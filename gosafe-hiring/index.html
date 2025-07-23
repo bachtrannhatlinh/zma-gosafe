@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: gap: content:"
+    />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <!-- Prevent overscroll behavior -->
+    <meta name="overscroll-behavior" content="none">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <!-- Disable iOS bounce and pull-to-refresh -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <meta name="theme-color" content="#007aff" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <title>Zalo Mini App</title>
+    
+    <!-- Inline CSS to prevent overscroll immediately -->
+    <style>
+      html, body {
+        height: 100%;
+        overflow-x: hidden;
+        overscroll-behavior: none;
+        overscroll-behavior-y: none;
+        -webkit-overscroll-behavior: none;
+        -webkit-overscroll-behavior-y: none;
+        position: relative;
+        width: 100%;
+        background-color: white;
+      }
+      
+      #app {
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: none;
+        overscroll-behavior-y: none;
+        -webkit-overscroll-behavior: none;
+        -webkit-overscroll-behavior-y: none;
+        -webkit-overflow-scrolling: touch;
+        background-color: white;
+      }
+      
+      /* Allow normal scrolling but disable overscroll */
+      body {
+        touch-action: manipulation;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        background-color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <!-- built script files will be auto injected -->
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>

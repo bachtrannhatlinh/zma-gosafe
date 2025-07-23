@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Simple mobile-friendly scrolling */
+  html {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  /* Simple mobile scrolling utilities */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Allow horizontal scroll specifically */
+  .allow-horizontal-scroll {
+    overscroll-behavior-x: auto;
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Safe area utilities for iPhone with Dynamic Island/Notch */
+  .pt-safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .pb-safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .pl-safe-area-left {
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+  
+  .pr-safe-area-right {
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  
+  /* Safe area margins */
+  .mt-safe-area-top {
+    margin-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .mb-safe-area-bottom {
+    margin-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}

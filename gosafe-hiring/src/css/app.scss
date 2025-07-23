@@ -1,0 +1,318 @@
+.page {
+  padding: 16px 16px 96px 16px;
+}
+
+.section-container {
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.zaui-list-item {
+  cursor: pointer;
+}
+
+/* Custom scrollbar styling for horizontal scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Smooth scrolling behavior */
+.overflow-x-auto {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  /* Allow horizontal scroll */
+  overscroll-behavior-x: auto !important;
+  touch-action: pan-x pan-y !important;
+}
+
+/* Pull to refresh optimizations */
+.pull-to-refresh-container {
+  /* GPU acceleration for smooth animations */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+  
+  /* Smooth touch interactions */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  
+  /* Prevent text selection during drag */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Skeleton loading animations */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* Enhanced pulse animation */
+@keyframes enhanced-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-enhanced-pulse {
+  animation: enhanced-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Fix for overscroll behavior - prevent orange/rubber band effect */
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: white;
+  -webkit-overflow-scrolling: touch;
+  /* Hide scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+/* Safe area support for iPhone with Dynamic Island/Notch */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .pt-safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .pb-safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Fallback for devices without safe area */
+.pt-safe-area-top {
+  padding-top: 44px; /* Default status bar height */
+}
+
+.pb-safe-area-bottom {
+  padding-bottom: 34px; /* Default home indicator height */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+#app {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  background-color: white;
+  /* Support for iPhone safe area */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  /* Hide scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+#app::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* Additional fixes for Zalo Mini App pages */
+.zmp-page {
+  padding-bottom: 0;
+  -webkit-overflow-scrolling: touch;
+  background-color: white;
+  /* Hide scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.zmp-page::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* Prevent overscroll on specific containers */
+.zmp-scroll-view,
+.zmp-page-container,
+.page {
+  -webkit-overflow-scrolling: touch;
+  background-color: white;
+  /* Hide scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.zmp-scroll-view::-webkit-scrollbar,
+.zmp-page-container::-webkit-scrollbar,
+.page::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* Remove complex overscroll behavior rules that cause conflicts */
+/* Keep it simple for better mobile performance */
+
+/* iPhone Safe Area Support */
+@supports (padding: max(0px)) {
+  .ios-safe-header {
+    padding-top: max(1rem, env(safe-area-inset-top)) !important;
+  }
+  
+  .ios-safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* iPhone 14 Pro Max specific fixes */
+@media screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) {
+  .pt-safe-area-top {
+    padding-top: max(1.5rem, env(safe-area-inset-top)) !important;
+  }
+  
+  #app {
+    padding-top: 0 !important; /* Let individual components handle their safe area */
+  }
+}
+
+/* Ensure pages have proper bottom spacing for fixed navigation */
+.page-with-bottom-nav {
+  padding-bottom: 80px !important;
+  min-height: calc(100vh - 80px) !important;
+  background-color: white !important;
+}
+
+/* Fixed bottom navigation styling */
+.bottom-nav-fixed {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1000 !important;
+  background: white !important;
+  border-top: 1px solid #e5e7eb !important;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Global scrollbar hiding - Apply to all elements */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* Specific targeting for common scrollable elements */
+div, main, section, article, aside, nav, 
+.container, .content, .scroll, .scrollable,
+[class*="scroll"], [class*="overflow"] {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
+}
+
+div::-webkit-scrollbar, main::-webkit-scrollbar, section::-webkit-scrollbar, 
+article::-webkit-scrollbar, aside::-webkit-scrollbar, nav::-webkit-scrollbar,
+.container::-webkit-scrollbar, .content::-webkit-scrollbar, 
+.scroll::-webkit-scrollbar, .scrollable::-webkit-scrollbar,
+[class*="scroll"]::-webkit-scrollbar, [class*="overflow"]::-webkit-scrollbar {
+  display: none !important; /* Safari and Chrome */
+}
+
+/* Additional page fixes for smooth scrolling */
+.zmp-page-content {
+  -webkit-overflow-scrolling: touch !important;
+  /* Hide scrollbar */
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
+}
+
+.zmp-page-content::-webkit-scrollbar {
+  display: none !important; /* Safari and Chrome */
+}
+
+/* Prevent scroll bouncing on iOS - Keep minimal */
+.zmp-ui-page {
+  -webkit-overflow-scrolling: touch !important;
+  /* Hide scrollbar */
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
+}
+
+.zmp-ui-page::-webkit-scrollbar {
+  display: none !important; /* Safari and Chrome */
+}
+
+/* Smooth scrolling for all pages */
+.smooth-page {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto; /* Disable CSS scroll-behavior for native smoothness */
+  /* Hide scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.smooth-page::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* Page content with bottom navigation */
+.page-with-nav {
+  padding-bottom: 80px;
+  -webkit-overflow-scrolling: touch;
+  /* Hide scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+/* Page content with header and bottom navigation */
+.page-with-header-nav {
+  padding-top: 60px; /* Space for header with safe area */
+  padding-bottom: 80px; /* Space for bottom navigation */
+  -webkit-overflow-scrolling: touch;
+  /* Hide scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+/* Safe area support for devices with notch */
+@supports (padding: max(0px)) {
+  .page-with-header-nav {
+    padding-top: max(60px, calc(50px + env(safe-area-inset-top))) !important;
+  }
+}
+
+/* iPhone specific adjustments */
+@media screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) {
+  .page-with-header-nav {
+    padding-top: max(70px, calc(50px + env(safe-area-inset-top))) !important;
+  }
+}
+
+.page-with-nav::-webkit-scrollbar,
+.page-with-header-nav::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
