@@ -56,7 +56,7 @@ const News = () => {
             </Text>
           </Box>
           <Text className="text-gray-600 text-sm">
-            Cập nhật thông tin mới nhất từ GoSafe
+            Cập nhật thông tin mới nhất từ GOSafe
           </Text>
         </Box>
 

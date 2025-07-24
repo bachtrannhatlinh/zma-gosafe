@@ -6,6 +6,7 @@ export { default as CardSlider } from './CardSlider';
 export { default as BottomNavigation } from './BottomNavigation';
 export { default as LoadingScreen } from './LoadingScreen';
 export { default as PullToRefresh } from './PullToRefresh';
+export { default as CustomModal } from './CustomModal';
 
 // News Components
 export { default as NewsCard } from './NewsCard';

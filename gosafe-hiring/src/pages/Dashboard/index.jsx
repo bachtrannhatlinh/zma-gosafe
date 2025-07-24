@@ -3,7 +3,7 @@ import { Page, Box, Text } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
 
 // Import banner image
-import bannerImage from "../../static/img/banner_gosafe.jpg";
+import bannerImage from "../../static/img/banner_GOSafe.jpg";
 
 // Components
 import LoadingScreen from "../../components/LoadingScreen";
@@ -79,7 +79,7 @@ const Dashboard = () => {
           <Box className="relative">
             <img 
               src={bannerImage} 
-              alt="GoSafe Banner" 
+              alt="GOSafe Banner" 
               className="w-full h-48 object-cover"
               style={{ userSelect: 'none', pointerEvents: 'none' }}
             />

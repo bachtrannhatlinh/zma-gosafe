@@ -24,7 +24,7 @@ const LoadingScreen = ({ compact = false }) => {
           <Box className="w-10 h-10 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-3 shadow-lg">
             <Text className="text-white text-lg font-bold">G</Text>
           </Box>
-          <Text className="text-lg font-bold text-gray-800 mb-1">GoSafe</Text>
+          <Text className="text-lg font-bold text-gray-800 mb-1">GOSafe</Text>
           <Text className="text-xs text-gray-500">Ứng dụng bảo hiểm thông minh</Text>
         </Box>
         

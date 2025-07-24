@@ -13,6 +13,229 @@
   cursor: pointer;
 }
 
+/* Custom button styles for modal */
+.custom-btn-outline {
+  background-color: white !important;
+  border: 2px solid #6b7280 !important;
+  color: #6b7280 !important;
+  border-radius: 50px !important;
+  padding: 12px 24px !important;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+}
+
+.custom-btn-outline:hover {
+  background-color: #f9fafb !important;
+}
+
+.custom-btn-filled {
+  background-color: #ff6b35 !important;
+  border: none !important;
+  color: white !important;
+  border-radius: 50px !important;
+  padding: 12px 24px !important;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+}
+
+.custom-btn-filled:hover {
+  background-color: #e55a2b !important;
+}
+
+/* Custom Bottom Sheet Style */
+.permission-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  z-index: 999999 !important;
+  animation: fadeIn 0.3s ease-out !important;
+  touch-action: none !important;
+}
+
+.permission-bottom-sheet {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  background: white !important;
+  border-radius: 20px 20px 0 0 !important;
+  z-index: 999999 !important;
+  animation: slideUpFromBottom 0.3s ease-out !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  transform: translateY(0) !important;
+  will-change: transform !important;
+}
+
+.bottom-sheet-handle {
+  position: absolute !important;
+  top: 12px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 40px !important;
+  height: 4px !important;
+  background-color: #d1d5db !important;
+  border-radius: 2px !important;
+  z-index: 1 !important;
+}
+
+/* Ensure bottom sheet is always on top */
+.permission-bottom-sheet * {
+  z-index: inherit !important;
+}
+
+/* Animation for overlay */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Animation for bottom sheet */
+@keyframes slideUpFromBottom {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Prevent body scroll when bottom sheet is open */
+body.modal-no-scroll,
+html.modal-no-scroll {
+  overflow: hidden !important;
+  height: 100% !important;
+  position: fixed !important;
+  width: 100% !important;
+}
+
+/* Force hide BottomNavigation when permission modal is open */
+body.modal-no-scroll [data-fixed-element="true"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  z-index: -1 !important;
+}
+
+/* Ensure permission modal is always on top */
+.permission-overlay,
+.permission-bottom-sheet {
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+/* Permission modal bottom sheet style - Remove old styles */
+.permission-modal {
+  display: none !important;
+}
+
+.permission-modal .zaui-modal {
+  display: none !important;
+}
+
+.permission-modal .zaui-modal-content {
+  display: none !important;
+}
+
+.permission-modal .zaui-modal-backdrop {
+  display: none !important;
+}
+
+.permission-modal .zaui-modal-backdrop {
+  z-index: 10051 !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+.permission-modal .zaui-modal-content {
+  margin: 0 !important;
+  margin-bottom: 0 !important;
+  border-radius: 16px 16px 0 0 !important;
+  max-height: 85vh !important;
+  width: 100% !important;
+  animation: slideUpFromBottom 0.3s ease-out !important;
+  z-index: 10053 !important;
+  position: relative !important;
+  background-color: #f8fafc !important;
+  /* Ensure it covers the bottom navigation */
+  min-height: 65vh !important;
+}
+
+/* Prevent scroll on modal backdrop */
+.zaui-modal-backdrop {
+  touch-action: none !important;
+  -webkit-overflow-scrolling: auto !important;
+  overflow: hidden !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 9999 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.zaui-modal {
+  touch-action: none !important;
+  -webkit-overflow-scrolling: auto !important;
+  position: fixed !important;
+  z-index: 10000 !important;
+}
+
+/* Lock body scroll when modal is open */
+body.modal-open,
+body:has(.zaui-modal) {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+  touch-action: none !important;
+  -webkit-overflow-scrolling: auto !important;
+}
+
+html:has(.zaui-modal) {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
+/* Disable scroll for entire document when modal is open */
+.modal-no-scroll {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.modal-no-scroll * {
+  -webkit-overflow-scrolling: auto !important;
+}
+
+/* Ensure modal content is above everything */
+.zaui-modal-content {
+  position: relative !important;
+  z-index: 10001 !important;
+}
+
+@keyframes slideUpFromBottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 /* Custom scrollbar styling for horizontal scroll */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* Internet Explorer 10+ */
@@ -315,4 +538,18 @@ article::-webkit-scrollbar, aside::-webkit-scrollbar, nav::-webkit-scrollbar,
 .page-with-nav::-webkit-scrollbar,
 .page-with-header-nav::-webkit-scrollbar {
   display: none; /* Safari and Chrome */
+}
+
+.custom-btn-outline {
+  @apply bg-white border-2 border-orange-500 text-orange-500 rounded-full font-medium;
+  border: 2px solid #f97316 !important;
+  background-color: white !important;
+  color: #f97316 !important;
+}
+
+.custom-btn-filled {
+  @apply bg-orange-500 text-white rounded-full font-medium;
+  background-color: #f97316 !important;
+  color: white !important;
+  border: none !important;
 }
