@@ -13,7 +13,6 @@ import SectionHeader from "../../components/SectionHeader";
 import CardSlider from "../../components/CardSlider";
 import BottomNavigation from "../../components/BottomNavigation";
 import PullToRefresh from "../../components/PullToRefresh";
-import ServerTest from "../../components/ServerTest";
 
 // Hooks
 import { useUserData } from "../../hooks/useUserData";
@@ -119,8 +118,6 @@ const Dashboard = () => {
               />
             </Box>
 
-            {/* Development: Server Test Component */}
-            {process.env.NODE_ENV === 'development' && <ServerTest />}
           </Box>
         </PullToRefresh>
       </Box>
