@@ -3,13 +3,15 @@ import { Box, Text } from "zmp-ui";
 
 const CardSlider = ({ items, onItemClick, testId }) => {
   return (
-    <Box className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide allow-horizontal-scroll" 
-         data-testid={testId}
-         style={{ 
-           overscrollBehaviorX: 'auto',
-           touchAction: 'pan-x pan-y',
-           WebkitOverflowScrolling: 'touch'
-         }}>
+    <Box
+      className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide allow-horizontal-scroll"
+      data-testid={testId}
+      style={{
+        overscrollBehaviorX: "auto",
+        touchAction: "pan-x pan-y",
+        WebkitOverflowScrolling: "touch",
+      }}
+    >
       {items.map((item) => (
         <Box
           key={item.id}
@@ -22,7 +24,9 @@ const CardSlider = ({ items, onItemClick, testId }) => {
             <Text className="text-white text-xs font-bold mb-1">
               {item.title}
             </Text>
-            <Text className="text-white text-xs opacity-90">{item.subtitle}</Text>
+            <Text className="text-white text-xs opacity-90">
+              {item.subtitle}
+            </Text>
             <Text className="absolute right-2 top-2 text-2xl">
               {item.image}
             </Text>

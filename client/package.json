@@ -17,7 +17,11 @@
   "scripts": {
     "login": "zmp login",
     "start": "zmp start",
-    "deploy": "zmp deploy"
+    "deploy": "zmp deploy",
+    "server": "cd server && npm run dev",
+    "server:install": "cd server && npm install",
+    "dev": "concurrently \"npm run server\" \"npm start\"",
+    "setup": "npm run server:install && echo Backend dependencies installed. Now configure server/.env file."
   },
   "dependencies": {
     "jotai": "^2.12.1",
@@ -30,6 +34,7 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
+    "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "postcss": "^8.4.38",
     "postcss-cli": "^8.3.1",
