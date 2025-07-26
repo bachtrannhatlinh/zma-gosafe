@@ -115,18 +115,8 @@ const UserHeader = ({ userInfo, isLoading }) => {
               );
               setPhoneNumber(serverResult.phoneNumber);
             } else {
-              console.log(
-                "⚠️ Server không decode được, hiển thị trạng thái xác thực"
-              );
+              // Fallback: hiển thị trạng thái đã xác thực
               setPhoneNumber("✅ Đã xác thực số điện thoại");
-
-              // Store token for later processing
-              try {
-                localStorage.setItem("zalo_phone_token", phoneResult.token);
-                console.log("💾 Đã lưu token để xử lý sau");
-              } catch (storageError) {
-                console.warn("⚠️ Không thể lưu token:", storageError);
-              }
             }
           } catch (tokenError) {
             console.error("❌ Lỗi decode token:", tokenError);
