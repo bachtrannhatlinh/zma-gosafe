@@ -5,11 +5,28 @@ import { Page, Box, Text, Input, Button } from "zmp-ui";
 import BottomNavigation from "../../components/BottomNavigation";
 import LocationInput from "../../components/LocationInput";
 
+import { useEffect } from "react";
+
 const BookRide = () => {
   console.log("BookRide component rendered");
   const [pickupLocation, setPickupLocation] = useState("3 Nguyễn Thông, An Hải Trung, Sơn Trà, Đà Nẵng 550000, Vietnam");
   const [destination, setDestination] = useState("");
   const [stopCount, setStopCount] = useState(5);
+
+  // Ngăn scroll khi vào trang này
+  useEffect(() => {
+    const preventScroll = (e) => {
+      e.preventDefault();
+    };
+    window.addEventListener('touchmove', preventScroll, { passive: false });
+    window.addEventListener('wheel', preventScroll, { passive: false });
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('touchmove', preventScroll);
+      window.removeEventListener('wheel', preventScroll);
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const handleContinue = () => {
     console.log("Continuing with:", { pickupLocation, destination, stopCount });
@@ -26,7 +43,8 @@ const BookRide = () => {
       display: 'flex',
       flexDirection: 'column',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      touchAction: 'none' // Ngăn thao tác vuốt trên mobile
     }}>
       {/* Content - NO SCROLL */}
       <Box style={{ 

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Page, Box, Text, Button, Input, Select } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
+import { useEffect } from "react";
 
 const AddVehicle = () => {
   const navigate = useNavigate();
@@ -9,6 +10,21 @@ const AddVehicle = () => {
     licensePlate: "",
     color: ""
   });
+
+  // Ngăn scroll khi vào trang này
+  useEffect(() => {
+    const preventScroll = (e) => {
+      e.preventDefault();
+    };
+    window.addEventListener('touchmove', preventScroll, { passive: false });
+    window.addEventListener('wheel', preventScroll, { passive: false });
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('touchmove', preventScroll);
+      window.removeEventListener('wheel', preventScroll);
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const vehicleBrands = [
     { value: "honda", title: "Honda" },
@@ -47,7 +63,9 @@ const AddVehicle = () => {
       height: '100vh',
       backgroundColor: '#f9fafb',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      overflow: 'hidden',
+      touchAction: 'none'
     }}>
       {/* Header */}
       <Box style={{

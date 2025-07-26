@@ -7,12 +7,28 @@ import BottomNavigation from "../../components/BottomNavigation";
 import MenuItem from "../../components/MenuItem";
 import UserProfile from "../../components/UserProfile";
 import CustomModal from "../../components/CustomModal";
+import { useEffect } from "react";
 
 const Account = () => {
   console.log("Account component rendered");
   const navigate = useNavigate();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Ngăn scroll khi vào trang này
+  useEffect(() => {
+    const preventScroll = (e) => {
+      e.preventDefault();
+    };
+    window.addEventListener('touchmove', preventScroll, { passive: false });
+    window.addEventListener('wheel', preventScroll, { passive: false });
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('touchmove', preventScroll);
+      window.removeEventListener('wheel', preventScroll);
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   // User data - trong thực tế sẽ fetch từ API hoặc context
   const [userInfo] = useState({
@@ -130,6 +146,7 @@ const Account = () => {
         flexDirection: "column",
         position: "relative",
         overflow: "hidden", // Prevent scroll
+        touchAction: "none"
       }}
     >
       {/* User Profile Section - Tăng chiều cao */}
