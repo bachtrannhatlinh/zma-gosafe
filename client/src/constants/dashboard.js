@@ -1,70 +1,69 @@
-// Constants for services
-export const SERVICES = [
-  { id: "vehicle", icon: "🚗", label: "Thuê xe", bgColor: "bg-blue-500" },
-  { id: "car", icon: "🚙", label: "Ô tô", bgColor: "bg-blue-600" },
-  { id: "bike", icon: "🏍️", label: "Xe máy", bgColor: "bg-cyan-500" },
-  { id: "food", icon: "🍔", label: "Đồ ăn", bgColor: "bg-green-500" },
+// Constants for main driver services - DỊCH VỤ TÀI XẾ
+export const DRIVER_SERVICES = [
+  { 
+    id: "car-driver", 
+    icon: "🚗", 
+    label: "Tài xế ô tô", 
+    bgColor: "bg-orange-500",
+  },
+  { 
+    id: "bike-driver", 
+    icon: "🏍️", 
+    label: "Tài xế xe máy", 
+    bgColor: "bg-orange-500",
+  },
+  { 
+    id: "daily-rental", 
+    icon: "📅", 
+    label: "Thuê tài xế theo ngày", 
+    bgColor: "bg-orange-500",
+  },
 ];
 
-// Constants for promotions
-export const PROMOTIONS = [
-  {
-    id: 1,
-    title: "Deal Hè Của Đá",
-    subtitle: "Món Ngon Giảm Giá Cực Sốc",
+// Constants for other GoSafe services - CÁC DỊCH VỤ KHÁC CỦA GOSAFE
+export const OTHER_SERVICES = [
+  { 
+    id: "vehicle-registration", 
+    icon: "📋", 
+    label: "Đăng kiểm hộ", 
+    bgColor: "bg-blue-500",
+  },
+  { 
+    id: "bike-rental", 
+    icon: "🛵", 
+    label: "Cho thuê xe máy", 
     bgColor: "bg-green-500",
-    image: "🧊",
   },
-  {
-    id: 2,
-    title: "DEAL HÈ CỰC ĐÃ",
-    subtitle: "ĐẢ - MÓN NGON...",
-    bgColor: "bg-orange-500",
-    image: "☀️",
-  },
-  {
-    id: 3,
-    title: "ĐẶT MÓN VIP",
-    subtitle: "GIAO - KHAO...",
+  { 
+    id: "car-rental", 
+    icon: "🚙", 
+    label: "Cho thuê xe ô tô", 
     bgColor: "bg-red-500",
-    image: "👑",
   },
-  {
-    id: 4,
-    title: "Món Ngon Mỗi Ngày",
-    subtitle: "Giảm Giá Đặc Biệt",
+  { 
+    id: "flight-tickets", 
+    icon: "✈️", 
+    label: "Vé máy bay", 
     bgColor: "bg-purple-500",
-    image: "🍽️",
   },
-];
-
-// Constants for news
-export const NEWS_DATA = [
-  {
-    id: 1,
-    title: "Deal Hè Của Đá",
-    subtitle: "Món Ngon Giảm Giá Cực Sốc",
-    bgColor: "bg-green-500",
-    image: "🧊",
-  },
-  {
-    id: 2,
-    title: "DEAL HÈ CỰC ĐÃ",
-    subtitle: "ĐẢ - MÓN NGON...",
-    bgColor: "bg-orange-500",
-    image: "☀️",
-  },
-  {
-    id: 3,
-    title: "ĐẶT MÓN VIP",
-    subtitle: "GIAO - KHAO...",
-    bgColor: "bg-red-500",
-    image: "👑",
+  { 
+    id: "travel-tours", 
+    icon: "🌍", 
+    label: "Vé khu vui chơi toàn quốc", 
+    bgColor: "bg-teal-500",
   },
 ];
 
 // Service route mapping
 export const SERVICE_ROUTES = {
+  "car-driver": "/book-ride",
+  "bike-driver": "/book-ride", 
+  "daily-rental": "/book-ride",
+  "vehicle-registration": null, // Coming soon
+  "bike-rental": null, // Coming soon
+  "car-rental": null, // Coming soon
+  "flight-tickets": null, // Coming soon
+  "travel-tours": null, // Coming soon
   food: "/food",
   vehicle: "/vehicle",
   delivery: null, // Coming soon

@@ -6,7 +6,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 
 // Multiple server URLs for better reliability
 const SERVER_URLS = isDevelopment 
-  ? ['http://localhost:3001'] 
+  ? ['http://localhost:5000'] 
   : [
       'https://zma-gosafe-c2pee8u0f-bachtrannhatlinhs-projects.vercel.app',
       'https://zma-gosafe.vercel.app', // backup URL
