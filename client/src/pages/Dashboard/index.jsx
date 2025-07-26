@@ -14,7 +14,7 @@ import PullToRefresh from "../../components/PullToRefresh";
 
 // Hooks
 import { useUserData } from "../../hooks/useUserData";
-import { useServiceNavigation, usePromotionNavigation } from "../../hooks/useNavigation";
+import { useServiceNavigation } from "../../hooks/useNavigation";
 
 // Constants
 import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
@@ -22,7 +22,7 @@ import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   // Custom hooks
   const { userInfo, isLoading, error, refetch } = useUserData();
   const { handleServiceClick } = useServiceNavigation(navigate);
@@ -33,15 +33,16 @@ const Dashboard = () => {
     try {
       // Simulate network delay for better UX
       const refreshPromise = refetch();
-      const minDelayPromise = new Promise(resolve => setTimeout(resolve, 800));
-      
+      const minDelayPromise = new Promise((resolve) =>
+        setTimeout(resolve, 800)
+      );
+
       // Wait for both data refresh and minimum delay
       await Promise.all([refreshPromise, minDelayPromise]);
-      
     } catch (error) {
       console.error("Error refreshing data:", error);
       // Still wait minimum time even on error for consistent UX
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     } finally {
       setIsRefreshing(false);
     }
@@ -65,56 +66,60 @@ const Dashboard = () => {
   }
 
   return (
-    <Page 
+    <Page
       className="dashboard-page"
-      style={{ 
-        height: '100vh',
-        backgroundColor: '#fb923c',
-        background: 'linear-gradient(to bottom, #fb923c, #ef4444)',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        overflow: 'hidden'
+      style={{
+        height: "100vh",
+        backgroundColor: "#fb923c",
+        background: "linear-gradient(to bottom, #fb923c, #ef4444)",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
       <PullToRefresh onRefresh={handleRefresh} refreshing={isRefreshing}>
         {/* Header with user info */}
         <UserHeader userInfo={userInfo} isLoading={isLoading} />
-        
+
         {/* Hero Banner */}
-        <Box style={{ 
-          position: 'relative',
-          background: 'linear-gradient(to right, #fb923c, #ef4444)'
-        }}>
-          <img 
-            src={bannerImage} 
-            alt="GOSafe Banner" 
+        <Box
+          style={{
+            position: "relative",
+            background: "linear-gradient(to right, #fb923c, #ef4444)",
+          }}
+        >
+          <img
+            src={bannerImage}
+            alt="GOSafe Banner"
             style={{
-              width: '100%',
-              height: '192px',
-              objectFit: 'cover',
+              width: "100%",
+              height: "192px",
+              objectFit: "cover",
               opacity: 0.9,
-              userSelect: 'none',
-              pointerEvents: 'none',
-              display: 'block'
+              userSelect: "none",
+              pointerEvents: "none",
+              display: "block",
             }}
           />
         </Box>
 
         {/* Main Content */}
-        <Box style={{ 
-          background: 'linear-gradient(to bottom, #fb923c, #ef4444)',
-          minHeight: 'calc(100vh - 192px)', // Trừ đi chiều cao banner
-          paddingBottom: '120px' // Space cho bottom nav
-        }}>
-          <ServiceSection 
+        <Box
+          style={{
+            background: "linear-gradient(to bottom, #fb923c, #ef4444)",
+            minHeight: "calc(100vh - 192px)", // Trừ đi chiều cao banner
+            paddingBottom: "120px", // Space cho bottom nav
+          }}
+        >
+          <ServiceSection
             title="DỊCH VỤ TÀI XẾ"
             services={DRIVER_SERVICES}
             onServiceClick={handleServiceClick}
             columns={3}
           />
 
-          <ServiceSection 
+          <ServiceSection
             title="CÁC DỊCH VỤ KHÁC CỦA GOSAFE"
             services={OTHER_SERVICES}
             onServiceClick={handleServiceClick}
