@@ -1,34 +1,33 @@
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Middleware - Allow all origins for testing
 app.use(cors({
-  origin: [
-    'http://localhost:3000', 
-    'https://localhost:3000',
-    // Zalo Mini App domains
-    'https://zalo.me',
-    'https://*.zalo.me',
-    'https://mini.zalo.me',
-    'https://*.mini.zalo.me',
-    'https://miniapp.zalo.me',
-    'https://*.miniapp.zalo.me',
-    // Allow all for testing
-    '*'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS'],
+  origin: '*',
+  credentials: false,
+  methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
 }));
 app.use(express.json());
 
-// Add preflight handler
-app.options('*', cors());
+// Add explicit CORS headers for all responses
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Test endpoint
 app.get('/api/test', (req, res) => {
@@ -65,6 +64,20 @@ app.get('/api/health', (req, res) => {
 // Zalo App credentials - cần config trong .env
 const ZALO_APP_ID = process.env.ZALO_APP_ID;
 const ZALO_APP_SECRET = process.env.ZALO_APP_SECRET;
+
+// Stringee configuration - sử dụng API_KEY và API_SECRET
+const API_KEY_SID = process.env.API_KEY_SID;
+const API_SECRET_KEY = process.env.API_SECRET_KEY;
+
+// Debug endpoint để kiểm tra credentials
+app.get('/api/stringee/debug', (req, res) => {
+  res.json({
+    hasApiKey: !!API_KEY_SID,
+    hasApiSecret: !!API_SECRET_KEY,
+    apiKeyPrefix: API_KEY_SID ? API_KEY_SID.substring(0, 10) + '...' : 'Not set',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // API endpoint để decode phone token
 app.post('/api/decode-phone', async (req, res) => {
@@ -134,33 +147,69 @@ app.post('/api/decode-phone', async (req, res) => {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'GoSafe Backend Server is running',
+  res.json({ 
+    success: true, 
+    message: 'Server is running',
     timestamp: new Date().toISOString()
   });
 });
 
-// Test endpoint để check Zalo API connection
-app.get('/api/test-zalo', async (req, res) => {
+// Simple test endpoint without CORS issues
+app.get('/api/stringee/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'CORS test successful',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Stringee token endpoint với better error handling
+app.post('/api/stringee/token', async (req, res) => {
+  console.log('🔑 Stringee token request received');
+  
   try {
-    const testResponse = await axios.get('https://openapi.zalo.me/v2.0/me/info', {
-      params: {
-        access_token: 'test_token',
-        fields: 'id,name,phone'
+    const API_KEY_SID = process.env.API_KEY_SID;
+    const API_SECRET_KEY = process.env.API_SECRET_KEY;
+
+    if (!API_KEY_SID || !API_SECRET_KEY) {
+      console.log('❌ Missing Stringee credentials');
+      return res.json({
+        success: false,
+        error: 'Stringee credentials not configured'
+      });
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    const exp = now + (24 * 60 * 60);
+
+    const payload = {
+      jti: API_KEY_SID + '-' + now,
+      iss: API_KEY_SID,
+      exp: exp,
+      userId: req.body.userId || 'user_' + Date.now()
+    };
+
+    const token = jwt.sign(payload, API_SECRET_KEY, {
+      algorithm: 'HS256',
+      header: {
+        typ: 'JWT',
+        alg: 'HS256',
+        cty: 'stringee-api;v=1'
       }
     });
-    
+
+    console.log('✅ Stringee token generated successfully');
     res.json({
       success: true,
-      message: 'Zalo API is accessible',
-      response: testResponse.data
+      token: token,
+      expires: exp
     });
+
   } catch (error) {
+    console.error('❌ Stringee token error:', error);
     res.json({
       success: false,
-      message: 'Zalo API test failed (expected)',
-      error: error.response?.data || error.message
+      error: error.message
     });
   }
 });

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Page, Box, Text } from "zmp-ui";
+import { Page, Box, Text, Modal, Button } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
 
 // Import banner image
@@ -11,6 +11,8 @@ import UserHeader from "../../components/UserHeader";
 import ServiceSection from "../../components/ServiceSection";
 import BottomNavigation from "../../components/BottomNavigation";
 import PullToRefresh from "../../components/PullToRefresh";
+import StringeeCall from '../../components/StringeeCall';
+import StringeeDemo from '../../components/StringeeDemo';
 
 // Hooks
 import { useUserData } from "../../hooks/useUserData";
@@ -22,6 +24,13 @@ import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showStringeeModal, setShowStringeeModal] = useState(false);
+  const [showStringeeDemo, setShowStringeeDemo] = useState(false);
+
+  // Add Stringee demo handler
+  const handleStringeeDemo = () => {
+    setShowStringeeDemo(true);
+  };
 
   // Custom hooks
   const { userInfo, isLoading, error, refetch } = useUserData();
@@ -102,6 +111,24 @@ const Dashboard = () => {
               display: "block",
             }}
           />
+          
+          {/* Stringee Demo Button - Floating on banner */}
+          <Box
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              zIndex: 10
+            }}
+          >
+            <Button
+              onClick={handleStringeeDemo}
+              size="small"
+              className="bg-green-500 text-white shadow-lg"
+            >
+              📞 Demo Call
+            </Button>
+          </Box>
         </Box>
 
         {/* Main Content */}
@@ -127,6 +154,16 @@ const Dashboard = () => {
           />
         </Box>
       </PullToRefresh>
+
+      {/* Stringee Demo Modal */}
+      <Modal
+        visible={showStringeeDemo}
+        title="📞 Stringee Call Demo"
+        onClose={() => setShowStringeeDemo(false)}
+        className="stringee-demo-modal"
+      >
+        <StringeeDemo />
+      </Modal>
 
       {/* Bottom Navigation - Fixed */}
       <BottomNavigation activeTab="home" />
