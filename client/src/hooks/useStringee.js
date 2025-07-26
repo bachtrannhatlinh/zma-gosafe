@@ -1,102 +1,59 @@
 import { useState, useEffect, useRef } from "react";
+import StringeeClient from "stringee";
 
-// Khai báo biến global cho Stringee SDK
-let StringeeClient, StringeeCall;
-
-// Import Stringee SDK từ npm package
-const loadStringeeSDK = async () => {
+// Function để lấy Stringee token từ server
+const getStringeeToken = async () => {
   try {
-    const StringeeSDK = await import('stringee');
+    const SERVER_URL = process.env.NODE_ENV === 'development' 
+      ? 'http://localhost:5000' 
+      : 'https://server-weld-mu-76.vercel.app';
     
-    if (StringeeSDK.StringeeClient && StringeeSDK.StringeeCall) {
-      StringeeClient = StringeeSDK.StringeeClient;
-      StringeeCall = StringeeSDK.StringeeCall;
-      console.log('✅ Stringee SDK loaded from npm');
-      return;
+    console.log('🔑 Getting Stringee token from server...');
+    
+    const response = await fetch(`${SERVER_URL}/api/stringee/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: `user_${Date.now()}`
+      }),
+      timeout: 10000
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
+
+    const result = await response.json();
     
-    // Fallback to global variables if available
-    if (window.StringeeClient && window.StringeeCall) {
-      StringeeClient = window.StringeeClient;
-      StringeeCall = window.StringeeCall;
-      console.log('✅ Stringee SDK loaded from window');
-      return;
+    if (!result.success || !result.token) {
+      throw new Error(result.error || 'No token received');
     }
-    
-    throw new Error('Stringee classes not found');
+
+    console.log('✅ Stringee token received');
+    return result.token;
     
   } catch (error) {
-    console.error('❌ Failed to load Stringee SDK:', error);
-    throw error;
+    console.error('❌ Failed to get Stringee token:', error);
+    
+    // Fallback: tạo mock token để test
+    console.log('🔄 Using mock token for testing...');
+    return 'mock_token_for_testing';
   }
 };
 
-const generateMockStringeeToken = () => {
-  const header = btoa(JSON.stringify({
-    typ: 'JWT',
-    alg: 'HS256',
-    cty: 'stringee-api;v=1'
-  }));
-  
-  const payload = btoa(JSON.stringify({
-    jti: 'mock-' + Date.now(),
-    iss: 'mock-api-key', 
-    exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
-    userId: 'mock_user_' + Date.now()
-  }));
-  
-  const signature = btoa('mock-signature');
-  return `${header}.${payload}.${signature}`;
-};
-
-const getTokenViaXHR = (serverUrl) => {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-
-    xhr.open("POST", `${serverUrl}/api/stringee/token`, true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.timeout = 15000;
-
-    xhr.onload = function () {
-      if (xhr.status === 200) {
-        try {
-          const result = JSON.parse(xhr.responseText);
-          console.log("✅ XHR success:", result);
-          if (result.success) {
-            resolve(result.token);
-          } else {
-            reject(new Error(result.error || "XHR failed"));
-          }
-        } catch (e) {
-          reject(new Error("Invalid JSON response"));
-        }
-      } else {
-        reject(new Error(`XHR failed: ${xhr.status}`));
-      }
-    };
-
-    xhr.onerror = () => reject(new Error("XHR network error"));
-    xhr.ontimeout = () => reject(new Error("XHR timeout"));
-
-    xhr.send(JSON.stringify({ userId: "demo_user_" + Date.now() }));
-  });
-};
-
-const getStringeeToken = async () => {
+// Load Stringee SDK từ npm package
+const loadStringeeSDK = async () => {
   try {
-    console.log('🔗 Getting token via XHR (bypass Zalo API)');
-    
-    const SERVER_URL = 'https://server-weld-mu-76.vercel.app';
-    const token = await getTokenViaXHR(SERVER_URL);
-    console.log('✅ Got token via XHR');
-    return token;
-    
+    console.log('✅ Stringee SDK loaded from npm package');
+    return {
+      StringeeClient: StringeeClient.StringeeClient,
+      StringeeCall: StringeeClient.StringeeCall2
+    };
   } catch (error) {
-    console.error('❌ XHR failed:', error);
-    console.log('🔄 Using mock token for testing');
-    
-    // Return mock token ngay lập tức khi XHR fail
-    return generateMockStringeeToken();
+    console.error('❌ Failed to load Stringee SDK:', error);
+    throw error;
   }
 };
 
@@ -107,6 +64,8 @@ export const useStringee = () => {
   const [sdkLoaded, setSdkLoaded] = useState(false);
   const [error, setError] = useState(null);
   const clientRef = useRef(null);
+  const StringeeClientClass = useRef(null);
+  const StringeeCallClass = useRef(null);
 
   useEffect(() => {
     initStringee();
@@ -126,19 +85,19 @@ export const useStringee = () => {
       console.log("🚀 Initializing Stringee...");
       setError(null);
 
-      // Load SDK first
-      await loadStringeeSDK();
+      // Load SDK
+      const { StringeeClient, StringeeCall } = await loadStringeeSDK();
+      StringeeClientClass.current = StringeeClient;
+      StringeeCallClass.current = StringeeCall;
       setSdkLoaded(true);
 
-      // Get access token from server
+      // Get token từ server
       const token = await getStringeeToken();
 
-      if (!StringeeClient) {
-        throw new Error("StringeeClient not available");
-      }
-
+      // Tạo client instance
       clientRef.current = new StringeeClient();
 
+      // Setup event listeners
       clientRef.current.on("connect", () => {
         console.log("✅ Stringee connected");
         setIsConnected(true);
@@ -150,65 +109,49 @@ export const useStringee = () => {
         setIsConnected(false);
       });
 
-      // Thêm event handler cho authen
       clientRef.current.on("authen", (res) => {
         console.log("🔐 Stringee authen:", res);
-        if (res.r === 0) {
-          console.log("✅ Authentication successful");
-        } else {
+        if (res.r !== 0) {
           console.error("❌ Authentication failed:", res.message);
           setError("Authentication failed: " + res.message);
         }
       });
 
-      clientRef.current.on("incomingcall", (incomingCall) => {
+      clientRef.current.on("incomingcall2", (incomingCall) => {
         console.log("📞 Incoming call:", incomingCall);
         handleIncomingCall(incomingCall);
       });
 
-      clientRef.current.on("error", (error) => {
-        console.error("❌ Stringee error:", error);
-        setIsConnected(false);
-        setError(error.message || "Stringee connection error");
-      });
-
-      // Connect with retry logic
+      // Connect
       clientRef.current.connect(token);
 
-      // Set timeout for connection
-      setTimeout(() => {
-        if (!isConnected) {
-          console.warn("⚠️ Stringee connection timeout");
-          setError("Connection timeout - please try again");
-        }
-      }, 15000);
     } catch (error) {
       console.error("❌ Stringee init error:", error);
-      setIsConnected(false);
       setError(error.message || "Failed to initialize Stringee");
     }
   };
 
   const makeCall = (phoneNumber) => {
     if (!clientRef.current || !isConnected) {
-      console.error("❌ Stringee not connected");
       setError("Not connected to Stringee");
       return;
     }
 
-    if (!StringeeCall) {
-      console.error("❌ StringeeCall not available");
+    if (!StringeeCallClass.current) {
       setError("StringeeCall not loaded");
       return;
     }
 
     try {
-      const call = new StringeeCall(
+      // Sử dụng Call2 cho voice call (false = voice only)
+      const call = new StringeeCallClass.current(
         clientRef.current,
-        phoneNumber,
-        phoneNumber
+        `user_${Date.now()}`, // fromUserId
+        phoneNumber, // toUserId (số điện thoại)
+        false // isVideoCall
       );
 
+      // Setup call events
       call.on("addlocalstream", (stream) => {
         console.log("🎤 Local stream added");
       });
@@ -218,21 +161,30 @@ export const useStringee = () => {
       });
 
       call.on("signalingstate", (state) => {
-        console.log("📡 Signaling state:", state.code, state.reason);
-        setCallState(state.code === 3 ? "answered" : "calling");
+        console.log("📡 Signaling state:", state);
+        if (state.code === 3) {
+          setCallState("answered");
+        } else if (state.code === 1) {
+          setCallState("calling");
+        }
       });
 
       call.on("mediastate", (state) => {
-        console.log("🎵 Media state:", state.code, state.reason);
-      });
-
-      call.on("info", (info) => {
-        console.log("ℹ️ Call info:", info);
+        console.log("🎵 Media state:", state);
       });
 
       setCurrentCall(call);
       setCallState("calling");
-      call.makeCall();
+      
+      // Make call
+      call.makeCall((res) => {
+        console.log("📞 Make call result:", res);
+        if (res.r !== 0) {
+          setError("Call failed: " + res.message);
+          setCallState("idle");
+        }
+      });
+
     } catch (error) {
       console.error("❌ Make call error:", error);
       setError("Failed to make call: " + error.message);
@@ -278,6 +230,11 @@ export const useStringee = () => {
     retry,
   };
 };
+
+
+
+
+
 
 
 

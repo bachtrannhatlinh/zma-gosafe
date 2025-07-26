@@ -66,17 +66,31 @@ const ZALO_APP_ID = process.env.ZALO_APP_ID;
 const ZALO_APP_SECRET = process.env.ZALO_APP_SECRET;
 
 // Stringee configuration - sử dụng API_KEY và API_SECRET
-const API_KEY_SID = process.env.API_KEY_SID;
-const API_SECRET_KEY = process.env.API_SECRET_KEY;
+const STRINGEE_KEY = process.env.STRINGEE_KEY;
+const STRINGEE_SECRET = process.env.STRINGEE_SECRET;
 
 // Debug endpoint để kiểm tra credentials
 app.get('/api/stringee/debug', (req, res) => {
   res.json({
-    hasApiKey: !!API_KEY_SID,
-    hasApiSecret: !!API_SECRET_KEY,
-    apiKeyPrefix: API_KEY_SID ? API_KEY_SID.substring(0, 10) + '...' : 'Not set',
+    hasApiKey: !!STRINGEE_KEY,
+    hasApiSecret: !!STRINGEE_SECRET,
+    apiKeyPrefix: STRINGEE_KEY ? STRINGEE_KEY.substring(0, 10) + '...' : 'Not set',
     timestamp: new Date().toISOString()
   });
+});
+
+// Bạn cần tạo token truy cập để client dùng Stringee SDK có thể gọi.
+app.get('/get-stringee-token', (req, res) => {
+  const userId = req.query.userId; // từ Zalo user id
+
+  const token = jwt.sign({
+    jti: userId,
+    iss: STRINGEE_KEY,
+    exp: Math.floor(Date.now() / 1000) + 3600, // 1 tiếng
+    userId: userId
+  }, STRINGEE_SECRET);
+
+  res.json({ token });
 });
 
 // API endpoint để decode phone token
@@ -168,10 +182,10 @@ app.post('/api/stringee/token', async (req, res) => {
   console.log('🔑 Stringee token request received');
   
   try {
-    const API_KEY_SID = process.env.API_KEY_SID;
-    const API_SECRET_KEY = process.env.API_SECRET_KEY;
+    const STRINGEE_KEY = process.env.STRINGEE_KEY;
+    const STRINGEE_SECRET = process.env.STRINGEE_SECRET;
 
-    if (!API_KEY_SID || !API_SECRET_KEY) {
+    if (!STRINGEE_KEY || !STRINGEE_SECRET) {
       console.log('❌ Missing Stringee credentials');
       return res.json({
         success: false,
@@ -183,13 +197,13 @@ app.post('/api/stringee/token', async (req, res) => {
     const exp = now + (24 * 60 * 60);
 
     const payload = {
-      jti: API_KEY_SID + '-' + now,
-      iss: API_KEY_SID,
+      jti: STRINGEE_KEY + '-' + now,
+      iss: STRINGEE_KEY,
       exp: exp,
       userId: req.body.userId || 'user_' + Date.now()
     };
 
-    const token = jwt.sign(payload, API_SECRET_KEY, {
+    const token = jwt.sign(payload, STRINGEE_SECRET, {
       algorithm: 'HS256',
       header: {
         typ: 'JWT',

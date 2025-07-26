@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { getAccessToken, getPhoneNumber } from 'zmp-sdk/apis';
-
 // Server URL - switch between localhost and production
 const isDevelopment = process.env.NODE_ENV === 'development';
 
