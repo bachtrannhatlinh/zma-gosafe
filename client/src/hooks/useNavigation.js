@@ -21,23 +21,21 @@ export const useServiceNavigation = (navigate) => {
   return { handleServiceClick };
 };
 
+export const useMainNavigation = (navigate) => {
+  const handleBottomNavClick = useCallback((path) => {
+    navigate(path);
+  }, [navigate]);
+
+  return { handleBottomNavClick };
+};
+
 export const usePromotionNavigation = (navigate) => {
   const handlePromoClick = useCallback((promo) => {
     console.log(`Clicked on promo: ${promo}`);
     // Có thể navigate đến trang chi tiết promotion
   }, []);
 
-  const handleViewAllPromotions = useCallback(() => {
-    navigate("/promotions");
-  }, [navigate]);
-
-  const handleViewAllNews = useCallback(() => {
-    navigate("/news");
-  }, [navigate]);
-
   return {
     handlePromoClick,
-    handleViewAllPromotions,
-    handleViewAllNews,
   };
 };

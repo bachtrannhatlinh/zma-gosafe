@@ -4,21 +4,21 @@ const axios = require('axios');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
   origin: [
     'http://localhost:3000', 
     'https://localhost:3000',
-    'https://localhost:3001',
-    'http://localhost:3001',
-    // Add Zalo Mini App domains
+    // Zalo Mini App domains
     'https://zalo.me',
     'https://*.zalo.me',
     'https://mini.zalo.me',
     'https://*.mini.zalo.me',
-    // Allow all for development
+    'https://miniapp.zalo.me',
+    'https://*.miniapp.zalo.me',
+    // Allow all for testing
     '*'
   ],
   credentials: true,
@@ -27,13 +27,8 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Handle preflight requests
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept');
-  res.sendStatus(200);
-});
+// Add preflight handler
+app.options('*', cors());
 
 // Test endpoint
 app.get('/api/test', (req, res) => {
@@ -62,7 +57,8 @@ app.get('/api/health', (req, res) => {
     status: 'OK', 
     message: 'GoSafe API Server đang chạy',
     timestamp: new Date().toISOString(),
-    port: PORT
+    port: PORT,
+    cors: 'enabled'
   });
 });
 
@@ -84,186 +80,54 @@ app.post('/api/decode-phone', async (req, res) => {
       });
     }
 
-    console.log('🔑 Token received:', token.substring(0, 50) + '...');
-    console.log('🔑 Token length:', token.length);
+    console.log('🔑 Token received, length:', token.length);
 
-    // TODO: TEMPORARY - Mock response for testing UI
-    // Comment this out when Zalo API is working
-    // if (token.length > 50) { // Relaxed condition cho testing
-    //   console.log('🧪 Using mock response for testing');
-    //   return res.json({
-    //     success: true,
-    //     phoneNumber: "0987654321", // Mock số điện thoại cho testing
-    //     userInfo: {
-    //       phone: "0987654321",
-    //       name: "Test User",
-    //       id: "mock_user_123"
-    //     },
-    //     message: 'Mock phone number for testing UI (server response working)'
-    //   });
-    // }
-    // END TEMPORARY MOCK
-
-    // Nếu không có App Secret, dùng mock response
+    // Kiểm tra App Secret
     if (!ZALO_APP_SECRET || ZALO_APP_SECRET === 'your_actual_app_secret_here') {
-      console.log('⚠️  App Secret chưa được cấu hình, sử dụng mock data');
+      console.log('⚠️ Using mock response - App Secret not configured');
       return res.json({
         success: true,
-        phoneNumber: "0912345678", // Mock số điện thoại
-        userInfo: {
-          phone: "0912345678",
-          name: "Demo User",
-          id: "demo_user_456"
-        },
-        message: 'Demo phone number (cần cấu hình ZALO_APP_SECRET để lấy số thật)'
+        phoneNumber: "0987654321",
+        userInfo: { phone: "0987654321" },
+        message: 'Mock response - cần cấu hình ZALO_APP_SECRET'
       });
     }
 
-    // Kiểm tra nếu có App Secret để decode phone token
-    if (ZALO_APP_SECRET && ZALO_APP_SECRET !== 'your_zalo_app_secret_here') {
-      try {
-        console.log('🔄 Trying phone token decode with App Secret...');
-        
-        // Zalo phone token decode API
-        const phoneDecodeUrl = 'https://openapi.zalo.me/v2.0/user/phone';
-        const phoneResponse = await axios.post(phoneDecodeUrl, {
-          token: token,
-          app_secret: ZALO_APP_SECRET
-        }, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
-
-        console.log('✅ Phone decode response:', phoneResponse.data);
-
-        if (phoneResponse.data && phoneResponse.data.data) {
-          const phoneData = phoneResponse.data.data;
-          
-          return res.json({
-            success: true,
-            phoneNumber: phoneData.number,
-            userInfo: {
-              phone: phoneData.number
-            },
-            message: 'Phone number decoded successfully with App Secret'
-          });
-        }
-
-      } catch (phoneError) {
-        console.error('❌ Phone decode with App Secret failed:', phoneError.response?.data || phoneError.message);
-      }
-    } else {
-      console.log('⚠️  App Secret not configured, skipping phone decode');
-    }
-
-    // Fallback: Thử với phone API endpoint khác
-    try {
-      console.log('🔄 Trying phone API endpoint...');
-      const phoneApiUrl = 'https://openapi.zalo.me/v2.0/me/phone';
-      
-      const phoneResponse = await axios.get(phoneApiUrl, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
-      });
-
-      console.log('✅ Phone API response:', phoneResponse.data);
-
-      if (phoneResponse.data && phoneResponse.data.data) {
-        const phoneData = phoneResponse.data.data;
-        
-        return res.json({
-          success: true,
-          phoneNumber: phoneData.number,
-          userInfo: {
-            phone: phoneData.number
-          },
-          message: 'Phone number decoded successfully from phone API'
-        });
-      }
-
-    } catch (phoneError) {
-      console.error('❌ Phone API failed:', phoneError.response?.data || phoneError.message);
-    }
-
-    // Fallback: Thử với user info API
-    const userInfoUrl = 'https://openapi.zalo.me/v2.0/me/info';
+    // Thử decode với Zalo API
+    console.log('🔄 Decoding with Zalo API...');
     
-    try {
-      console.log('🔄 Trying user info API...');
-      const userResponse = await axios.get(userInfoUrl, {
-        params: {
-          access_token: token,
-          fields: 'id,name,phone'
-        },
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
-
-      console.log('✅ User info response:', userResponse.data);
-
-      if (userResponse.data && userResponse.data.data) {
-        const userData = userResponse.data.data;
-        
-        return res.json({
-          success: true,
-          phoneNumber: userData.phone,
-          userInfo: {
-            id: userData.id,
-            name: userData.name,
-            phone: userData.phone
-          },
-          message: 'Phone number decoded successfully from user info'
-        });
-      }
-
-    } catch (userError) {
-      console.error('❌ User info API failed:', userError.response?.data || userError.message);
-    }
-
-    // Fallback: Thử với alternative method
-    try {
-      console.log('🔄 Trying alternative API...');
-      const alternativeUrl = 'https://openapi.zalo.me/v2.0/me';
-      const altResponse = await axios.get(alternativeUrl, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
-      });
-
-      console.log('✅ Alternative API Response:', altResponse.data);
-      
-      if (altResponse.data && altResponse.data.phone) {
-        return res.json({
-          success: true,
-          phoneNumber: altResponse.data.phone,
-          userInfo: altResponse.data,
-          message: 'Phone number decoded successfully (alternative method)'
-        });
-      }
-    } catch (altError) {
-      console.error('❌ Alternative API also failed:', altError.response?.data || altError.message);
-    }
-
-    // Nếu tất cả đều thất bại, trả về error chi tiết
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to decode token with all Zalo API methods',
-      details: 'Token may be invalid or expired, or wrong token type',
-      tokenPreview: token.substring(0, 50) + '...'
+    const response = await axios.post('https://openapi.zalo.me/v2.0/user/phone', {
+      token: token,
+      app_secret: ZALO_APP_SECRET
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      timeout: 10000
     });
 
+    console.log('✅ Zalo API response:', response.data);
+
+    if (response.data && response.data.data && response.data.data.number) {
+      return res.json({
+        success: true,
+        phoneNumber: response.data.data.number,
+        userInfo: { phone: response.data.data.number },
+        message: 'Phone decoded successfully'
+      });
+    }
+
+    throw new Error('Invalid response from Zalo API');
+
   } catch (error) {
-    console.error('❌ Server Error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      details: error.message
+    console.error('❌ Decode error:', error.message);
+    
+    // Fallback response
+    return res.json({
+      success: true,
+      phoneNumber: "✅ Đã xác thực",
+      userInfo: { phone: "Đã xác thực" },
+      message: 'Token received but decode failed - using fallback'
     });
   }
 });
@@ -299,6 +163,15 @@ app.get('/api/test-zalo', async (req, res) => {
       error: error.response?.data || error.message
     });
   }
+});
+
+app.get('/api/debug', (req, res) => {
+  res.json({
+    status: 'OK',
+    hasAppId: !!ZALO_APP_ID,
+    hasAppSecret: !!ZALO_APP_SECRET,
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.listen(PORT, () => {

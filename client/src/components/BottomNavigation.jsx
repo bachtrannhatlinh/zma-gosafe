@@ -1,13 +1,26 @@
 import React from "react";
 import { Box, Text, Button } from "zmp-ui";
+import { useNavigate } from "zmp-ui";
 
 const BottomNavigation = ({ activeTab = "home" }) => {
+  const navigate = useNavigate();
+
   const navItems = [
-    { id: "home", icon: "🏠", label: "Trang chủ", isActive: activeTab === "home" },
-    { id: "activity", icon: "📦", label: "Hoạt động", isActive: activeTab === "activity" },
-    { id: "notification", icon: "🔔", label: "Thông báo", isActive: activeTab === "notification" },
-    { id: "account", icon: "👤", label: "Tài khoản", isActive: activeTab === "account" },
+    { id: "home", icon: "🏠", label: "Trang chủ", isActive: activeTab === "home", path: "/" },
+    { id: "activity", icon: "🚗", label: "Đặt chuyến", isActive: activeTab === "activity", path: "/book-ride" },
+    { id: "notification", icon: "📋", label: "Lịch sử", isActive: activeTab === "history", path: "/history" },
+    { id: "account", icon: "👤", label: "Tài khoản", isActive: activeTab === "account", path: "/account" },
   ];
+
+  const handleNavClick = (item) => {
+    console.log("Navigation clicked:", item.id, "Path:", item.path);
+    if (item.path) {
+      console.log("Navigating to:", item.path);
+      navigate(item.path);
+    } else {
+      console.log("No path defined for:", item.id);
+    }
+  };
 
   return (
     <Box 
@@ -43,16 +56,13 @@ const BottomNavigation = ({ activeTab = "home" }) => {
             key={item.id}
             variant="tertiary"
             className="flex flex-col items-center justify-center py-1 px-1 min-w-0 flex-1 transition-all duration-200 h-full"
+            onClick={() => handleNavClick(item)}
             style={{
               touchAction: 'manipulation',
               userSelect: 'none',
-              WebkitUserSelect: 'none'
-            }}
-            onTouchStart={(e) => {
-              e.stopPropagation();
-            }}
-            onTouchMove={(e) => {
-              e.stopPropagation();
+              WebkitUserSelect: 'none',
+              backgroundColor: 'transparent',
+              border: 'none'
             }}
           >
             <Text 

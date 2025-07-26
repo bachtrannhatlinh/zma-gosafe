@@ -8,9 +8,7 @@ import bannerImage from "../../static/img/banner_GOSafe.jpg";
 // Components
 import LoadingScreen from "../../components/LoadingScreen";
 import UserHeader from "../../components/UserHeader";
-import ServiceGrid from "../../components/ServiceGrid";
-import SectionHeader from "../../components/SectionHeader";
-import CardSlider from "../../components/CardSlider";
+import ServiceSection from "../../components/ServiceSection";
 import BottomNavigation from "../../components/BottomNavigation";
 import PullToRefresh from "../../components/PullToRefresh";
 
@@ -19,7 +17,7 @@ import { useUserData } from "../../hooks/useUserData";
 import { useServiceNavigation, usePromotionNavigation } from "../../hooks/useNavigation";
 
 // Constants
-import { SERVICES, PROMOTIONS, NEWS_DATA } from "../../constants/dashboard";
+import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -28,7 +26,6 @@ const Dashboard = () => {
   // Custom hooks
   const { userInfo, isLoading, error, refetch } = useUserData();
   const { handleServiceClick } = useServiceNavigation(navigate);
-  const { handlePromoClick, handleViewAllPromotions, handleViewAllNews } = usePromotionNavigation(navigate);
 
   // Handle pull-to-refresh
   const handleRefresh = async () => {
@@ -68,61 +65,65 @@ const Dashboard = () => {
   }
 
   return (
-    <Page className="bg-white relative flex flex-col" style={{ height: '100vh', overflow: 'hidden' }}>
-      {/* Content with Pull to Refresh */}
-      <Box className="flex-1 overflow-hidden">
-        <PullToRefresh onRefresh={handleRefresh} refreshing={isRefreshing}>
-          {/* Header with user info - with safe area padding */}
-          <UserHeader userInfo={userInfo} isLoading={isLoading} />
-          
-          {/* Hero Banner */}
-          <Box className="relative">
-            <img 
-              src={bannerImage} 
-              alt="GOSafe Banner" 
-              className="w-full h-48 object-cover"
-              style={{ userSelect: 'none', pointerEvents: 'none' }}
-            />
-          </Box>
+    <Page 
+      className="dashboard-page"
+      style={{ 
+        height: '100vh',
+        backgroundColor: '#fb923c',
+        background: 'linear-gradient(to bottom, #fb923c, #ef4444)',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+      <PullToRefresh onRefresh={handleRefresh} refreshing={isRefreshing}>
+        {/* Header with user info */}
+        <UserHeader userInfo={userInfo} isLoading={isLoading} />
+        
+        {/* Hero Banner */}
+        <Box style={{ 
+          position: 'relative',
+          background: 'linear-gradient(to right, #fb923c, #ef4444)'
+        }}>
+          <img 
+            src={bannerImage} 
+            alt="GOSafe Banner" 
+            style={{
+              width: '100%',
+              height: '192px',
+              objectFit: 'cover',
+              opacity: 0.9,
+              userSelect: 'none',
+              pointerEvents: 'none',
+              display: 'block'
+            }}
+          />
+        </Box>
 
-          {/* Main Content */}
-          <Box className="pb-4">
-            {/* Services Grid */}
-            <Box className="pt-6">
-              <ServiceGrid services={SERVICES} onServiceClick={handleServiceClick} />
-            </Box>
+        {/* Main Content */}
+        <Box style={{ 
+          background: 'linear-gradient(to bottom, #fb923c, #ef4444)',
+          minHeight: 'calc(100vh - 192px)', // Trừ đi chiều cao banner
+          paddingBottom: '120px' // Space cho bottom nav
+        }}>
+          <ServiceSection 
+            title="DỊCH VỤ TÀI XẾ"
+            services={DRIVER_SERVICES}
+            onServiceClick={handleServiceClick}
+            columns={3}
+          />
 
-            {/* Promotions Section */}
-            <Box className="px-2 py-6 mb-6">
-              <SectionHeader 
-                title="Khuyến mãi" 
-                onViewAll={handleViewAllPromotions}
-              />
-              <CardSlider 
-                items={PROMOTIONS} 
-                onItemClick={handlePromoClick}
-                testId="promotions-slider"
-              />
-            </Box>
+          <ServiceSection 
+            title="CÁC DỊCH VỤ KHÁC CỦA GOSAFE"
+            services={OTHER_SERVICES}
+            onServiceClick={handleServiceClick}
+            columns={3}
+          />
+        </Box>
+      </PullToRefresh>
 
-            {/* News Section */}
-            <Box className="px-2 py-6">
-              <SectionHeader 
-                title="Tin tức" 
-                onViewAll={handleViewAllNews}
-              />
-              <CardSlider 
-                items={NEWS_DATA} 
-                onItemClick={handlePromoClick}
-                testId="news-slider"
-              />
-            </Box>
-
-          </Box>
-        </PullToRefresh>
-      </Box>
-
-      {/* Bottom Navigation - Fixed outside of PullToRefresh */}
+      {/* Bottom Navigation - Fixed */}
       <BottomNavigation activeTab="home" />
     </Page>
   );

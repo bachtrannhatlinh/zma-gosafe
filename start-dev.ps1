@@ -59,17 +59,17 @@ Start-Sleep -Seconds 2
 
 # Test server
 try {
-    $response = Invoke-RestMethod -Uri "http://localhost:3001/api/health" -Method Get -TimeoutSec 5
+    $response = Invoke-RestMethod -Uri "http://localhost:5000/api/health" -Method Get -TimeoutSec 5
     Write-Host "✅ Backend server is running: $($response.message)" -ForegroundColor Green
 } catch {
-    Write-Host "⚠️  Backend server may not be ready yet. Check manually: http://localhost:3001/api/health" -ForegroundColor Yellow
+    Write-Host "⚠️  Backend server may not be ready yet. Check manually: http://localhost:5000/api/health" -ForegroundColor Yellow
 }
 
 Write-Host ""
 Write-Host "📋 Server Information:" -ForegroundColor Cyan
-Write-Host "  📍 Backend: http://localhost:3001" -ForegroundColor White
-Write-Host "  📍 Health Check: http://localhost:3001/api/health" -ForegroundColor White
-Write-Host "  📍 Decode API: POST http://localhost:3001/api/decode-phone" -ForegroundColor White
+Write-Host "  📍 Backend: http://localhost:5000" -ForegroundColor White
+Write-Host "  📍 Health Check: http://localhost:5000/api/health" -ForegroundColor White
+Write-Host "  📍 Decode API: POST http://localhost:5000/api/decode-phone" -ForegroundColor White
 Write-Host ""
 
 Write-Host "📱 Starting client development server..." -ForegroundColor Yellow

@@ -119,8 +119,16 @@ html.modal-no-scroll {
   width: 100% !important;
 }
 
-/* Force hide BottomNavigation when permission modal is open */
-body.modal-no-scroll [data-fixed-element="true"] {
+/* Remove this rule that forces hide BottomNavigation */
+/* body.modal-no-scroll [data-fixed-element="true"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  z-index: -1 !important;
+} */
+
+/* Add conditional hiding only when needed */
+body.modal-hide-nav [data-fixed-element="true"] {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
@@ -552,4 +560,77 @@ article::-webkit-scrollbar, aside::-webkit-scrollbar, nav::-webkit-scrollbar,
   background-color: #f97316 !important;
   color: white !important;
   border: none !important;
+}
+
+/* Fix overscroll behavior for Dashboard */
+.zmp-page {
+  overscroll-behavior-y: none !important;
+  -webkit-overscroll-behavior-y: none !important;
+}
+
+/* Prevent white space on pull */
+.pull-to-refresh-container {
+  overscroll-behavior-y: none !important;
+  -webkit-overscroll-behavior-y: none !important;
+  background-color: #fb923c !important;
+}
+
+/* Fix Dashboard white space issue */
+.zmp-page {
+  overscroll-behavior-y: none !important;
+  -webkit-overscroll-behavior-y: none !important;
+  background: linear-gradient(to bottom, #fb923c, #ef4444) !important;
+}
+
+/* Ensure body and html have orange background */
+body, html {
+  background: linear-gradient(to bottom, #fb923c, #ef4444) !important;
+  overscroll-behavior-y: none !important;
+  -webkit-overscroll-behavior-y: none !important;
+}
+
+/* Prevent white space on pull */
+.pull-to-refresh-container {
+  overscroll-behavior-y: none !important;
+  -webkit-overscroll-behavior-y: none !important;
+  background: linear-gradient(to bottom, #fb923c, #ef4444) !important;
+  min-height: 100vh !important;
+}
+
+/* Dashboard specific fixes */
+.dashboard-page {
+  background: linear-gradient(to bottom, #fb923c, #ef4444) !important;
+  min-height: 100vh !important;
+  overscroll-behavior-y: none !important;
+  -webkit-overscroll-behavior-y: none !important;
+}
+
+.dashboard-page .pull-to-refresh-container {
+  background: linear-gradient(to bottom, #fb923c, #ef4444) !important;
+  min-height: 100vh !important;
+}
+
+/* Prevent overscroll globally */
+* {
+  overscroll-behavior-y: none !important;
+  -webkit-overscroll-behavior-y: none !important;
+}
+
+/* Fix static pages - no scroll */
+.zmp-page {
+  overflow: hidden !important;
+  height: 100vh !important;
+}
+
+/* Prevent any scrolling on static pages */
+.page-static {
+  overflow: hidden !important;
+  height: 100vh !important;
+  position: fixed !important;
+  width: 100% !important;
+}
+
+.page-static * {
+  overflow: hidden !important;
+  -webkit-overflow-scrolling: auto !important;
 }

@@ -94,7 +94,7 @@ ZALO_APP_SECRET=your_zalo_app_secret
 
 ### Client
 Server URL được cấu hình tự động:
-- Development: `http://localhost:3001`
+- Development: `http://localhost:5000`
 - Production: URL Vercel
 
 ## 🐛 Debug
