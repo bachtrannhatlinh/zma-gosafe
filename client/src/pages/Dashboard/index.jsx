@@ -11,21 +11,36 @@ import UserHeader from "../../components/UserHeader";
 import ServiceSection from "../../components/ServiceSection";
 import BottomNavigation from "../../components/BottomNavigation";
 import PullToRefresh from "../../components/PullToRefresh";
+import DevFeatureToast from "../../components/DevFeatureToast";
 
 // Hooks
 import { useUserData } from "../../hooks/useUserData";
-import { useServiceNavigation, usePromotionNavigation } from "../../hooks/useNavigation";
+import { useServiceNavigation } from "../../hooks/useNavigation";
 
 // Constants
 import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
 
+// Danh sách services đã phát triển
+const DEVELOPED_SERVICES = ['sms-brandname', 'zalo-chat'];
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   // Custom hooks
   const { userInfo, isLoading, error, refetch } = useUserData();
   const { handleServiceClick } = useServiceNavigation(navigate);
+
+  // Function xử lý click service - nhận showToast từ DevFeatureToast
+  const handleServiceClickWithToast = (showToast) => (serviceId) => {
+    if (DEVELOPED_SERVICES.includes(serviceId)) {
+      // Service đã phát triển - navigate trực tiếp
+      handleServiceClick(serviceId);
+    } else {
+      // Service chưa phát triển - hiển thị toast
+      showToast();
+    }
+  };
 
   // Handle pull-to-refresh
   const handleRefresh = async () => {
@@ -33,15 +48,16 @@ const Dashboard = () => {
     try {
       // Simulate network delay for better UX
       const refreshPromise = refetch();
-      const minDelayPromise = new Promise(resolve => setTimeout(resolve, 800));
-      
+      const minDelayPromise = new Promise((resolve) =>
+        setTimeout(resolve, 800)
+      );
+
       // Wait for both data refresh and minimum delay
       await Promise.all([refreshPromise, minDelayPromise]);
-      
     } catch (error) {
       console.error("Error refreshing data:", error);
       // Still wait minimum time even on error for consistent UX
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     } finally {
       setIsRefreshing(false);
     }
@@ -65,65 +81,68 @@ const Dashboard = () => {
   }
 
   return (
-    <Page 
+    <Page
       className="dashboard-page"
-      style={{ 
-        height: '100vh',
-        backgroundColor: '#fb923c',
-        background: 'linear-gradient(to bottom, #fb923c, #ef4444)',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        overflow: 'hidden'
+      style={{
+        height: "100vh",
+        backgroundColor: "#fb923c",
+        background: "linear-gradient(to bottom, #fb923c, #ef4444)",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
-      <PullToRefresh onRefresh={handleRefresh} refreshing={isRefreshing}>
-        {/* Header with user info */}
-        <UserHeader userInfo={userInfo} isLoading={isLoading} />
-        
-        {/* Hero Banner */}
-        <Box style={{ 
-          position: 'relative',
-          background: 'linear-gradient(to right, #fb923c, #ef4444)'
-        }}>
-          <img 
-            src={bannerImage} 
-            alt="GOSafe Banner" 
-            style={{
-              width: '100%',
-              height: '192px',
-              objectFit: 'cover',
-              opacity: 0.9,
-              userSelect: 'none',
-              pointerEvents: 'none',
-              display: 'block'
-            }}
-          />
-        </Box>
+      <DevFeatureToast>
+        {(showToast) => (
+          <PullToRefresh onRefresh={handleRefresh} refreshing={isRefreshing}>
+            {/* Hero Banner */}
+            <Box
+              style={{
+                background: "linear-gradient(to right, #fb923c, #ef4444)",
+                paddingTop: 'env(safe-area-inset-top, 32px)', // tránh Dynamic Island che mất
+              }}
+            >
+              <img
+                src={bannerImage}
+                alt="GOSafe Banner"
+                style={{
+                  width: "100%",
+                  height: "270px",
+                  objectFit: "contain",
+                  userSelect: "none",
+                  pointerEvents: "none",
+                  display: "block",
+                }}
+              />
+            </Box>
+            {/* <UserHeader userInfo={userInfo} isLoading={isLoading} /> */}
 
-        {/* Main Content */}
-        <Box style={{ 
-          background: 'linear-gradient(to bottom, #fb923c, #ef4444)',
-          minHeight: 'calc(100vh - 192px)', // Trừ đi chiều cao banner
-          paddingBottom: '120px' // Space cho bottom nav
-        }}>
-          <ServiceSection 
-            title="DỊCH VỤ TÀI XẾ"
-            services={DRIVER_SERVICES}
-            onServiceClick={handleServiceClick}
-            columns={3}
-          />
+            {/* Main Content */}
+            <Box
+              style={{
+                background: "linear-gradient(to bottom, #fb923c, #ef4444)",
+                minHeight: "calc(100vh - 192px)",
+                paddingBottom: "120px",
+              }}
+            >
+              <ServiceSection
+                title="DỊCH VỤ TÀI XẾ"
+                services={DRIVER_SERVICES}
+                onServiceClick={handleServiceClickWithToast(showToast)}
+                columns={3}
+              />
+              <ServiceSection
+                title="CÁC DỊCH VỤ KHÁC CỦA GOSAFE"
+                services={OTHER_SERVICES}
+                onServiceClick={handleServiceClickWithToast(showToast)}
+                columns={3}
+              />
+            </Box>
+          </PullToRefresh>
+        )}
+      </DevFeatureToast>
 
-          <ServiceSection 
-            title="CÁC DỊCH VỤ KHÁC CỦA GOSAFE"
-            services={OTHER_SERVICES}
-            onServiceClick={handleServiceClick}
-            columns={3}
-          />
-        </Box>
-      </PullToRefresh>
-
-      {/* Bottom Navigation - Fixed */}
       <BottomNavigation activeTab="home" />
     </Page>
   );

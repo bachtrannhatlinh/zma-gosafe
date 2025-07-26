@@ -8,7 +8,7 @@ import {
 } from "zmp-ui";
 
 import Dashboard from "../pages/Dashboard";
-import BookRide from "../pages/BookRide";
+import SMSBrandnamePage from "../pages/SMSBrandname";
 import History from "../pages/History";
 import Account from "../pages/Account";
 import VehicleManagement from "../pages/VehicleManagement";
@@ -17,6 +17,8 @@ import ChangePassword from "../pages/ChangePassword";
 import VNPayPolicy from "../pages/VNPayPolicy";
 import Promotions from "../pages/Promotions";
 import PromotionDetail from "../pages/PromotionDetail";
+import CallToUser from "../pages/CallToUser";
+import LiveChat from "../pages/Chat/ChatPage";
 
 const Layout = () => {
   console.log("Layout rendered, current path:", window.location.pathname);
@@ -27,7 +29,9 @@ const Layout = () => {
         <ZMPRouter>
           <AnimationRoutes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/book-ride" element={<BookRide />} />
+            <Route path="/call-to-user" element={<CallToUser />} />
+            <Route path="/sms-brandname" element={<SMSBrandnamePage />} />
+            <Route path="/zalo-chat" element={<LiveChat />} />
             <Route path="/history" element={<History />} />
             <Route path="/account" element={<Account />} />
             <Route path="/vehicle-management" element={<VehicleManagement />} />

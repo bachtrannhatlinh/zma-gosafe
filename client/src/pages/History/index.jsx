@@ -5,12 +5,28 @@ import { Page, Box, Text, Button } from "zmp-ui";
 import BottomNavigation from "../../components/BottomNavigation";
 import EmptyState from "../../components/EmptyState";
 import HistoryItem from "../../components/HistoryItem";
+import { useEffect } from "react";
 
 const History = () => {
   console.log("History component rendered");
   
   // Sample data - trong thực tế sẽ fetch từ API
   const [historyData, setHistoryData] = useState([]);
+
+  // Ngăn scroll khi vào trang này
+  useEffect(() => {
+    const preventScroll = (e) => {
+      e.preventDefault();
+    };
+    window.addEventListener('touchmove', preventScroll, { passive: false });
+    window.addEventListener('wheel', preventScroll, { passive: false });
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('touchmove', preventScroll);
+      window.removeEventListener('wheel', preventScroll);
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const sampleData = [
     {
@@ -60,7 +76,8 @@ const History = () => {
       display: 'flex',
       flexDirection: 'column',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      touchAction: 'none'
     }}>
       {/* Content - NO SCROLL */}
       <Box style={{ 

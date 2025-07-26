@@ -41,6 +41,12 @@ export const OTHER_SERVICES = [
     bgColor: "bg-red-500",
   },
   { 
+    id: "sms-brandname", 
+    icon: "💬", 
+    label: "SMS Brandname", 
+    bgColor: "bg-purple-500",
+  },
+  { 
     id: "flight-tickets", 
     icon: "✈️", 
     label: "Vé máy bay", 
@@ -52,7 +58,14 @@ export const OTHER_SERVICES = [
     label: "Vé khu vui chơi toàn quốc", 
     bgColor: "bg-teal-500",
   },
+  { 
+    id: "zalo-chat", 
+    icon: "💬", 
+    label: "Live Chat", 
+    bgColor: "bg-gray-500",
+  },
 ];
+
 
 // Service route mapping
 export const SERVICE_ROUTES = {
@@ -62,9 +75,10 @@ export const SERVICE_ROUTES = {
   "vehicle-registration": null, // Coming soon
   "bike-rental": null, // Coming soon
   "car-rental": null, // Coming soon
+  "sms-brandname": "/sms-brandname", // SMS Brandname route
   "flight-tickets": null, // Coming soon
   "travel-tours": null, // Coming soon
-  food: "/food",
+  "zalo-chat": "/zalo-chat",
   vehicle: "/vehicle",
   delivery: null, // Coming soon
   gift: null, // Coming soon
@@ -73,6 +87,9 @@ export const SERVICE_ROUTES = {
   bike: "/vehicle",
   market: null, // Coming soon
 };
+
+export const OTHER_SERVICES_ACTIVE = OTHER_SERVICES.filter(s => SERVICE_ROUTES[s.id]);
+export const OTHER_SERVICES_COMING_SOON = OTHER_SERVICES.filter(s => !SERVICE_ROUTES[s.id]);
 
 // Local storage keys
 export const STORAGE_KEYS = {

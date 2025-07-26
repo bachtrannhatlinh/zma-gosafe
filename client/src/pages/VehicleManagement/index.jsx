@@ -1,10 +1,26 @@
 import React, { useState } from "react";
 import { Page, Box, Text, Button } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
+import { useEffect } from "react";
 
 const VehicleManagement = () => {
   const navigate = useNavigate();
   const [vehicles] = useState([]); // Danh sách phương tiện (hiện tại trống)
+
+  // Ngăn scroll khi vào trang này
+  useEffect(() => {
+    const preventScroll = (e) => {
+      e.preventDefault();
+    };
+    window.addEventListener('touchmove', preventScroll, { passive: false });
+    window.addEventListener('wheel', preventScroll, { passive: false });
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('touchmove', preventScroll);
+      window.removeEventListener('wheel', preventScroll);
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const handleBack = () => {
     navigate(-1);
@@ -19,7 +35,9 @@ const VehicleManagement = () => {
       height: '100vh',
       backgroundColor: '#f9fafb',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      overflow: 'hidden',
+      touchAction: 'none'
     }}>
       {/* Header */}
       <Box style={{

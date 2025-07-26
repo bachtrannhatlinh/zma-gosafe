@@ -49,7 +49,9 @@ const ChangePassword = () => {
       height: '100vh',
       backgroundColor: '#f9fafb',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      overflow: 'hidden',
+      touchAction: 'none' 
     }}>
       {/* Header */}
       <Box style={{

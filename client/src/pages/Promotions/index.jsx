@@ -41,12 +41,6 @@ const Promotions = () => {
         }}>
           Khuyến mãi
         </Text>
-        <Box onClick={handleBack} style={{ 
-          marginLeft: 'auto',
-          cursor: 'pointer'
-        }}>
-          <Text style={{ fontSize: '20px', color: '#6b7280' }}>✕</Text>
-        </Box>
       </Box>
 
       {/* Promotions List */}
