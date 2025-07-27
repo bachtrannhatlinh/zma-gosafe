@@ -8,10 +8,10 @@ export default function handler(req, res) {
   console.log('🔑 Stringee token request received');
   
   try {
-    const STRINGEE_KEY = process.env.STRINGEE_KEY;
-    const STRINGEE_SECRET = process.env.STRINGEE_SECRET;
+    const STRINGEE_API_KEY_SID = process.env.STRINGEE_API_KEY_SID;
+    const STRINGEE_API_KEY_SECRET = process.env.STRINGEE_API_KEY_SECRET;
 
-    if (!STRINGEE_KEY || !STRINGEE_SECRET) {
+    if (!STRINGEE_API_KEY_SID || !STRINGEE_API_KEY_SECRET) {
       console.log('❌ Missing Stringee credentials');
       return res.json({
         success: false,
@@ -23,13 +23,13 @@ export default function handler(req, res) {
     const exp = now + (24 * 60 * 60);
 
     const payload = {
-      jti: STRINGEE_KEY + '-' + now,
-      iss: STRINGEE_KEY,
+      jti: STRINGEE_API_KEY_SID + '-' + now,
+      iss: STRINGEE_API_KEY_SID, // Sử dụng API_KEY_SID làm issuer
       exp: exp,
       userId: req.body.userId || 'user_' + Date.now()
     };
 
-    const token = jwt.sign(payload, STRINGEE_SECRET, {
+    const token = jwt.sign(payload, STRINGEE_API_KEY_SECRET, {
       algorithm: 'HS256',
       header: {
         typ: 'JWT',

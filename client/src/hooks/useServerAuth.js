@@ -6,8 +6,9 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 const SERVER_URLS = isDevelopment 
   ? ['http://localhost:5000'] 
   : [
-      'https://server-weld-mu-76.vercel.app', // URL chính từ Vercel
-      'https://gosafe-backend.vercel.app', // Backup
+      'https://cd0e7fcc5d19b.ngrok-free.app', // URL ngrok mới
+      'https://server-weld-mu-76.vercel.app',
+      'https://gosafe-backend.vercel.app',
     ];
 
 const getCurrentServerUrl = () => {

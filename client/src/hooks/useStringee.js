@@ -6,7 +6,7 @@ const getStringeeToken = async () => {
   try {
     const SERVER_URL = process.env.NODE_ENV === 'development' 
       ? 'http://localhost:5000' 
-      : 'https://server-weld-mu-76.vercel.app';
+      : 'https://cd0e7fcc5d19b.ngrok-free.app'; // URL ngrok mới
     
     console.log('🔑 Getting Stringee token from server...');
     

@@ -66,15 +66,15 @@ const ZALO_APP_ID = process.env.ZALO_APP_ID;
 const ZALO_APP_SECRET = process.env.ZALO_APP_SECRET;
 
 // Stringee configuration - sử dụng API_KEY và API_SECRET
-const STRINGEE_KEY = process.env.STRINGEE_KEY;
-const STRINGEE_SECRET = process.env.STRINGEE_SECRET;
+const STRINGEE_API_KEY_SID = process.env.STRINGEE_API_KEY_SID;
+const STRINGEE_API_KEY_SECRET = process.env.STRINGEE_API_KEY_SECRET;
 
 // Debug endpoint để kiểm tra credentials
 app.get('/api/stringee/debug', (req, res) => {
   res.json({
-    hasApiKey: !!STRINGEE_KEY,
-    hasApiSecret: !!STRINGEE_SECRET,
-    apiKeyPrefix: STRINGEE_KEY ? STRINGEE_KEY.substring(0, 10) + '...' : 'Not set',
+    hasApiKey: !!STRINGEE_API_KEY_SID,
+    hasApiSecret: !!STRINGEE_API_KEY_SECRET,
+    apiKeyPrefix: STRINGEE_API_KEY_SID ? STRINGEE_API_KEY_SID.substring(0, 10) + '...' : 'Not set',
     timestamp: new Date().toISOString()
   });
 });
@@ -85,10 +85,10 @@ app.get('/get-stringee-token', (req, res) => {
 
   const token = jwt.sign({
     jti: userId,
-    iss: STRINGEE_KEY,
+    iss: STRINGEE_API_KEY_SID,
     exp: Math.floor(Date.now() / 1000) + 3600, // 1 tiếng
     userId: userId
-  }, STRINGEE_SECRET);
+  }, STRINGEE_API_KEY_SECRET);
 
   res.json({ token });
 });
@@ -182,10 +182,10 @@ app.post('/api/stringee/token', async (req, res) => {
   console.log('🔑 Stringee token request received');
   
   try {
-    const STRINGEE_KEY = process.env.STRINGEE_KEY;
-    const STRINGEE_SECRET = process.env.STRINGEE_SECRET;
+    const STRINGEE_API_KEY_SID = process.env.STRINGEE_API_KEY_SID;
+    const STRINGEE_API_KEY_SECRET = process.env.STRINGEE_API_KEY_SECRET;
 
-    if (!STRINGEE_KEY || !STRINGEE_SECRET) {
+    if (!STRINGEE_API_KEY_SID || !STRINGEE_API_KEY_SECRET) {
       console.log('❌ Missing Stringee credentials');
       return res.json({
         success: false,
@@ -197,13 +197,13 @@ app.post('/api/stringee/token', async (req, res) => {
     const exp = now + (24 * 60 * 60);
 
     const payload = {
-      jti: STRINGEE_KEY + '-' + now,
-      iss: STRINGEE_KEY,
+      jti: STRINGEE_API_KEY_SID + '-' + now,
+      iss: STRINGEE_API_KEY_SID,
       exp: exp,
       userId: req.body.userId || 'user_' + Date.now()
     };
 
-    const token = jwt.sign(payload, STRINGEE_SECRET, {
+    const token = jwt.sign(payload, STRINGEE_API_KEY_SECRET, {
       algorithm: 'HS256',
       header: {
         typ: 'JWT',
