@@ -109,17 +109,6 @@ app.post('/api/decode-phone', async (req, res) => {
 
     console.log('🔑 Token received, length:', token.length);
 
-    // Kiểm tra App Secret
-    if (!ZALO_APP_SECRET || ZALO_APP_SECRET === 'your_actual_app_secret_here') {
-      console.log('⚠️ Using mock response - App Secret not configured');
-      return res.json({
-        success: true,
-        phoneNumber: "0987654321",
-        userInfo: { phone: "0987654321" },
-        message: 'Mock response - cần cấu hình ZALO_APP_SECRET'
-      });
-    }
-
     // Thử decode với Zalo API
     console.log('🔄 Decoding with Zalo API...');
     
