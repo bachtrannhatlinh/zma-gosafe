@@ -11,9 +11,7 @@ import UserHeader from "../../components/UserHeader";
 import ServiceSection from "../../components/ServiceSection";
 import BottomNavigation from "../../components/BottomNavigation";
 import PullToRefresh from "../../components/PullToRefresh";
-import StringeeCall from '../../components/StringeeCall';
-import StringeeDemo from '../../components/StringeeDemo';
-import OpenPhoneDemo from '../../components/OpenPhoneDemo';
+import OpenPhoneDemo from "../../components/OpenPhoneDemo";
 
 // Hooks
 import { useUserData } from "../../hooks/useUserData";
@@ -25,14 +23,7 @@ import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showStringeeModal, setShowStringeeModal] = useState(false);
-  const [showStringeeDemo, setShowStringeeDemo] = useState(false);
   const [showOpenPhoneDemo, setShowOpenPhoneDemo] = useState(false);
-
-  // Add Stringee demo handler
-  const handleStringeeDemo = () => {
-    setShowStringeeDemo(true);
-  };
 
   // Add Open Phone demo handler
   const handleOpenPhoneDemo = () => {
@@ -118,7 +109,7 @@ const Dashboard = () => {
               display: "block",
             }}
           />
-          
+
           {/* Stringee Demo Button - Floating on banner */}
           {/* <Box
             style={{
@@ -143,7 +134,7 @@ const Dashboard = () => {
               position: "absolute",
               top: "10px",
               left: "10px",
-              zIndex: 10
+              zIndex: 10,
             }}
           >
             <Button
@@ -198,36 +189,47 @@ const Dashboard = () => {
         className="open-phone-demo-modal"
         showCloseButton={false}
       >
-        <Box className="relative">
-          {/* Custom Header với Close Button đẹp hơn */}
-          <Box className="flex items-center justify-between p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
-            <Box className="flex items-center space-x-3">
-              <Box className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
-                <Text className="text-xl">📱</Text>
+        <Box
+          className="absolute"
+          style={{
+            position: "absolute",
+            top: "12px",
+            right: "12px",
+            zIndex: 999,
+          }}
+        >
+          <Button
+            onClick={() => setShowOpenPhoneDemo(false)}
+            className="!p-0 !min-w-0 !w-8 !h-8 rounded-md bg-red-500 hover:bg-red-600 border-none text-white shadow-lg hover:shadow-xl transition-all duration-200"
+            style={{
+              minWidth: "32px",
+              width: "32px",
+              height: "32px",
+              padding: "0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#ef4444",
+              border: "none",
+            }}
+          >
+            <Text className="text-sm font-bold leading-none text-white">X</Text>
+          </Button>
+        </Box>
+        <Box className="relative bg-white mt-6">
+          {/* Custom Header */}
+          <Box className="relative px-6 py-4">
+            {/* Title và icon ở giữa */}
+            <Box className="flex items-center justify-center space-x-3">
+              <Box className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
+                <Text className="text-lg">📱</Text>
               </Box>
-              <Text className="text-xl font-bold text-gray-800">
+              <Text className="text-lg font-bold text-gray-800">
                 Open Phone Demo
               </Text>
             </Box>
-            
-            {/* Close Button đẹp hơn */}
-            <Button
-              onClick={() => setShowOpenPhoneDemo(false)}
-              className="!p-0 !min-w-0 !w-10 !h-10 rounded-full bg-white hover:bg-red-50 border-2 border-gray-200 hover:border-red-300 text-gray-500 hover:text-red-500 shadow-sm hover:shadow-md transition-all duration-200"
-              style={{ 
-                minWidth: '40px',
-                width: '40px', 
-                height: '40px',
-                padding: '0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Text className="text-lg font-bold leading-none">×</Text>
-            </Button>
           </Box>
-          
+
           <OpenPhoneDemo />
         </Box>
       </Modal>
