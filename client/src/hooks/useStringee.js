@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import StringeeClient from "stringee";
+// import StringeeClient from "stringee";
 
 // Function để lấy Stringee token từ server
 const getStringeeToken = async () => {
@@ -68,7 +68,7 @@ export const useStringee = () => {
   const StringeeCallClass = useRef(null);
 
   useEffect(() => {
-    initStringee();
+    // initStringee();
     return () => {
       if (clientRef.current) {
         try {

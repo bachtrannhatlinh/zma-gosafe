@@ -3,6 +3,7 @@ import { Box, Text, Avatar, Button } from "zmp-ui";
 import { authorize, getUserInfo, getPhoneNumber } from "zmp-sdk/apis";
 import CustomModal from "./CustomModal";
 import { useServerAuth } from "../hooks/useServerAuth";
+// import { useStringeeAuth } from "../hooks/useStringeeAuth";
 
 const UserHeader = ({ userInfo, isLoading }) => {
   const [showModal, setShowModal] = useState(false);

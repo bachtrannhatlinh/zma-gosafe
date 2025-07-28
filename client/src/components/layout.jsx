@@ -17,6 +17,7 @@ import ChangePassword from "../pages/ChangePassword";
 import VNPayPolicy from "../pages/VNPayPolicy";
 import Promotions from "../pages/Promotions";
 import PromotionDetail from "../pages/PromotionDetail";
+import OpenPhoneTest from "../pages/OpenPhoneTest";
 
 const Layout = () => {
   console.log("Layout rendered, current path:", window.location.pathname);
@@ -36,6 +37,7 @@ const Layout = () => {
             <Route path="/vnpay-policy" element={<VNPayPolicy />} />
             <Route path="/promotions" element={<Promotions />} />
             <Route path="/promotion-detail/:id" element={<PromotionDetail />} />
+            <Route path="/open-phone-test" element={<OpenPhoneTest />} />
             <Route path="*" element={
               <div style={{padding: '20px', textAlign: 'center'}}>
                 <h2>Page not found</h2>

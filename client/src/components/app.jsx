@@ -1,4 +1,4 @@
-import StringeeCall from './StringeeCall';
+// import StringeeCall from './StringeeCall';
 
 // Thêm vào routing hoặc component chính
-<StringeeCall />
+{/* <StringeeCall /> */}
