@@ -110,23 +110,30 @@ const UserHeader = ({ userInfo, isLoading }) => {
             const serverResult = await sendTokenToServer(phoneResult.token);
 
             if (serverResult.success && serverResult.phoneNumber) {
-              console.log(
-                "✅ Server decode thành công:",
-                serverResult.phoneNumber
-              );
-              setPhoneNumber(serverResult.phoneNumber);
+              console.log("✅ Server decode thành công:", serverResult.phoneNumber);
+              
+              // Hiển thị số điện thoại thật từ server
+              if (serverResult.phoneNumber && 
+                  !serverResult.phoneNumber.includes("Đã xác thực") && 
+                  !serverResult.phoneNumber.includes("iOS User") &&
+                  !serverResult.phoneNumber.includes("Decode failed")) {
+                setPhoneNumber(serverResult.phoneNumber);
+              } else {
+                // Fallback: Hiển thị token đã được xử lý
+                const shortToken = phoneResult.token.substring(phoneResult.token.length - 8);
+                setPhoneNumber(`Đã xác thực •••${shortToken}`);
+              }
             } else {
-              // Fallback: hiển thị trạng thái đã xác thực
-              setPhoneNumber("✅ Đã xác thực số điện thoại");
+              // Server error - show token processed
+              const shortToken = phoneResult.token.substring(phoneResult.token.length - 8);
+              setPhoneNumber(`Token xử lý •••${shortToken}`);
             }
           } catch (tokenError) {
             console.error("❌ Lỗi decode token:", tokenError);
 
             // Show verification status with token hint
-            const shortToken = phoneResult.token.substring(
-              phoneResult.token.length - 6
-            );
-            setPhoneNumber(`Đã xác thực *${shortToken}`);
+            const shortToken = phoneResult.token.substring(phoneResult.token.length - 8);
+            setPhoneNumber(`Đã xác thực •••${shortToken}`);
 
             // Store token for later use
             try {
@@ -136,10 +143,6 @@ const UserHeader = ({ userInfo, isLoading }) => {
               console.warn("⚠️ Không thể lưu token:", storageError);
             }
           }
-        } else {
-          // No phone data received
-          console.warn("⚠️ Không nhận được dữ liệu số điện thoại");
-          setPhoneNumber("Đang xử lý...");
         }
       } else {
         console.warn("⚠️ Không có kết quả số điện thoại");

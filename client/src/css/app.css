@@ -50,6 +50,7 @@
 input[type="tel"] {
   font-size: 18px !important;
   -webkit-appearance: none;
+  appearance: none;
   border-radius: 16px;
   transition: all 0.3s ease;
   font-weight: 500;
