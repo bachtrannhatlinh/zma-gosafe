@@ -32,42 +32,10 @@ const UserHeader = ({ userInfo, isLoading }) => {
     setIsGettingPhone(true);
 
     try {
-      console.log("🔐 Bắt đầu quy trình xin quyền số điện thoại (flow mới)...");
+      console.log("🔐 Bắt đầu quy trình xin quyền số điện thoại...");
 
-      // STEP 1: Request authorization - không cần scope cụ thể
-      console.log("📋 Xin quyền truy cập...");
-      const authResult = await new Promise((resolve, reject) => {
-        authorize({
-          success: (data) => {
-            console.log("✅ Người dùng đồng ý:", data);
-            resolve(data);
-          },
-          fail: (error) => {
-            console.error("❌ Người dùng từ chối:", error);
-            reject(new Error("Cần cấp quyền để sử dụng ứng dụng"));
-          },
-        });
-      });
-
-      // STEP 2: Get user info
-      console.log("👤 Lấy thông tin người dùng...");
-      const userResult = await new Promise((resolve, reject) => {
-        getUserInfo({
-          success: (userData) => {
-            console.log("✅ Thông tin người dùng:", userData);
-            resolve(userData);
-          },
-          fail: (error) => {
-            console.error("❌ Lỗi lấy thông tin người dùng:", error);
-            reject(new Error("Không thể lấy thông tin người dùng"));
-          },
-        });
-      });
-
-      setUpdatedUserInfo(userResult.userInfo);
-
-      // STEP 3: Get phone number - flow mới không cần scope
-      console.log("📱 Lấy số điện thoại (flow mới)...");
+      // Thử gọi trực tiếp getPhoneNumber() trước
+      console.log("📱 Gọi getPhoneNumber() trực tiếp...");
       const phoneResult = await new Promise((resolve, reject) => {
         getPhoneNumber({
           success: (phoneData) => {
@@ -76,12 +44,12 @@ const UserHeader = ({ userInfo, isLoading }) => {
           },
           fail: (error) => {
             console.error("❌ Lỗi lấy số điện thoại:", error);
-            reject(new Error("Không thể lấy số điện thoại"));
+            reject(error);
           },
         });
       });
 
-      // STEP 4: Process phone result
+      // Xử lý kết quả
       if (phoneResult?.token) {
         console.log("🔐 Token số điện thoại:", phoneResult.token);
 
@@ -90,31 +58,59 @@ const UserHeader = ({ userInfo, isLoading }) => {
 
           if (serverResult.success) {
             console.log("✅ Server decode thành công:", serverResult.phoneNumber);
-            setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đã xác thực`);
+            setPhoneNumber(serverResult.phoneNumber);
           } else {
-            setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đang xử lý`);
+            setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đã xác thực`);
           }
         } catch (tokenError) {
           console.error("❌ Lỗi decode token:", tokenError);
           setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đã xác thực`);
-          
-          // Store token for later use
-          localStorage.setItem("zalo_phone_token", phoneResult.token);
         }
       } else {
         console.warn("⚠️ Không có token số điện thoại");
         setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đang xử lý`);
       }
+
     } catch (error) {
       console.error("❌ Lỗi trong quá trình xin quyền:", error);
       
-      if (error.message.includes("từ chối")) {
-        alert("Bạn cần cấp quyền để sử dụng ứng dụng GoSafe. Vui lòng thử lại.");
-      } else {
-        alert("Có lỗi xảy ra. Vui lòng thử lại.");
-      }
+      // Nếu lỗi, thử với authorize() trước
+      try {
+        console.log("🔄 Thử với authorize() trước...");
+        
+        const authResult = await new Promise((resolve, reject) => {
+          authorize({
+            success: (data) => {
+              console.log("✅ Authorize thành công:", data);
+              resolve(data);
+            },
+            fail: (error) => {
+              console.error("❌ Authorize thất bại:", error);
+              reject(error);
+            },
+          });
+        });
 
-      setPhoneNumber("Cần cấp quyền");
+        // Sau khi authorize, gọi lại getPhoneNumber
+        const phoneResult2 = await new Promise((resolve, reject) => {
+          getPhoneNumber({
+            success: resolve,
+            fail: reject,
+          });
+        });
+
+        if (phoneResult2?.token) {
+          const serverResult = await sendTokenToServer(phoneResult2.token);
+          if (serverResult.success) {
+            setPhoneNumber(serverResult.phoneNumber);
+          }
+        }
+
+      } catch (finalError) {
+        console.error("❌ Lỗi cuối cùng:", finalError);
+        alert("Không thể lấy số điện thoại. Vui lòng thử lại.");
+        setPhoneNumber("Cần cấp quyền");
+      }
     } finally {
       setIsGettingPhone(false);
     }
