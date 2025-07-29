@@ -60,11 +60,10 @@ const ZALO_APP_SECRET = process.env.ZALO_APP_SECRET;
 const STRINGEE_API_KEY_SID = process.env.STRINGEE_API_KEY_SID;
 const STRINGEE_API_KEY_SECRET = process.env.STRINGEE_API_KEY_SECRET;
 
-// Cải thiện endpoint decode-phone
+// Cải thiện endpoint decode-phone với axios và headers đúng
 app.post("/api/decode-phone", async (req, res) => {
   console.log("🚀 Received decode phone request");
   console.log("📋 Request body:", req.body);
-  console.log("📋 Request headers:", req.headers);
   
   try {
     const { token } = req.body;
@@ -100,7 +99,7 @@ app.post("/api/decode-phone", async (req, res) => {
       });
     }
 
-    // STEP 1: Get OAuth token với timeout ngắn hơn
+    // STEP 1: Get OAuth token
     console.log("🔄 Getting OAuth token...");
     const oauthResponse = await axios.post(
       "https://oauth.zaloapp.com/v4/oa/access_token",
@@ -110,7 +109,7 @@ app.post("/api/decode-phone", async (req, res) => {
         code: token,
       },
       { 
-        timeout: 5000,
+        timeout: 10000,
         headers: {
           'Content-Type': 'application/json'
         }
@@ -123,18 +122,22 @@ app.post("/api/decode-phone", async (req, res) => {
       throw new Error("No access token received from Zalo");
     }
 
-    // STEP 2: Get user info
+    // STEP 2: Get user info với method mới
     console.log("🔄 Getting user info...");
+    
     const userResponse = await axios.get(
       "https://graph.zalo.me/v2.0/me/info",
       {
         headers: {
-          access_token: oauthResponse.data.access_token,
+          'access_token': oauthResponse.data.access_token,
+          'code': token,
+          'secret_key': ZALO_APP_SECRET,
+          'Content-Type': 'application/json'
         },
         params: {
-          fields: "id,name,phone",
+          fields: 'id,name,phone'
         },
-        timeout: 5000,
+        timeout: 10000
       }
     );
 
@@ -158,13 +161,20 @@ app.post("/api/decode-phone", async (req, res) => {
 
   } catch (error) {
     console.error("❌ Decode error:", error.message);
-    console.error("❌ Error stack:", error.stack);
+    
+    // Log chi tiết hơn cho debugging
+    if (error.response) {
+      console.error("❌ Response error:", error.response.status, error.response.data);
+    }
     
     return res.status(500).json({
       success: false,
       error: "Failed to decode phone token",
       message: error.message,
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      details: process.env.NODE_ENV === 'development' ? {
+        status: error.response?.status,
+        data: error.response?.data
+      } : undefined
     });
   }
 });
