@@ -293,6 +293,15 @@ app.post("/api/sms/send-brandname", async (req, res) => {
       });
     }
 
+    // Kiểm tra Stringee credentials
+    if (!STRINGEE_API_KEY_SID || !STRINGEE_API_KEY_SECRET) {
+      console.log("❌ Missing Stringee credentials");
+      return res.status(500).json({
+        success: false,
+        error: "Stringee credentials not configured"
+      });
+    }
+
     // Sử dụng Stringee SMS API
     const smsResponse = await fetch('https://api.stringee.com/v1/sms', {
       method: 'POST',
@@ -302,7 +311,7 @@ app.post("/api/sms/send-brandname", async (req, res) => {
       },
       body: JSON.stringify({
         sms: [{
-          from: brandname || 'GoSafe', // Brandname
+          from: brandname || 'GoSafe',
           to: phoneNumber,
           text: message
         }]
