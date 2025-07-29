@@ -27,39 +27,16 @@ export const useServerAuth = () => {
     const SERVER_URL = getCurrentServerUrl();
     
     try {
-      console.log('📡 Calling server:', `${SERVER_URL}/api/decode-phone`);
-
-      // Test health check first
-      try {
-        console.log('🏥 Testing health check...');
-        const healthResponse = await fetch(`${SERVER_URL}/api/health`);
-        console.log('🏥 Health status:', healthResponse.status);
-        if (healthResponse.ok) {
-          const healthData = await healthResponse.json();
-          console.log('🏥 Health data:', healthData);
-        }
-      } catch (healthError) {
-        console.error('❌ Health check failed:', healthError);
-      }
-      
-      // Wrap fetch in additional try-catch
-      let response;
-      try {
-        response = await fetch(`${SERVER_URL}/api/decode-phone`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'ngrok-skip-browser-warning': 'true',
-            'User-Agent': navigator.userAgent || 'ZaloMiniApp'
-          },
-          body: JSON.stringify({ token: phoneToken }),
-          timeout: 15000
-        });
-      } catch (fetchError) {
-        // Immediate fallback for fetch errors
-        throw new Error(`Network error: ${fetchError.message}`);
-      }
+      const response = await fetch(`${SERVER_URL}/api/decode-phone`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        },
+        body: JSON.stringify({ token: phoneToken }),
+        timeout: 15000
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -68,34 +45,18 @@ export const useServerAuth = () => {
       const result = await response.json();
       console.log('✅ Server response:', result);
       
+      // Trả về kết quả thực từ server
       return result;
       
     } catch (error) {
-      // iPhone/iOS specific handling
-      if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iOS')) {
-        console.log('📱 iPhone detected - using fallback');
-        return {
-          success: true,
-          phoneNumber: `👤 Người dùng iOS - Đã xác thực`,
-          userInfo: { 
-            phone: "Đã xác thực trên iOS", 
-            platform: "iOS",
-            verified: true
-          },
-          message: 'Xác thực iOS thành công'
-        };
-      }
+      console.error('❌ Server error:', error);
+      setError(error.message);
       
-      // General fallback with user info instead of phone
+      // Fallback với thông báo lỗi rõ ràng
       return {
-        success: true,
-        phoneNumber: `👤 Người dùng Zalo - Đã xác thực`,
-        userInfo: { 
-          phone: "Đã xác thực qua Zalo", 
-          verified: true,
-          timestamp: new Date().toISOString()
-        },
-        message: 'Xác thực thành công với fallback'
+        success: false,
+        error: error.message,
+        phoneNumber: "Không thể lấy số điện thoại",
       };
     } finally {
       setLoading(false);

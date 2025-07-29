@@ -91,14 +91,11 @@ const UserHeader = ({ userInfo, isLoading }) => {
       // STEP 4: Process phone result - tạm thời không hiển thị số điện thoại
       if (phoneResult) {
         if (phoneResult.number) {
-          // Direct phone number available - nhưng không hiển thị
+          // Hiển thị số điện thoại thực
           console.log("📱 Số điện thoại trực tiếp:", phoneResult.number);
-          // setPhoneNumber(phoneResult.number); // Comment out
+          setPhoneNumber(phoneResult.number); // Hiển thị số thật
           
-          // Hiển thị thông tin user thay vì số điện thoại
-          setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đã xác thực`);
-
-          // Send to server for verification/registration
+          // Send to server for verification
           try {
             await sendTokenToServer(phoneResult.number);
             console.log("✅ Đã gửi số điện thoại lên server");
@@ -106,34 +103,19 @@ const UserHeader = ({ userInfo, isLoading }) => {
             console.warn("⚠️ Không thể gửi lên server:", serverError.message);
           }
         } else if (phoneResult.token) {
-          // Phone token - need server to decode
-          console.log("🔐 Token số điện thoại:", phoneResult.token);
-
+          // Xử lý token và hiển thị số thật từ server
           try {
             const serverResult = await sendTokenToServer(phoneResult.token);
-
-            if (serverResult.success) {
-              console.log("✅ Server decode thành công:", serverResult.phoneNumber);
-              
-              // Hiển thị thông tin user thay vì số điện thoại
-              setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đã xác thực`);
+            
+            if (serverResult.success && serverResult.phoneNumber) {
+              // Hiển thị số điện thoại thực từ server
+              setPhoneNumber(serverResult.phoneNumber);
             } else {
-              // Server error - show user info
               setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đang xử lý`);
             }
           } catch (tokenError) {
             console.error("❌ Lỗi decode token:", tokenError);
-
-            // Show user info instead of token
-            setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đã xác thực`);
-
-            // Store token for later use
-            try {
-              localStorage.setItem("zalo_phone_token", phoneResult.token);
-              console.log("💾 Đã lưu token để xử lý sau");
-            } catch (storageError) {
-              console.warn("⚠️ Không thể lưu token:", storageError);
-            }
+            setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Lỗi xử lý`);
           }
         }
       } else {
@@ -223,17 +205,17 @@ const UserHeader = ({ userInfo, isLoading }) => {
                   ? "Chào mừng bạn đến với GoSafe!"
                   : "Cung cấp số điện thoại để sử dụng app!"}
               </Text>
-              {/* {phoneNumber && (
+              {phoneNumber && (
                 <Text
                   className={`text-xs mt-1 ${
-                    phoneNumber.includes("✅")
-                      ? "text-blue-600"
-                      : "text-green-600"
+                    phoneNumber.includes("✅") || phoneNumber.includes("👤")
+                      ? "text-green-600"
+                      : "text-blue-600"
                   }`}
                 >
                   📱 {phoneNumber}
                 </Text>
-              )} */}
+              )}
               {(serverLoading || isGettingPhone) && (
                 <Text className="text-blue-500 text-xs mt-1">
                   🔄{" "}

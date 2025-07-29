@@ -50,16 +50,13 @@ const ZALO_APP_SECRET = process.env.ZALO_APP_SECRET;
 const STRINGEE_API_KEY_SID = process.env.STRINGEE_API_KEY_SID;
 const STRINGEE_API_KEY_SECRET = process.env.STRINGEE_API_KEY_SECRET;
 
-// ONLY ONE decode-phone endpoint - the complete one
+// Cải thiện endpoint decode-phone để trả về số thật
 app.post("/api/decode-phone", async (req, res) => {
   console.log("🚀 Received decode phone request");
-  console.log("📝 Request body:", req.body);
-  console.log("📋 Request headers:", req.headers);
-
+  
   try {
     const { token } = req.body;
-    const userAgent = req.headers["user-agent"] || "";
-
+    
     if (!token) {
       return res.status(400).json({
         success: false,
@@ -67,59 +64,34 @@ app.post("/api/decode-phone", async (req, res) => {
       });
     }
 
-    console.log("🔑 Token received:", token.substring(0, 50) + "...");
-
-    // iOS requests - return success with token info
-    if (userAgent.includes("iPhone") || userAgent.includes("iOS")) {
-      console.log("📱 iOS request detected");
-      const shortToken = token.substring(token.length - 8);
+    // Nếu token là số điện thoại trực tiếp
+    if (/^[0-9+\-\s()]+$/.test(token)) {
+      console.log("📱 Direct phone number received");
       return res.json({
         success: true,
-        phoneNumber: `📱 ${shortToken}`,
-        userInfo: { phone: "Verified", platform: "iOS", token: shortToken },
-        message: "iOS authentication with token",
+        phoneNumber: token,
+        userInfo: { phone: token, verified: true },
+        message: "Direct phone number processed",
       });
     }
 
-    // Regular processing for other platforms
-    console.log("🔧 App credentials check:", {
-      hasAppId: !!ZALO_APP_ID,
-      hasAppSecret: !!ZALO_APP_SECRET,
-    });
-
-    if (!ZALO_APP_ID || !ZALO_APP_SECRET) {
-      console.log("❌ Missing Zalo credentials");
-      const shortToken = token.substring(token.length - 8);
-      return res.json({
-        success: true,
-        phoneNumber: `Token •••${shortToken}`,
-        userInfo: { phone: "No credentials" },
-        message: "Missing Zalo app credentials",
-      });
-    }
-
-    // STEP 1: Get access token from OAuth
+    // STEP 1: Get OAuth token
     const oauthResponse = await axios.post(
-      "https://oauth.zaloapp.com/v4/access_token",
+      "https://oauth.zaloapp.com/v4/oa/access_token",
       {
         app_id: ZALO_APP_ID,
         app_secret: ZALO_APP_SECRET,
         code: token,
       },
-      {
-        headers: { "Content-Type": "application/json" },
-        timeout: 10000,
-      }
+      { timeout: 10000 }
     );
-
-    console.log("📊 OAuth response:", oauthResponse.data);
 
     if (!oauthResponse.data.access_token) {
       throw new Error("No access token received from Zalo");
     }
 
-    // STEP 2: Get user phone with access token
-    const phoneResponse = await axios.get(
+    // STEP 2: Get user info including phone
+    const userResponse = await axios.get(
       "https://graph.zalo.me/v2.0/me/info",
       {
         headers: {
@@ -132,41 +104,32 @@ app.post("/api/decode-phone", async (req, res) => {
       }
     );
 
-    console.log("📱 Phone response:", phoneResponse.data);
+    console.log("📱 User response:", userResponse.data);
 
-    if (phoneResponse.data && phoneResponse.data.phone) {
+    if (userResponse.data && userResponse.data.phone) {
       return res.json({
         success: true,
-        phoneNumber: phoneResponse.data.phone,
-        userInfo: phoneResponse.data,
-        message: "Phone number decoded successfully",
+        phoneNumber: userResponse.data.phone,
+        userInfo: userResponse.data,
+        message: "Phone number retrieved successfully",
       });
     } else {
-      // No phone in response - return token processed
-      const shortToken = token.substring(token.length - 8);
+      // Fallback - vẫn trả về thông tin có ích
       return res.json({
         success: true,
-        phoneNumber: `Verified •••${shortToken}`,
-        userInfo: { phone: "Processed", token: shortToken },
-        message: "Token processed - no phone number available",
+        phoneNumber: "Không thể lấy số điện thoại",
+        userInfo: userResponse.data || { phone: "N/A" },
+        message: "User info retrieved but no phone available",
       });
     }
-  } catch (error) {
-    console.error(
-      "❌ Decode error details:",
-      error.response?.data || error.message
-    );
 
-    // Return token processed instead of error
-    const shortToken = req.body.token
-      ? req.body.token.substring(req.body.token.length - 8)
-      : "unknown";
-    return res.json({
-      success: true,
-      phoneNumber: `Token •••${shortToken}`,
-      userInfo: { phone: "Error processed" },
-      message: "Token processed with fallback",
-      debug: error.message,
+  } catch (error) {
+    console.error("❌ Decode error:", error.message);
+    
+    return res.status(500).json({
+      success: false,
+      error: "Failed to decode phone token",
+      message: error.message,
     });
   }
 });
