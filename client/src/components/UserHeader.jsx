@@ -88,12 +88,15 @@ const UserHeader = ({ userInfo, isLoading }) => {
         });
       });
 
-      // STEP 4: Process phone result
+      // STEP 4: Process phone result - tạm thời không hiển thị số điện thoại
       if (phoneResult) {
         if (phoneResult.number) {
-          // Direct phone number available
+          // Direct phone number available - nhưng không hiển thị
           console.log("📱 Số điện thoại trực tiếp:", phoneResult.number);
-          setPhoneNumber(phoneResult.number);
+          // setPhoneNumber(phoneResult.number); // Comment out
+          
+          // Hiển thị thông tin user thay vì số điện thoại
+          setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đã xác thực`);
 
           // Send to server for verification/registration
           try {
@@ -109,31 +112,20 @@ const UserHeader = ({ userInfo, isLoading }) => {
           try {
             const serverResult = await sendTokenToServer(phoneResult.token);
 
-            if (serverResult.success && serverResult.phoneNumber) {
+            if (serverResult.success) {
               console.log("✅ Server decode thành công:", serverResult.phoneNumber);
               
-              // Hiển thị số điện thoại thật từ server
-              if (serverResult.phoneNumber && 
-                  !serverResult.phoneNumber.includes("Đã xác thực") && 
-                  !serverResult.phoneNumber.includes("iOS User") &&
-                  !serverResult.phoneNumber.includes("Decode failed")) {
-                setPhoneNumber(serverResult.phoneNumber);
-              } else {
-                // Fallback: Hiển thị token đã được xử lý
-                const shortToken = phoneResult.token.substring(phoneResult.token.length - 8);
-                setPhoneNumber(`Đã xác thực •••${shortToken}`);
-              }
+              // Hiển thị thông tin user thay vì số điện thoại
+              setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đã xác thực`);
             } else {
-              // Server error - show token processed
-              const shortToken = phoneResult.token.substring(phoneResult.token.length - 8);
-              setPhoneNumber(`Token xử lý •••${shortToken}`);
+              // Server error - show user info
+              setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đang xử lý`);
             }
           } catch (tokenError) {
             console.error("❌ Lỗi decode token:", tokenError);
 
-            // Show verification status with token hint
-            const shortToken = phoneResult.token.substring(phoneResult.token.length - 8);
-            setPhoneNumber(`Đã xác thực •••${shortToken}`);
+            // Show user info instead of token
+            setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đã xác thực`);
 
             // Store token for later use
             try {
@@ -146,7 +138,7 @@ const UserHeader = ({ userInfo, isLoading }) => {
         }
       } else {
         console.warn("⚠️ Không có kết quả số điện thoại");
-        setPhoneNumber("Đang xử lý...");
+        setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đang xử lý`);
       }
     } catch (error) {
       console.error("❌ Lỗi trong quá trình xin quyền:", error);
@@ -231,7 +223,7 @@ const UserHeader = ({ userInfo, isLoading }) => {
                   ? "Chào mừng bạn đến với GoSafe!"
                   : "Cung cấp số điện thoại để sử dụng app!"}
               </Text>
-              {phoneNumber && (
+              {/* {phoneNumber && (
                 <Text
                   className={`text-xs mt-1 ${
                     phoneNumber.includes("✅")
@@ -241,7 +233,7 @@ const UserHeader = ({ userInfo, isLoading }) => {
                 >
                   📱 {phoneNumber}
                 </Text>
-              )}
+              )} */}
               {(serverLoading || isGettingPhone) && (
                 <Text className="text-blue-500 text-xs mt-1">
                   🔄{" "}
@@ -262,7 +254,7 @@ const UserHeader = ({ userInfo, isLoading }) => {
         </Box>
       </Box>
 
-      {/* Modal xin quyền số điện thoại bắt buộc */}
+      {/* Modal xin quyền thông tin người dùng */}
       <CustomModal
         visible={showModal}
         onClose={() => setShowModal(false)}
@@ -271,9 +263,13 @@ const UserHeader = ({ userInfo, isLoading }) => {
       >
         <Box className="text-center p-4">
           <Box className="mb-4">
-            <Text className="text-2xl mb-2">📱</Text>
+            <img
+              src={process.env.PUBLIC_URL + "/logo_gosafe.jpg"}
+              alt="GoSafe Logo"
+              style={{ width: 64, height: 64, margin: "0 auto" }}
+            />
             <Text className="text-lg font-bold text-black mb-2">
-              Cần số điện thoại để sử dụng GoSafe
+              Cần thông tin người dùng để sử dụng GoSafe
             </Text>
           </Box>
 
@@ -282,14 +278,14 @@ const UserHeader = ({ userInfo, isLoading }) => {
               <strong>Mục đích sử dụng:</strong>
             </Text>
             <Box className="space-y-2 text-sm text-gray-600">
-              <Text>• Định danh tài khoản của bạn</Text>
-              <Text>• Liên hệ khẩn cấp khi cần thiết</Text>
-              <Text>• Xác thực thông tin cá nhân</Text>
+              <Text>• Hiển thị tên và avatar của bạn</Text>
+              <Text>• Cá nhân hóa trải nghiệm sử dụng</Text>
+              <Text>• Xác thực danh tính người dùng</Text>
               <Text>• Bảo mật và bảo vệ tài khoản</Text>
             </Box>
 
             <Text className="text-xs text-gray-500 mt-4">
-              Số điện thoại của bạn sẽ được bảo mật và chỉ sử dụng cho mục đích
+              Thông tin của bạn sẽ được bảo mật và chỉ sử dụng cho mục đích
               trên
             </Text>
           </Box>

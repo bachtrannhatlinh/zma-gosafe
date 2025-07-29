@@ -7,7 +7,7 @@ const BottomNavigation = ({ activeTab = "home" }) => {
 
   const navItems = [
     { id: "home", icon: "🏠", label: "Trang chủ", isActive: activeTab === "home", path: "/" },
-    { id: "activity", icon: "🚗", label: "Đặt chuyến", isActive: activeTab === "activity", path: "/book-ride" },
+    { id: "activity", icon: "🚗", label: "Gọi", isActive: activeTab === "call", path: "/call-to-user" },
     { id: "notification", icon: "📋", label: "Lịch sử", isActive: activeTab === "history", path: "/history" },
     { id: "account", icon: "👤", label: "Tài khoản", isActive: activeTab === "account", path: "/account" },
   ];

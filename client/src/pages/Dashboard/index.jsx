@@ -87,13 +87,13 @@ const Dashboard = () => {
     >
       <PullToRefresh onRefresh={handleRefresh} refreshing={isRefreshing}>
         {/* Header with user info */}
-        <UserHeader userInfo={userInfo} isLoading={isLoading} />
+        {/* <UserHeader userInfo={userInfo} isLoading={isLoading} /> */}
 
         {/* Hero Banner */}
         <Box
           style={{
-            position: "relative",
             background: "linear-gradient(to right, #fb923c, #ef4444)",
+            paddingTop: 'env(safe-area-inset-top, 32px)', // tránh Dynamic Island che mất
           }}
         >
           <img
@@ -101,50 +101,15 @@ const Dashboard = () => {
             alt="GOSafe Banner"
             style={{
               width: "100%",
-              height: "192px",
-              objectFit: "cover",
-              opacity: 0.9,
+              height: "270px", // tăng chiều cao banner
+              objectFit: "contain", // đảm bảo hình ảnh không bị cắt
               userSelect: "none",
               pointerEvents: "none",
               display: "block",
             }}
           />
-
           {/* Stringee Demo Button - Floating on banner */}
-          {/* <Box
-            style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
-              zIndex: 10
-            }}
-          >
-            <Button
-              onClick={handleStringeeDemo}
-              size="small"
-              className="bg-green-500 text-white shadow-lg"
-            >
-              📞 Demo Call
-            </Button>
-          </Box> */}
-
-          {/* Open Phone Demo Button - Floating on banner */}
-          <Box
-            style={{
-              position: "absolute",
-              top: "10px",
-              left: "10px",
-              zIndex: 10,
-            }}
-          >
-            <Button
-              onClick={handleOpenPhoneDemo}
-              size="small"
-              className="bg-blue-500 text-white shadow-lg"
-            >
-              📱 Open Phone
-            </Button>
-          </Box>
+          {/* ...existing code... */}
         </Box>
 
         {/* Main Content */}
@@ -180,59 +145,6 @@ const Dashboard = () => {
       >
         <StringeeDemo />
       </Modal> */}
-
-      {/* Open Phone Demo Modal */}
-      <Modal
-        visible={showOpenPhoneDemo}
-        title=""
-        onClose={() => setShowOpenPhoneDemo(false)}
-        className="open-phone-demo-modal"
-        showCloseButton={false}
-      >
-        <Box
-          className="absolute"
-          style={{
-            position: "absolute",
-            top: "12px",
-            right: "12px",
-            zIndex: 999,
-          }}
-        >
-          <Button
-            onClick={() => setShowOpenPhoneDemo(false)}
-            className="!p-0 !min-w-0 !w-8 !h-8 rounded-md bg-red-500 hover:bg-red-600 border-none text-white shadow-lg hover:shadow-xl transition-all duration-200"
-            style={{
-              minWidth: "32px",
-              width: "32px",
-              height: "32px",
-              padding: "0",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "#ef4444",
-              border: "none",
-            }}
-          >
-            <Text className="text-sm font-bold leading-none text-white">X</Text>
-          </Button>
-        </Box>
-        <Box className="relative bg-white mt-6">
-          {/* Custom Header */}
-          <Box className="relative px-6 py-4">
-            {/* Title và icon ở giữa */}
-            <Box className="flex items-center justify-center space-x-3">
-              <Box className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
-                <Text className="text-lg">📱</Text>
-              </Box>
-              <Text className="text-lg font-bold text-gray-800">
-                Open Phone Demo
-              </Text>
-            </Box>
-          </Box>
-
-          <OpenPhoneDemo />
-        </Box>
-      </Modal>
 
       {/* Bottom Navigation - Fixed */}
       <BottomNavigation activeTab="home" />
