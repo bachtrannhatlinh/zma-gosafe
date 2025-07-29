@@ -11,7 +11,7 @@ export const useServerAuth = () => {
 
     // Determine server URL
     const SERVER_URL = process.env.NODE_ENV === 'production' 
-      ? 'zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app'
+      ? 'https://zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app'
       : 'http://localhost:5000';
 
     console.log('🌐 Using server URL:', SERVER_URL);
