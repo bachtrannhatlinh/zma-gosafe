@@ -12,7 +12,6 @@ const UserHeader = ({ userInfo, isLoading }) => {
   const [isGettingPhone, setIsGettingPhone] = useState(false);
   const {
     sendTokenToServer,
-    testServerConnection,
     loading: serverLoading,
     error: serverError,
   } = useServerAuth();

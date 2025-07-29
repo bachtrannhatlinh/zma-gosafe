@@ -18,6 +18,8 @@ import VNPayPolicy from "../pages/VNPayPolicy";
 import Promotions from "../pages/Promotions";
 import PromotionDetail from "../pages/PromotionDetail";
 import CallToUser from "../pages/CallToUser";
+import ChatListPage from "../pages/ChatList";
+import ChatPage from "../pages/Chat";
 
 const Layout = () => {
   console.log("Layout rendered, current path:", window.location.pathname);
@@ -38,6 +40,8 @@ const Layout = () => {
             <Route path="/vnpay-policy" element={<VNPayPolicy />} />
             <Route path="/promotions" element={<Promotions />} />
             <Route path="/promotion-detail/:id" element={<PromotionDetail />} />
+            <Route path="/chat-list" element={<ChatListPage />} />
+            <Route path="/chat/:partnerId" element={<ChatPage />} />
             <Route path="*" element={
               <div style={{padding: '20px', textAlign: 'center'}}>
                 <h2>Page not found</h2>

@@ -3,10 +3,170 @@ const cors = require("cors");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const { Server } = require("socket.io");
+const http = require("http");
+const mongoose = require("mongoose");
+const Message = require("./models/Message");
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: [
+      'https://zalo.me', 
+      'https://h5.zalo.me', 
+      'https://h5.zdn.vn',
+      'https://zdn.vn',
+      'https://localhost:3000',
+      'https://zma-gosafe.zalo.me'
+    ],
+    methods: ["GET", "POST"]
+  }
+});
+
+// MongoDB connection
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/gosafe-chat', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+// Store online users
+const onlineUsers = new Map();
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('🔌 User connected:', socket.id);
+
+  socket.on('user-online', (userData) => {
+    onlineUsers.set(socket.id, {
+      userId: userData.userId,
+      userName: userData.userName,
+      userPhone: userData.userPhone,
+      socketId: socket.id
+    });
+    
+    // Broadcast online users list
+    io.emit('users-online', Array.from(onlineUsers.values()));
+    console.log('👤 User online:', userData.userName);
+  });
+
+  socket.on('send-message', async (messageData) => {
+    try {
+      // Save message to database
+      const message = new Message({
+        senderId: messageData.senderId,
+        senderName: messageData.senderName,
+        senderPhone: messageData.senderPhone,
+        receiverId: messageData.receiverId,
+        content: messageData.content,
+        messageType: messageData.messageType || 'text'
+      });
+      
+      await message.save();
+
+      // Send to receiver if online
+      const receiverSocket = Array.from(onlineUsers.values())
+        .find(user => user.userId === messageData.receiverId);
+      
+      if (receiverSocket) {
+        io.to(receiverSocket.socketId).emit('receive-message', {
+          ...message.toObject(),
+          timestamp: message.timestamp
+        });
+      }
+
+      // Confirm to sender
+      socket.emit('message-sent', {
+        success: true,
+        messageId: message._id,
+        timestamp: message.timestamp
+      });
+
+    } catch (error) {
+      console.error('❌ Message error:', error);
+      socket.emit('message-error', { error: error.message });
+    }
+  });
+
+  socket.on('disconnect', () => {
+    onlineUsers.delete(socket.id);
+    io.emit('users-online', Array.from(onlineUsers.values()));
+    console.log('🔌 User disconnected:', socket.id);
+  });
+});
+
+// Chat API endpoints
+app.get('/api/chat/messages/:userId/:partnerId', async (req, res) => {
+  try {
+    const { userId, partnerId } = req.params;
+    const { page = 1, limit = 50 } = req.query;
+    
+    const messages = await Message.find({
+      $or: [
+        { senderId: userId, receiverId: partnerId },
+        { senderId: partnerId, receiverId: userId }
+      ]
+    })
+    .sort({ timestamp: -1 })
+    .limit(limit * 1)
+    .skip((page - 1) * limit);
+
+    res.json({
+      success: true,
+      messages: messages.reverse(),
+      page: parseInt(page),
+      hasMore: messages.length === parseInt(limit)
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/chat/conversations/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const conversations = await Message.aggregate([
+      {
+        $match: {
+          $or: [{ senderId: userId }, { receiverId: userId }]
+        }
+      },
+      {
+        $sort: { timestamp: -1 }
+      },
+      {
+        $group: {
+          _id: {
+            $cond: [
+              { $eq: ["$senderId", userId] },
+              "$receiverId",
+              "$senderId"
+            ]
+          },
+          lastMessage: { $first: "$$ROOT" },
+          unreadCount: {
+            $sum: {
+              $cond: [
+                { $and: [{ $eq: ["$receiverId", userId] }, { $eq: ["$isRead", false] }] },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      }
+    ]);
+
+    res.json({
+      success: true,
+      conversations
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // Simplified CORS for production
 app.use(
@@ -370,8 +530,9 @@ app.post("/api/sms/send-brandname", async (req, res) => {
 
 if (require.main === module) {
   // Chỉ chạy khi local
-  app.listen(PORT, () => {
-    console.log(`🚀 GoSafe Backend Server running on port ${PORT}`);
+  server.listen(PORT, () => {
+    console.log(`🚀 GoSafe Backend Server with Chat running on port ${PORT}`);
+    console.log(`💬 Socket.IO Chat enabled`);
     console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
     console.log(
       `🔧 Decode phone: POST http://localhost:${PORT}/api/decode-phone`
