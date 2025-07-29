@@ -1,179 +1,272 @@
-import React, { useState } from 'react';
-import { Page, Box, Button, Text, Header } from 'zmp-ui';
-import { getPhoneNumber, authorize } from 'zmp-sdk/apis';
-import { useServerAuth } from '../hooks/useServerAuth';
+import React, { useState } from "react";
+import { Box, Text, Avatar, Button } from "zmp-ui";
+import { authorize, getUserInfo, getPhoneNumber } from "zmp-sdk/apis";
+import CustomModal from "./CustomModal";
+import { useServerAuth } from "../hooks/useServerAuth";
+// import { useStringeeAuth } from "../hooks/useStringeeAuth";
 
-const UserHeader = () => {
-  const [step, setStep] = useState(1);
-  const [token, setToken] = useState(null);
-  const [phoneResult, setPhoneResult] = useState(null);
-  const [serverResult, setServerResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const { sendTokenToServer } = useServerAuth();
+const UserHeader = ({ userInfo, isLoading }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [updatedUserInfo, setUpdatedUserInfo] = useState(userInfo);
+  const [phoneNumber, setPhoneNumber] = useState(null);
+  const [isGettingPhone, setIsGettingPhone] = useState(false);
+  const {
+    sendTokenToServer,
+    loading: serverLoading,
+    error: serverError,
+  } = useServerAuth();
 
-  // Step 1: Request permission and get token
-  const handleStep1 = async () => {
-    setLoading(true);
+  const handleLocationClick = () => {
+    // Show modal if no user info or no phone number yet
+    if (!currentUserInfo?.name || !phoneNumber) {
+      setShowModal(true);
+    }
+  };
+
+  const handleLogin = () => {
+    setShowModal(false);
+    handleAllowPermission();
+  };
+
+  const handleAllowPermission = async () => {
+    setIsGettingPhone(true);
+
     try {
-      console.log('🔐 Step 1: Requesting phone permission...');
-      
-      // First authorize
+      console.log("🔐 Bắt đầu quy trình xin quyền số điện thoại (flow mới)...");
+
+      // STEP 1: Request authorization - không cần scope cụ thể
+      console.log("📋 Xin quyền truy cập...");
       const authResult = await new Promise((resolve, reject) => {
         authorize({
-          scopes: ["scope.userPhonenumber"],
-          success: resolve,
-          fail: reject,
+          success: (data) => {
+            console.log("✅ Người dùng đồng ý:", data);
+            resolve(data);
+          },
+          fail: (error) => {
+            console.error("❌ Người dùng từ chối:", error);
+            reject(new Error("Cần cấp quyền để sử dụng ứng dụng"));
+          },
         });
       });
-      
-      console.log('✅ Authorization success:', authResult);
-      
-      // Then get phone number (with token)
+
+      // STEP 2: Get user info
+      console.log("👤 Lấy thông tin người dùng...");
+      const userResult = await new Promise((resolve, reject) => {
+        getUserInfo({
+          success: (userData) => {
+            console.log("✅ Thông tin người dùng:", userData);
+            resolve(userData);
+          },
+          fail: (error) => {
+            console.error("❌ Lỗi lấy thông tin người dùng:", error);
+            reject(new Error("Không thể lấy thông tin người dùng"));
+          },
+        });
+      });
+
+      setUpdatedUserInfo(userResult.userInfo);
+
+      // STEP 3: Get phone number - flow mới không cần scope
+      console.log("📱 Lấy số điện thoại (flow mới)...");
       const phoneResult = await new Promise((resolve, reject) => {
         getPhoneNumber({
-          success: resolve,
-          fail: reject,
+          success: (phoneData) => {
+            console.log("✅ Kết quả số điện thoại:", phoneData);
+            resolve(phoneData);
+          },
+          fail: (error) => {
+            console.error("❌ Lỗi lấy số điện thoại:", error);
+            reject(new Error("Không thể lấy số điện thoại"));
+          },
         });
       });
-      
-      console.log('✅ Phone result:', phoneResult);
-      setToken(phoneResult.token || phoneResult);
-      setPhoneResult(phoneResult);
-      setStep(2);
-      
+
+      // STEP 4: Process phone result
+      if (phoneResult?.token) {
+        console.log("🔐 Token số điện thoại:", phoneResult.token);
+
+        try {
+          const serverResult = await sendTokenToServer(phoneResult.token);
+
+          if (serverResult.success) {
+            console.log("✅ Server decode thành công:", serverResult.phoneNumber);
+            setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đã xác thực`);
+          } else {
+            setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đang xử lý`);
+          }
+        } catch (tokenError) {
+          console.error("❌ Lỗi decode token:", tokenError);
+          setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đã xác thực`);
+          
+          // Store token for later use
+          localStorage.setItem("zalo_phone_token", phoneResult.token);
+        }
+      } else {
+        console.warn("⚠️ Không có token số điện thoại");
+        setPhoneNumber(`👤 ${currentUserInfo?.name || 'Người dùng Zalo'} - Đang xử lý`);
+      }
     } catch (error) {
-      console.error('❌ Step 1 failed:', error);
-      alert('Lỗi Step 1: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Step 2: Send token to server
-  const handleStep2 = async () => {
-    if (!token) {
-      alert('Không có token để gửi!');
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      console.log('🚀 Step 2: Sending token to server...');
-      const result = await sendTokenToServer(token);
-      setServerResult(result);
-      setStep(3);
-    } catch (error) {
-      console.error('❌ Step 2 failed:', error);
-      alert('Lỗi Step 2: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const reset = () => {
-    setStep(1);
-    setToken(null);
-    setPhoneResult(null);
-    setServerResult(null);
-  };
-
-  return (
-    <Page>
-      <Header title="Phone Number Flow Demo" />
+      console.error("❌ Lỗi trong quá trình xin quyền:", error);
       
-      <Box className="p-4 space-y-6">
-        {/* Flow Steps */}
-        <Box className="bg-blue-50 p-4 rounded-lg">
-          <Text className="font-bold mb-2">📋 Flow theo tài liệu Zalo:</Text>
-          <Text className="text-sm space-y-1">
-            1. Mini App → getPhoneNumber() → Popup xin quyền<br/>
-            2. Callback với token → Gửi token lên server<br/>
-            3. Server → Zalo Open API → Lấy thông tin chi tiết
-          </Text>
-        </Box>
+      if (error.message.includes("từ chối")) {
+        alert("Bạn cần cấp quyền để sử dụng ứng dụng GoSafe. Vui lòng thử lại.");
+      } else {
+        alert("Có lỗi xảy ra. Vui lòng thử lại.");
+      }
 
-        {/* Current Step */}
-        <Box className="text-center">
-          <Text className="text-2xl font-bold">
-            Step {step}/3
-          </Text>
-        </Box>
+      setPhoneNumber("Cần cấp quyền");
+    } finally {
+      setIsGettingPhone(false);
+    }
+  };
 
-        {/* Step 1 */}
-        {step === 1 && (
-          <Box className="space-y-4">
-            <Text className="font-bold">🔐 Step 1: Xin quyền và lấy token</Text>
-            <Button
-              onClick={handleStep1}
-              loading={loading}
-              className="w-full bg-blue-500 text-white"
-            >
-              Bắt đầu - getPhoneNumber()
-            </Button>
+  // Get current user info to display
+  const currentUserInfo = updatedUserInfo || userInfo;
+
+  const handleClose = () => {
+    setShowModal(false);
+  };
+
+  if (isLoading) {
+    return (
+      <Box
+        className="px-4 relative bg-white shadow-sm"
+        style={{ paddingTop: "max(env(safe-area-inset-top), 44px)" }}
+      >
+        <Box className="flex items-center space-x-3 py-4">
+          {/* Avatar skeleton với animation */}
+          <Box className="w-10 h-10 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-full animate-pulse relative overflow-hidden">
+            <Box className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></Box>
           </Box>
-        )}
 
-        {/* Step 2 */}
-        {step === 2 && (
-          <Box className="space-y-4">
-            <Text className="font-bold">🚀 Step 2: Gửi token lên server</Text>
-            
-            <Box className="bg-green-50 p-3 rounded">
-              <Text className="text-sm font-bold">✅ Token nhận được:</Text>
-              <Text className="text-xs break-all mt-1">
-                {JSON.stringify(phoneResult, null, 2)}
-              </Text>
+          <Box className="flex-1">
+            {/* Text skeletons với animation */}
+            <Box className="h-3 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded w-32 mb-2 animate-pulse relative overflow-hidden">
+              <Box className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></Box>
             </Box>
-            
-            <Button
-              onClick={handleStep2}
-              loading={loading}
-              className="w-full bg-green-500 text-white"
-            >
-              Gửi token lên server
-            </Button>
-          </Box>
-        )}
-
-        {/* Step 3 */}
-        {step === 3 && (
-          <Box className="space-y-4">
-            <Text className="font-bold">📱 Step 3: Kết quả từ server</Text>
-            
-            <Box className="bg-yellow-50 p-3 rounded">
-              <Text className="text-sm font-bold">📊 Server response:</Text>
-              <Text className="text-xs break-all mt-1">
-                {JSON.stringify(serverResult, null, 2)}
-              </Text>
+            <Box className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded w-48 animate-pulse relative overflow-hidden">
+              <Box className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></Box>
             </Box>
-            
-            {serverResult?.phoneNumber && (
-              <Box className="bg-green-100 p-3 rounded text-center">
-                <Text className="font-bold text-green-800">
-                  📞 Số điện thoại: {serverResult.phoneNumber}
-                </Text>
-              </Box>
-            )}
-            
-            <Button
-              onClick={reset}
-              className="w-full bg-gray-500 text-white"
-            >
-              🔄 Test lại từ đầu
-            </Button>
           </Box>
-        )}
-
-        {/* Debug Info */}
-        <Box className="bg-gray-50 p-3 rounded text-xs">
-          <Text className="font-bold">🔍 Debug Info:</Text>
-          <Text>Current Step: {step}</Text>
-          <Text>Has Token: {!!token}</Text>
-          <Text>Loading: {loading}</Text>
         </Box>
       </Box>
-    </Page>
+    );
+  }
+
+  return (
+    <>
+      <Box
+        className="px-4 relative bg-white shadow-sm"
+        style={{ paddingTop: "max(env(safe-area-inset-top), 30px)" }}
+      >
+        <Box className="flex items-center justify-between py-4">
+          <Box
+            className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors"
+            onClick={handleLocationClick}
+          >
+            <Avatar
+              src={currentUserInfo?.avatar || ""}
+              size="40"
+              className="bg-white"
+            >
+              {currentUserInfo?.name?.charAt(0) || "U"}
+            </Avatar>
+            <Box>
+              <Text className="text-black text-xs">
+                {currentUserInfo?.name
+                  ? `Xin chào, ${currentUserInfo.name} 👋`
+                  : "Cần cấp quyền số điện thoại 📱"}
+              </Text>
+              <Text className="text-black text-sm font-bold">
+                {currentUserInfo?.name
+                  ? "Chào mừng bạn đến với GoSafe!"
+                  : "Cung cấp số điện thoại để sử dụng app!"}
+              </Text>
+              {/* {phoneNumber && (
+                <Text
+                  className={`text-xs mt-1 ${
+                    phoneNumber.includes("✅")
+                      ? "text-blue-600"
+                      : "text-green-600"
+                  }`}
+                >
+                  📱 {phoneNumber}
+                </Text>
+              )} */}
+              {(serverLoading || isGettingPhone) && (
+                <Text className="text-blue-500 text-xs mt-1">
+                  🔄{" "}
+                  {isGettingPhone
+                    ? "Đang lấy thông tin..."
+                    : "Đang kết nối server..."}
+                </Text>
+              )}
+              {serverError &&
+                !isGettingPhone &&
+                process.env.NODE_ENV === "development" && (
+                  <Text className="text-orange-500 text-xs mt-1">
+                    🔧 DEV: {serverError}
+                  </Text>
+                )}
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Modal xin quyền số điện thoại bắt buộc */}
+      <CustomModal
+        visible={showModal}
+        onClose={() => setShowModal(false)}
+        showCloseButton={false}
+        position="center"
+      >
+        <Box className="text-center p-4">
+          <Box className="mb-4">
+            <Text className="text-2xl mb-2">📱</Text>
+            <Text className="text-lg font-bold text-black mb-2">
+              Cần số điện thoại để sử dụng GoSafe
+            </Text>
+          </Box>
+
+          <Box className="text-left mb-6 space-y-3">
+            <Text className="text-gray-700 text-sm">
+              <strong>Mục đích sử dụng:</strong>
+            </Text>
+            <Box className="space-y-2 text-sm text-gray-600">
+              <Text>• Định danh tài khoản của bạn</Text>
+              <Text>• Liên hệ khẩn cấp khi cần thiết</Text>
+              <Text>• Xác thực thông tin cá nhân</Text>
+              <Text>• Bảo mật và bảo vệ tài khoản</Text>
+            </Box>
+
+            <Text className="text-xs text-gray-500 mt-4">
+              Số điện thoại của bạn sẽ được bảo mật và chỉ sử dụng cho mục đích
+              trên
+            </Text>
+          </Box>
+
+          <Box className="flex flex-row gap-2">
+            <Button
+              fullWidth
+              className="custom-btn-outline"
+              onClick={handleClose}
+              disabled={isGettingPhone}
+            >
+              Đóng
+            </Button>
+            <Button
+              fullWidth
+              className="custom-btn-filled"
+              onClick={handleLogin}
+              disabled={isGettingPhone}
+            >
+              {isGettingPhone ? "🔄 Đang xử lý..." : "Đồng ý cung cấp"}
+            </Button>
+          </Box>
+        </Box>
+      </CustomModal>
+    </>
   );
 };
 
-export default UserHeader;
+export default React.memo(UserHeader);

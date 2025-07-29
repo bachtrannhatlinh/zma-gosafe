@@ -60,50 +60,34 @@ const STRINGEE_API_KEY_SECRET = process.env.STRINGEE_API_KEY_SECRET;
 
 // Cải thiện endpoint decode-phone với axios và headers đúng
 app.post("/api/decode-phone", async (req, res) => {
-  console.log("🚀 Received decode phone request");
-  console.log("📋 Request body:", req.body);
+  console.log("🚀 Received decode phone request (new flow)");
   
   try {
     const { token } = req.body;
     
     if (!token) {
-      console.log("❌ No token provided");
       return res.status(400).json({
         success: false,
         error: "Token is required",
       });
     }
 
-    console.log("🔑 Processing token:", token.substring(0, 20) + "...");
-
     // Kiểm tra credentials
     if (!ZALO_APP_ID || !ZALO_APP_SECRET) {
-      console.log("❌ Missing Zalo credentials");
       return res.status(500).json({
         success: false,
-        error: "Server configuration error",
-        message: "Missing Zalo credentials"
+        error: "Server configuration error"
       });
     }
 
-    // Nếu token là số điện thoại trực tiếp
-    if (/^[0-9+\-\s()]+$/.test(token)) {
-      console.log("📱 Direct phone number received");
-      return res.json({
-        success: true,
-        phoneNumber: token,
-        userInfo: { phone: token, verified: true },
-        message: "Direct phone number processed",
-      });
-    }
-
-    // STEP 1: Get OAuth token
-    console.log("🔄 Getting OAuth token...");
-    const oauthResponse = await axios.post(
-      "https://oauth.zaloapp.com/v4/oa/access_token",
+    // STEP 1: Get access token từ Zalo
+    console.log("🔄 Getting access token...");
+    const tokenResponse = await axios.post(
+      "https://oauth.zaloapp.com/v4/access_token",
       {
         app_id: ZALO_APP_ID,
         app_secret: ZALO_APP_SECRET,
+        grant_type: "authorization_code",
         code: token,
       },
       { 
@@ -114,23 +98,17 @@ app.post("/api/decode-phone", async (req, res) => {
       }
     );
 
-    console.log("✅ OAuth response received");
-
-    if (!oauthResponse.data.access_token) {
-      throw new Error("No access token received from Zalo");
+    if (!tokenResponse.data.access_token) {
+      throw new Error("No access token received");
     }
 
-    // STEP 2: Get user info với method mới
-    console.log("🔄 Getting user info...");
-    
-    const userResponse = await axios.get(
+    // STEP 2: Get phone number với access token
+    console.log("🔄 Getting phone number...");
+    const phoneResponse = await axios.get(
       "https://graph.zalo.me/v2.0/me/info",
       {
         headers: {
-          'access_token': oauthResponse.data.access_token,
-          'code': token,
-          'secret_key': ZALO_APP_SECRET,
-          'Content-Type': 'application/json'
+          'access_token': tokenResponse.data.access_token
         },
         params: {
           fields: 'id,name,phone'
@@ -139,40 +117,30 @@ app.post("/api/decode-phone", async (req, res) => {
       }
     );
 
-    console.log("📱 User response:", userResponse.data);
+    console.log("📱 Phone response:", phoneResponse.data);
 
-    if (userResponse.data && userResponse.data.phone) {
+    if (phoneResponse.data?.phone) {
       return res.json({
         success: true,
-        phoneNumber: userResponse.data.phone,
-        userInfo: userResponse.data,
+        phoneNumber: phoneResponse.data.phone,
+        userInfo: phoneResponse.data,
         message: "Phone number retrieved successfully",
       });
     } else {
       return res.json({
         success: true,
         phoneNumber: "Không thể lấy số điện thoại",
-        userInfo: userResponse.data || { phone: "N/A" },
+        userInfo: phoneResponse.data || {},
         message: "User info retrieved but no phone available",
       });
     }
 
   } catch (error) {
-    console.error("❌ Decode error:", error.message);
-    
-    // Log chi tiết hơn cho debugging
-    if (error.response) {
-      console.error("❌ Response error:", error.response.status, error.response.data);
-    }
-    
+    console.error("❌ Error decoding phone:", error);
     return res.status(500).json({
       success: false,
-      error: "Failed to decode phone token",
-      message: error.message,
-      details: process.env.NODE_ENV === 'development' ? {
-        status: error.response?.status,
-        data: error.response?.data
-      } : undefined
+      error: error.message,
+      message: "Failed to decode phone number"
     });
   }
 });
