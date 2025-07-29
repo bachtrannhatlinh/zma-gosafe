@@ -331,18 +331,22 @@ app.post("/api/sms/send-brandname", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 GoSafe Backend Server running on port ${PORT}`);
-  console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
-  console.log(
-    `🔧 Decode phone: POST http://localhost:${PORT}/api/decode-phone`
-  );
-
-  if (!ZALO_APP_ID || !ZALO_APP_SECRET) {
-    console.warn(
-      "⚠️  Warning: ZALO_APP_ID and ZALO_APP_SECRET not configured in .env"
+if (require.main === module) {
+  // Chỉ chạy khi local
+  app.listen(PORT, () => {
+    console.log(`🚀 GoSafe Backend Server running on port ${PORT}`);
+    console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
+    console.log(
+      `🔧 Decode phone: POST http://localhost:${PORT}/api/decode-phone`
     );
-  }
-});
 
+    if (!ZALO_APP_ID || !ZALO_APP_SECRET) {
+      console.warn(
+        "⚠️  Warning: ZALO_APP_ID and ZALO_APP_SECRET not configured in .env"
+      );
+    }
+  });
+}
+
+// Export app cho Vercel
 module.exports = app;
