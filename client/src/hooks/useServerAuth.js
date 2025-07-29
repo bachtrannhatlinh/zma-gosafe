@@ -3,30 +3,30 @@ import { useState } from 'react';
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 // Cập nhật server URL mới
-const SERVER_URLS = isDevelopment 
-  ? ['http://localhost:5000'] 
-  : [
-      'https://zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app', // URL Vercel chính xác
-      'https://79d5fb63007d.ngrok-free.app', // URL ngrok backup
-    ];
-
 const getCurrentServerUrl = () => {
-  return SERVER_URLS[0]; // Use first URL by default
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:5000';
+  }
+  // Sử dụng URL Vercel mới nhất
+  return 'https://zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app';
 };
 
 export const useServerAuth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const sendTokenToServer = async (phoneToken) => {
+  const sendTokenToServer = async (phoneToken, retryCount = 0) => {
     setLoading(true);
     setError(null);
     
-    console.log('🚀 Sending token to server for decode...');
+    console.log(`🚀 Sending token to server (attempt ${retryCount + 1})...`);
     
     const SERVER_URL = getCurrentServerUrl();
     
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      
       const response = await fetch(`${SERVER_URL}/api/decode-phone`, {
         method: 'POST',
         headers: {
@@ -35,8 +35,10 @@ export const useServerAuth = () => {
           'ngrok-skip-browser-warning': 'true',
         },
         body: JSON.stringify({ token: phoneToken }),
-        timeout: 15000
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -45,14 +47,20 @@ export const useServerAuth = () => {
       const result = await response.json();
       console.log('✅ Server response:', result);
       
-      // Trả về kết quả thực từ server
       return result;
       
     } catch (error) {
       console.error('❌ Server error:', error);
+      
+      // Retry logic
+      if (retryCount < 2 && (error.name === 'AbortError' || error.message.includes('fetch'))) {
+        console.log(`🔄 Retrying... (${retryCount + 1}/2)`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s
+        return sendTokenToServer(phoneToken, retryCount + 1);
+      }
+      
       setError(error.message);
       
-      // Fallback với thông báo lỗi rõ ràng
       return {
         success: false,
         error: error.message,
@@ -66,10 +74,21 @@ export const useServerAuth = () => {
   const testServerConnection = async () => {
     const SERVER_URL = getCurrentServerUrl();
     try {
-      const response = await fetch(`${SERVER_URL}/api/health`);
-      const result = await response.json();
+      console.log('🔄 Testing server connection...');
+      const response = await fetch(`${SERVER_URL}/api/health`, {
+        method: 'GET',
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+        },
+        timeout: 5000
+      });
       
-      console.log('🔄 Server health check:', result);
+      if (!response.ok) {
+        throw new Error(`Server not responding: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Server health check passed:', result);
       return result;
     } catch (error) {
       console.error('❌ Server connection failed:', error);

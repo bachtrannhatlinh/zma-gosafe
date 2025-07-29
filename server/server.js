@@ -42,6 +42,16 @@ app.use((req, res, next) => {
   }
 });
 
+// Thêm middleware xử lý lỗi
+app.use((err, req, res, next) => {
+  console.error('❌ Server error:', err);
+  res.status(500).json({
+    success: false,
+    error: 'Internal server error',
+    message: err.message
+  });
+});
+
 // Zalo App credentials - cần config trong .env
 const ZALO_APP_ID = process.env.ZALO_APP_ID;
 const ZALO_APP_SECRET = process.env.ZALO_APP_SECRET;
@@ -50,17 +60,32 @@ const ZALO_APP_SECRET = process.env.ZALO_APP_SECRET;
 const STRINGEE_API_KEY_SID = process.env.STRINGEE_API_KEY_SID;
 const STRINGEE_API_KEY_SECRET = process.env.STRINGEE_API_KEY_SECRET;
 
-// Cải thiện endpoint decode-phone để trả về số thật
+// Cải thiện endpoint decode-phone
 app.post("/api/decode-phone", async (req, res) => {
   console.log("🚀 Received decode phone request");
+  console.log("📋 Request body:", req.body);
+  console.log("📋 Request headers:", req.headers);
   
   try {
     const { token } = req.body;
     
     if (!token) {
+      console.log("❌ No token provided");
       return res.status(400).json({
         success: false,
         error: "Token is required",
+      });
+    }
+
+    console.log("🔑 Processing token:", token.substring(0, 20) + "...");
+
+    // Kiểm tra credentials
+    if (!ZALO_APP_ID || !ZALO_APP_SECRET) {
+      console.log("❌ Missing Zalo credentials");
+      return res.status(500).json({
+        success: false,
+        error: "Server configuration error",
+        message: "Missing Zalo credentials"
       });
     }
 
@@ -75,7 +100,8 @@ app.post("/api/decode-phone", async (req, res) => {
       });
     }
 
-    // STEP 1: Get OAuth token
+    // STEP 1: Get OAuth token với timeout ngắn hơn
+    console.log("🔄 Getting OAuth token...");
     const oauthResponse = await axios.post(
       "https://oauth.zaloapp.com/v4/oa/access_token",
       {
@@ -83,14 +109,22 @@ app.post("/api/decode-phone", async (req, res) => {
         app_secret: ZALO_APP_SECRET,
         code: token,
       },
-      { timeout: 10000 }
+      { 
+        timeout: 5000,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
     );
+
+    console.log("✅ OAuth response received");
 
     if (!oauthResponse.data.access_token) {
       throw new Error("No access token received from Zalo");
     }
 
-    // STEP 2: Get user info including phone
+    // STEP 2: Get user info
+    console.log("🔄 Getting user info...");
     const userResponse = await axios.get(
       "https://graph.zalo.me/v2.0/me/info",
       {
@@ -100,7 +134,7 @@ app.post("/api/decode-phone", async (req, res) => {
         params: {
           fields: "id,name,phone",
         },
-        timeout: 10000,
+        timeout: 5000,
       }
     );
 
@@ -114,7 +148,6 @@ app.post("/api/decode-phone", async (req, res) => {
         message: "Phone number retrieved successfully",
       });
     } else {
-      // Fallback - vẫn trả về thông tin có ích
       return res.json({
         success: true,
         phoneNumber: "Không thể lấy số điện thoại",
@@ -125,11 +158,13 @@ app.post("/api/decode-phone", async (req, res) => {
 
   } catch (error) {
     console.error("❌ Decode error:", error.message);
+    console.error("❌ Error stack:", error.stack);
     
     return res.status(500).json({
       success: false,
       error: "Failed to decode phone token",
       message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
