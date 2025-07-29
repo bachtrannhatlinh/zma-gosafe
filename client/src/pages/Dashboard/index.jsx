@@ -116,7 +116,7 @@ const Dashboard = () => {
                 }}
               />
             </Box>
-            <UserHeader userInfo={userInfo} isLoading={isLoading} />
+            {/* <UserHeader userInfo={userInfo} isLoading={isLoading} /> */}
 
             {/* Main Content */}
             <Box

@@ -1,15 +1,15 @@
 import React from "react";
-import { Box, Text, Button } from "zmp-ui";
+import { Box, Text, Button, Icon } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
 
 const BottomNavigation = ({ activeTab = "home" }) => {
   const navigate = useNavigate();
 
   const navItems = [
-    { id: "home", icon: "🏠", label: "Trang chủ", isActive: activeTab === "home", path: "/" },
-    { id: "activity", icon: "🚗", label: "Gọi", isActive: activeTab === "call", path: "/call-to-user" },
-    { id: "notification", icon: "📋", label: "Lịch sử", isActive: activeTab === "history", path: "/history" },
-    { id: "account", icon: "👤", label: "Tài khoản", isActive: activeTab === "account", path: "/account" },
+    { id: "home", icon: <Icon icon="zi-home" style={{ fontSize: 24 }} />, label: "Trang chủ", isActive: activeTab === "home", path: "/" },
+    { id: "activity", icon: <Icon icon="zi-call" style={{ fontSize: 24 }} />, label: "Gọi", isActive: activeTab === "call", path: "/call-to-user" },
+    { id: "notification", icon: <Icon icon="zi-notif" style={{ fontSize: 24 }} />, label: "Lịch sử", isActive: activeTab === "history", path: "/history" },
+    { id: "account", icon: <Icon icon="zi-user" style={{ fontSize: 24 }} />, label: "Tài khoản", isActive: activeTab === "account", path: "/account" },
   ];
 
   const handleNavClick = (item) => {
