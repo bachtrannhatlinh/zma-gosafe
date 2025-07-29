@@ -279,6 +279,17 @@ app.post("/api/stringee/token", async (req, res) => {
   }
 });
 
+// Test Stringee credentials endpoint
+app.get("/api/test-stringee-creds", (req, res) => {
+  res.json({
+    hasApiKey: !!STRINGEE_API_KEY_SID,
+    hasApiSecret: !!STRINGEE_API_KEY_SECRET,
+    apiKeyLength: STRINGEE_API_KEY_SID ? STRINGEE_API_KEY_SID.length : 0,
+    secretLength: STRINGEE_API_KEY_SECRET ? STRINGEE_API_KEY_SECRET.length : 0,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // SMS Brandname endpoint với Stringee SMS Gateway
 app.post("/api/sms/send-brandname", async (req, res) => {
   console.log("📱 SMS Brandname request:", req.body);
@@ -309,14 +320,23 @@ app.post("/api/sms/send-brandname", async (req, res) => {
       });
     }
 
-    // Sử dụng Stringee SMS API với đúng format auth
-    const authHeader = Buffer.from(`${STRINGEE_API_KEY_SID}:${STRINGEE_API_KEY_SECRET}`).toString('base64');
+    // Sử dụng Stringee SMS API với Basic Auth
+    const authString = `${STRINGEE_API_KEY_SID}:${STRINGEE_API_KEY_SECRET}`;
+    const authHeader = Buffer.from(authString).toString('base64');
+    
+    console.log("🔑 Auth debug:", {
+      hasApiKey: !!STRINGEE_API_KEY_SID,
+      hasApiSecret: !!STRINGEE_API_KEY_SECRET,
+      authStringLength: authString.length,
+      authHeaderLength: authHeader.length
+    });
     
     const smsResponse = await fetch('https://api.stringee.com/v1/sms', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${authHeader}`
+        'Authorization': `Basic ${authHeader}`,
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         sms: [{
