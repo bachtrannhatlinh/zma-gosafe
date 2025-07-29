@@ -24,6 +24,7 @@
     "setup": "npm run server:install && echo Backend dependencies installed. Now configure server/.env file."
   },
   "dependencies": {
+    "abort-controller": "^3.0.0",
     "jotai": "^2.12.1",
     "jsonwebtoken": "^9.0.2",
     "react": "^18.3.1",

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { AbortSignal } from 'abort-controller';
 import { getServerUrl } from '../config/server';
 
 export const useServerAuth = () => {
@@ -15,15 +14,15 @@ export const useServerAuth = () => {
     console.log('🔐 Sending token:', phoneToken?.substring(0, 20) + '...');
 
     try {
-      // Test server health first
+      // Test server health first - đơn giản hóa
       console.log('🔍 Testing server connection...');
       const healthResponse = await fetch(`${SERVER_URL}/api/health`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-        },
-        signal: AbortSignal.timeout(5000)
+          'User-Agent': 'ZaloMiniApp'
+        }
       });
       
       if (!healthResponse.ok) {
@@ -38,13 +37,14 @@ export const useServerAuth = () => {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'User-Agent': 'ZaloMiniApp'
         },
-        body: JSON.stringify({ token: phoneToken }),
-        signal: AbortSignal.timeout(15000)
+        body: JSON.stringify({ token: phoneToken })
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
@@ -54,8 +54,9 @@ export const useServerAuth = () => {
     } catch (error) {
       console.error('❌ Server error:', error);
       
-      if (retryCount < 2 && (error.name === 'TimeoutError' || error.message.includes('fetch'))) {
-        const delay = Math.pow(2, retryCount) * 1000;
+      // Retry với delay đơn giản
+      if (retryCount < 2) {
+        const delay = (retryCount + 1) * 2000; // 2s, 4s
         console.log(`🔄 Retrying in ${delay}ms... (${retryCount + 1}/3)`);
         await new Promise(resolve => setTimeout(resolve, delay));
         return sendTokenToServer(phoneToken, retryCount + 1);
@@ -81,8 +82,8 @@ export const useServerAuth = () => {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-        },
-        signal: AbortSignal.timeout(5000)
+          'User-Agent': 'ZaloMiniApp'
+        }
       });
       
       if (!response.ok) {
