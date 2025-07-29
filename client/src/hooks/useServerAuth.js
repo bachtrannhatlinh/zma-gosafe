@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getServerUrl, getRequestHeaders } from '../config/server';
+import { AbortSignal } from 'abort-controller';
 
 export const useServerAuth = () => {
   const [loading, setLoading] = useState(false);
@@ -8,21 +8,24 @@ export const useServerAuth = () => {
   const sendTokenToServer = async (phoneToken, retryCount = 0) => {
     setLoading(true);
     setError(null);
-    
-    console.log(`🚀 Sending token to server (attempt ${retryCount + 1})...`);
-    
-    const SERVER_URL = getServerUrl();
-    console.log(`📍 Server URL: ${SERVER_URL}`);
-    
+
+    // Determine server URL
+    const SERVER_URL = process.env.NODE_ENV === 'production' 
+      ? 'zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app'
+      : 'http://localhost:5000';
+
+    console.log('🌐 Using server URL:', SERVER_URL);
+    console.log('🔐 Sending token:', phoneToken?.substring(0, 20) + '...');
+
     try {
-      // Test server health first
+      // Test server health first với timeout ngắn
       console.log('🔍 Testing server connection...');
       const healthResponse = await fetch(`${SERVER_URL}/api/health`, {
         method: 'GET',
         headers: {
           'ngrok-skip-browser-warning': 'true',
         },
-        timeout: 5000
+        signal: AbortSignal.timeout(5000) // 5s timeout
       });
       
       if (!healthResponse.ok) {
@@ -32,34 +35,31 @@ export const useServerAuth = () => {
       console.log('✅ Server is reachable');
       
       // Now send the actual request
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
-      
       const response = await fetch(`${SERVER_URL}/api/decode-phone`, {
         method: 'POST',
-        headers: getRequestHeaders(),
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        },
         body: JSON.stringify({ token: phoneToken }),
-        signal: controller.signal
+        signal: AbortSignal.timeout(15000) // 15s timeout
       });
 
-      clearTimeout(timeoutId);
-
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const result = await response.json();
-      console.log('✅ Server response:', result);
-      
-      return result;
-      
+      const data = await response.json();
+      console.log('✅ Server response:', data);
+
+      return data;
+
     } catch (error) {
       console.error('❌ Server error:', error);
       
       // Retry logic với exponential backoff
-      if (retryCount < 3 && (error.name === 'AbortError' || error.message.includes('fetch') || error.message.includes('Load failed'))) {
-        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+      if (retryCount < 2 && (error.name === 'TimeoutError' || error.message.includes('fetch'))) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s
         console.log(`🔄 Retrying in ${delay}ms... (${retryCount + 1}/3)`);
         await new Promise(resolve => setTimeout(resolve, delay));
         return sendTokenToServer(phoneToken, retryCount + 1);
