@@ -7,7 +7,7 @@ const getCurrentServerUrl = () => {
   if (process.env.NODE_ENV === 'development') {
     return 'http://localhost:5000';
   }
-  // Sử dụng URL Vercel mới nhất
+  // Cập nhật URL production mới nhất
   return 'https://zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app';
 };
 
@@ -22,10 +22,28 @@ export const useServerAuth = () => {
     console.log(`🚀 Sending token to server (attempt ${retryCount + 1})...`);
     
     const SERVER_URL = getCurrentServerUrl();
+    console.log(`📍 Server URL: ${SERVER_URL}`);
     
     try {
+      // Test server health first
+      console.log('🔍 Testing server connection...');
+      const healthResponse = await fetch(`${SERVER_URL}/api/health`, {
+        method: 'GET',
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+        },
+        timeout: 5000
+      });
+      
+      if (!healthResponse.ok) {
+        throw new Error(`Server not available: ${healthResponse.status}`);
+      }
+      
+      console.log('✅ Server is reachable');
+      
+      // Now send the actual request
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
       
       const response = await fetch(`${SERVER_URL}/api/decode-phone`, {
         method: 'POST',
@@ -41,7 +59,8 @@ export const useServerAuth = () => {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const result = await response.json();
@@ -52,10 +71,11 @@ export const useServerAuth = () => {
     } catch (error) {
       console.error('❌ Server error:', error);
       
-      // Retry logic
-      if (retryCount < 2 && (error.name === 'AbortError' || error.message.includes('fetch'))) {
-        console.log(`🔄 Retrying... (${retryCount + 1}/2)`);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s
+      // Retry logic với exponential backoff
+      if (retryCount < 3 && (error.name === 'AbortError' || error.message.includes('fetch') || error.message.includes('Load failed'))) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        console.log(`🔄 Retrying in ${delay}ms... (${retryCount + 1}/3)`);
+        await new Promise(resolve => setTimeout(resolve, delay));
         return sendTokenToServer(phoneToken, retryCount + 1);
       }
       
@@ -64,7 +84,7 @@ export const useServerAuth = () => {
       return {
         success: false,
         error: error.message,
-        phoneNumber: "Không thể lấy số điện thoại",
+        phoneNumber: "Lỗi kết nối server",
       };
     } finally {
       setLoading(false);

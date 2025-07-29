@@ -16,6 +16,7 @@ app.use(
       'https://h5.zalo.me', 
       'https://h5.zdn.vn',
       'https://zdn.vn',
+      'http://localhost:3000',
       'https://localhost:3000',
       'https://zma-gosafe.zalo.me'
     ],
@@ -26,14 +27,11 @@ app.use(
 );
 app.use(express.json());
 
-// Add OPTIONS handler for preflight requests
-app.options('*', cors());
-
-// Add middleware to handle preflight
+// Add preflight handling
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, ngrok-skip-browser-warning');
   
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
