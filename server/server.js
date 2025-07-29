@@ -282,6 +282,7 @@ app.post("/api/stringee/token", async (req, res) => {
 // SMS Brandname endpoint với Stringee SMS Gateway
 app.post("/api/sms/send-brandname", async (req, res) => {
   console.log("📱 SMS Brandname request:", req.body);
+  console.log("📋 Headers:", req.headers);
   
   try {
     const { phoneNumber, message, brandname } = req.body;
@@ -294,6 +295,12 @@ app.post("/api/sms/send-brandname", async (req, res) => {
     }
 
     // Kiểm tra Stringee credentials
+    console.log("🔑 Checking credentials:", {
+      hasApiKey: !!STRINGEE_API_KEY_SID,
+      hasApiSecret: !!STRINGEE_API_KEY_SECRET,
+      apiKeyPrefix: STRINGEE_API_KEY_SID ? STRINGEE_API_KEY_SID.substring(0, 10) + '...' : 'Not set'
+    });
+
     if (!STRINGEE_API_KEY_SID || !STRINGEE_API_KEY_SECRET) {
       console.log("❌ Missing Stringee credentials");
       return res.status(500).json({
@@ -302,12 +309,14 @@ app.post("/api/sms/send-brandname", async (req, res) => {
       });
     }
 
-    // Sử dụng Stringee SMS API
+    // Sử dụng Stringee SMS API với đúng format auth
+    const authHeader = Buffer.from(`${STRINGEE_API_KEY_SID}:${STRINGEE_API_KEY_SECRET}`).toString('base64');
+    
     const smsResponse = await fetch('https://api.stringee.com/v1/sms', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-STRINGEE-AUTH': `${STRINGEE_API_KEY_SID}:${STRINGEE_API_KEY_SECRET}`
+        'Authorization': `Basic ${authHeader}`
       },
       body: JSON.stringify({
         sms: [{
@@ -319,6 +328,7 @@ app.post("/api/sms/send-brandname", async (req, res) => {
     });
 
     const smsResult = await smsResponse.json();
+    console.log("📱 Stringee response:", smsResult);
     
     if (smsResult.r === 0) {
       console.log("✅ SMS Brandname sent successfully");

@@ -6,8 +6,8 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 const SERVER_URLS = isDevelopment 
   ? ['http://localhost:5000'] 
   : [
-      'zma-gosafe.vercel.app', // Vercel URL
-      'https://79d5fb63007d.ngrok-free.app', // URL ngrok mới
+      'https://zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app', // URL Vercel chính xác
+      'https://79d5fb63007d.ngrok-free.app', // URL ngrok backup
     ];
 
 const getCurrentServerUrl = () => {

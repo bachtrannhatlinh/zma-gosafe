@@ -58,7 +58,7 @@ const SMSBrandname = () => {
         // Gửi qua server API
         const SERVER_URL = process.env.NODE_ENV === 'development' 
           ? 'http://localhost:5000' 
-          : 'zma-gosafe.vercel.app';
+          : 'https://zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app';
         
         const response = await fetch(`${SERVER_URL}/api/sms/send-brandname`, {
           method: 'POST',
@@ -244,6 +244,7 @@ const SMSBrandname = () => {
 };
 
 export default SMSBrandname;
+
 
 
 
