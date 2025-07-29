@@ -1,15 +1,5 @@
 import { useState } from 'react';
-// Server URL - switch between localhost and production
-const isDevelopment = process.env.NODE_ENV === 'development';
-
-// Cập nhật server URL mới
-const getCurrentServerUrl = () => {
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:5000';
-  }
-  // Cập nhật URL production mới nhất
-  return 'https://zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app';
-};
+import { getServerUrl, getRequestHeaders } from '../config/server';
 
 export const useServerAuth = () => {
   const [loading, setLoading] = useState(false);
@@ -21,7 +11,7 @@ export const useServerAuth = () => {
     
     console.log(`🚀 Sending token to server (attempt ${retryCount + 1})...`);
     
-    const SERVER_URL = getCurrentServerUrl();
+    const SERVER_URL = getServerUrl();
     console.log(`📍 Server URL: ${SERVER_URL}`);
     
     try {
@@ -47,11 +37,7 @@ export const useServerAuth = () => {
       
       const response = await fetch(`${SERVER_URL}/api/decode-phone`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
-        },
+        headers: getRequestHeaders(),
         body: JSON.stringify({ token: phoneToken }),
         signal: controller.signal
       });
@@ -92,7 +78,7 @@ export const useServerAuth = () => {
   };
 
   const testServerConnection = async () => {
-    const SERVER_URL = getCurrentServerUrl();
+    const SERVER_URL = getServerUrl();
     try {
       console.log('🔄 Testing server connection...');
       const response = await fetch(`${SERVER_URL}/api/health`, {

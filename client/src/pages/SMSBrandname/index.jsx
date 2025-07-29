@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Page, Box, Button, Input, Text, Icon, useNavigate } from "zmp-ui";
 import { openSMS } from "zmp-sdk/apis";
+import { getServerUrl, getRequestHeaders } from '../../config/server';
 
 const SMSBrandname = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -56,17 +57,11 @@ const SMSBrandname = () => {
         }
 
         // Gửi qua server API
-        const SERVER_URL = process.env.NODE_ENV === 'development' 
-          ? 'http://localhost:5000' 
-          : 'https://zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app';
+        const SERVER_URL = getServerUrl();
         
         const response = await fetch(`${SERVER_URL}/api/sms/send-brandname`, {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': 'true',
-            'User-Agent': navigator.userAgent || 'ZaloMiniApp'
-          },
+          headers: getRequestHeaders(),
           body: JSON.stringify({
             phoneNumber: phoneNumber.trim(),
             message: message.trim(),
@@ -244,6 +239,7 @@ const SMSBrandname = () => {
 };
 
 export default SMSBrandname;
+
 
 
 

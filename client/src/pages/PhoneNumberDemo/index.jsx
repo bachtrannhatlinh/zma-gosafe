@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Page, Box, Button, Text, Header } from 'zmp-ui';
 import { getPhoneNumber, authorize } from 'zmp-sdk/apis';
-import { useServerAuth } from '../hooks/useServerAuth';
+import { useServerAuth } from '../../hooks/useServerAuth';
 
-const UserHeader = () => {
+const PhoneNumberDemo = () => {
   const [step, setStep] = useState(1);
   const [token, setToken] = useState(null);
   const [phoneResult, setPhoneResult] = useState(null);
@@ -176,4 +176,4 @@ const UserHeader = () => {
   );
 };
 
-export default UserHeader;
+export default PhoneNumberDemo;
