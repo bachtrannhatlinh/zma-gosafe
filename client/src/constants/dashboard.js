@@ -60,6 +60,9 @@ export const OTHER_SERVICES = [
   },
 ];
 
+export const OTHER_SERVICES_ACTIVE = OTHER_SERVICES.filter(s => SERVICE_ROUTES[s.id]);
+export const OTHER_SERVICES_COMING_SOON = OTHER_SERVICES.filter(s => !SERVICE_ROUTES[s.id]);
+
 // Service route mapping
 export const SERVICE_ROUTES = {
   "car-driver": "/book-ride",

@@ -11,6 +11,7 @@ import UserHeader from "../../components/UserHeader";
 import ServiceSection from "../../components/ServiceSection";
 import BottomNavigation from "../../components/BottomNavigation";
 import PullToRefresh from "../../components/PullToRefresh";
+import DevFeatureToast from "../../components/DevFeatureToast";
 
 // Hooks
 import { useUserData } from "../../hooks/useUserData";
@@ -78,56 +79,54 @@ const Dashboard = () => {
         overflow: "hidden",
       }}
     >
-      <PullToRefresh onRefresh={handleRefresh} refreshing={isRefreshing}>
-        {/* Header with user info */}
-        {/* <UserHeader userInfo={userInfo} isLoading={isLoading} /> */}
+      <DevFeatureToast>
+        {(showToast) => (
+          <PullToRefresh onRefresh={handleRefresh} refreshing={isRefreshing}>
+            {/* Hero Banner */}
+            <Box
+              style={{
+                background: "linear-gradient(to right, #fb923c, #ef4444)",
+                paddingTop: 'env(safe-area-inset-top, 32px)', // tránh Dynamic Island che mất
+              }}
+            >
+              <img
+                src={bannerImage}
+                alt="GOSafe Banner"
+                style={{
+                  width: "100%",
+                  height: "270px", // tăng chiều cao banner
+                  objectFit: "contain", // đảm bảo hình ảnh không bị cắt
+                  userSelect: "none",
+                  pointerEvents: "none",
+                  display: "block",
+                }}
+              />
+            </Box>
 
-        {/* Hero Banner */}
-        <Box
-          style={{
-            background: "linear-gradient(to right, #fb923c, #ef4444)",
-            paddingTop: 'env(safe-area-inset-top, 32px)', // tránh Dynamic Island che mất
-          }}
-        >
-          <img
-            src={bannerImage}
-            alt="GOSafe Banner"
-            style={{
-              width: "100%",
-              height: "270px", // tăng chiều cao banner
-              objectFit: "contain", // đảm bảo hình ảnh không bị cắt
-              userSelect: "none",
-              pointerEvents: "none",
-              display: "block",
-            }}
-          />
-          {/* Stringee Demo Button - Floating on banner */}
-          {/* ...existing code... */}
-        </Box>
-
-        {/* Main Content */}
-        <Box
-          style={{
-            background: "linear-gradient(to bottom, #fb923c, #ef4444)",
-            minHeight: "calc(100vh - 192px)", // Trừ đi chiều cao banner
-            paddingBottom: "120px", // Space cho bottom nav
-          }}
-        >
-          <ServiceSection
-            title="DỊCH VỤ TÀI XẾ"
-            services={DRIVER_SERVICES}
-            onServiceClick={handleServiceClick}
-            columns={3}
-          />
-
-          <ServiceSection
-            title="CÁC DỊCH VỤ KHÁC CỦA GOSAFE"
-            services={OTHER_SERVICES}
-            onServiceClick={handleServiceClick}
-            columns={3}
-          />
-        </Box>
-      </PullToRefresh>
+            {/* Main Content */}
+            <Box
+              style={{
+                background: "linear-gradient(to bottom, #fb923c, #ef4444)",
+                minHeight: "calc(100vh - 192px)", // Trừ đi chiều cao banner
+                paddingBottom: "120px", // Space cho bottom nav
+              }}
+            >
+              <ServiceSection
+                title="DỊCH VỤ TÀI XẾ"
+                services={DRIVER_SERVICES}
+                onServiceClick={showToast}
+                columns={3}
+              />
+              <ServiceSection
+                title="CÁC DỊCH VỤ KHÁC CỦA GOSAFE"
+                services={OTHER_SERVICES}
+                onServiceClick={showToast}
+                columns={3}
+              />
+            </Box>
+          </PullToRefresh>
+        )}
+      </DevFeatureToast>
 
       {/* Stringee Demo Modal */}
       {/* <Modal
