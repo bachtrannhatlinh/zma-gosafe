@@ -279,6 +279,58 @@ app.post("/api/stringee/token", async (req, res) => {
   }
 });
 
+// SMS Brandname endpoint với Stringee SMS Gateway
+app.post("/api/sms/send-brandname", async (req, res) => {
+  console.log("📱 SMS Brandname request:", req.body);
+  
+  try {
+    const { phoneNumber, message, brandname } = req.body;
+    
+    if (!phoneNumber || !message) {
+      return res.status(400).json({
+        success: false,
+        error: "Phone number and message are required"
+      });
+    }
+
+    // Sử dụng Stringee SMS API
+    const smsResponse = await fetch('https://api.stringee.com/v1/sms', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-STRINGEE-AUTH': `${STRINGEE_API_KEY_SID}:${STRINGEE_API_KEY_SECRET}`
+      },
+      body: JSON.stringify({
+        sms: [{
+          from: brandname || 'GoSafe', // Brandname
+          to: phoneNumber,
+          text: message
+        }]
+      })
+    });
+
+    const smsResult = await smsResponse.json();
+    
+    if (smsResult.r === 0) {
+      console.log("✅ SMS Brandname sent successfully");
+      res.json({
+        success: true,
+        message: "SMS Brandname sent successfully",
+        data: smsResult
+      });
+    } else {
+      throw new Error(smsResult.message || 'SMS sending failed');
+    }
+
+  } catch (error) {
+    console.error("❌ SMS Brandname error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 GoSafe Backend Server running on port ${PORT}`);
   console.log(`📋 Health check: http://localhost:${PORT}/api/health`);

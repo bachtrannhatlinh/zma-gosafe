@@ -41,6 +41,12 @@ export const OTHER_SERVICES = [
     bgColor: "bg-red-500",
   },
   { 
+    id: "sms-brandname", 
+    icon: "💬", 
+    label: "SMS Brandname", 
+    bgColor: "bg-purple-500",
+  },
+  { 
     id: "flight-tickets", 
     icon: "✈️", 
     label: "Vé máy bay", 
@@ -62,6 +68,7 @@ export const SERVICE_ROUTES = {
   "vehicle-registration": null, // Coming soon
   "bike-rental": null, // Coming soon
   "car-rental": null, // Coming soon
+  "sms-brandname": "/sms-brandname", // SMS Brandname route
   "flight-tickets": null, // Coming soon
   "travel-tours": null, // Coming soon
   food: "/food",

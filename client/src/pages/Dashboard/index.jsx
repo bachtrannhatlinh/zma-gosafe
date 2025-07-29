@@ -11,7 +11,6 @@ import UserHeader from "../../components/UserHeader";
 import ServiceSection from "../../components/ServiceSection";
 import BottomNavigation from "../../components/BottomNavigation";
 import PullToRefresh from "../../components/PullToRefresh";
-import OpenPhoneDemo from "../../components/OpenPhoneDemo";
 
 // Hooks
 import { useUserData } from "../../hooks/useUserData";
@@ -23,12 +22,6 @@ import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showOpenPhoneDemo, setShowOpenPhoneDemo] = useState(false);
-
-  // Add Open Phone demo handler
-  const handleOpenPhoneDemo = () => {
-    setShowOpenPhoneDemo(true);
-  };
 
   // Custom hooks
   const { userInfo, isLoading, error, refetch } = useUserData();

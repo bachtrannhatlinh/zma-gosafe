@@ -72,16 +72,6 @@ const CallToUser = () => {
         >
           <Icon icon="zi-chevron-left-header" style={{ fontSize: '30px', color: '#374151' }} />
         </Box>
-        
-        <Box style={{ display: 'flex', alignItems: 'center', marginLeft: '8px' }}>
-          <Text style={{
-            fontSize: '18px',
-            fontWeight: 'bold',
-            color: '#374151'
-          }}>
-            Gọi điện cho người dùng
-          </Text>
-        </Box>
       </Box>
       
       {/* Centered content container */}
