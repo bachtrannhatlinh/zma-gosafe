@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AbortSignal } from 'abort-controller';
+import { getServerUrl } from '../config/server';
 
 export const useServerAuth = () => {
   const [loading, setLoading] = useState(false);
@@ -9,23 +10,20 @@ export const useServerAuth = () => {
     setLoading(true);
     setError(null);
 
-    // Determine server URL
-    const SERVER_URL = process.env.NODE_ENV === 'production' 
-      ? 'https://zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app'
-      : 'http://localhost:5000';
-
+    const SERVER_URL = getServerUrl();
     console.log('🌐 Using server URL:', SERVER_URL);
     console.log('🔐 Sending token:', phoneToken?.substring(0, 20) + '...');
 
     try {
-      // Test server health first với timeout ngắn
+      // Test server health first
       console.log('🔍 Testing server connection...');
       const healthResponse = await fetch(`${SERVER_URL}/api/health`, {
         method: 'GET',
         headers: {
-          'ngrok-skip-browser-warning': 'true',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-        signal: AbortSignal.timeout(5000) // 5s timeout
+        signal: AbortSignal.timeout(5000)
       });
       
       if (!healthResponse.ok) {
@@ -34,15 +32,15 @@ export const useServerAuth = () => {
       
       console.log('✅ Server is reachable');
       
-      // Now send the actual request
+      // Send decode request
       const response = await fetch(`${SERVER_URL}/api/decode-phone`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({ token: phoneToken }),
-        signal: AbortSignal.timeout(15000) // 15s timeout
+        signal: AbortSignal.timeout(15000)
       });
 
       if (!response.ok) {
@@ -51,22 +49,19 @@ export const useServerAuth = () => {
 
       const data = await response.json();
       console.log('✅ Server response:', data);
-
       return data;
 
     } catch (error) {
       console.error('❌ Server error:', error);
       
-      // Retry logic với exponential backoff
       if (retryCount < 2 && (error.name === 'TimeoutError' || error.message.includes('fetch'))) {
-        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s
+        const delay = Math.pow(2, retryCount) * 1000;
         console.log(`🔄 Retrying in ${delay}ms... (${retryCount + 1}/3)`);
         await new Promise(resolve => setTimeout(resolve, delay));
         return sendTokenToServer(phoneToken, retryCount + 1);
       }
       
       setError(error.message);
-      
       return {
         success: false,
         error: error.message,
@@ -84,9 +79,10 @@ export const useServerAuth = () => {
       const response = await fetch(`${SERVER_URL}/api/health`, {
         method: 'GET',
         headers: {
-          'ngrok-skip-browser-warning': 'true',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-        timeout: 5000
+        signal: AbortSignal.timeout(5000)
       });
       
       if (!response.ok) {
