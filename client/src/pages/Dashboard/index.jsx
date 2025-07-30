@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Page, Box, Text, Modal, Button } from "zmp-ui";
+import { Page, Box, Text } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
 
 // Import banner image
