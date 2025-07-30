@@ -2,7 +2,7 @@ export const getServerUrl = () => {
   if (process.env.NODE_ENV === 'development') {
     return 'http://localhost:5000';
   }
-  return 'https://zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app';
+  return process.env.URL_SERVER;
 };
 
 export const getRequestHeaders = () => ({
