@@ -1,33 +1,26 @@
 import { useState, useEffect, useCallback } from "react";
-import { Box } from "zmp-ui";
-// import { useUserHeader } from "../hooks/useUserHeader";
-import LoadingSkeleton from "./shared/LoadingSkeleton";
-import PermissionModal from "./shared/PermissionModal";
-import UserInfoDisplay from "./shared/UserInfoDisplay";
-import axios from "axios";
+import { useServerAuth } from "./useServerAuth";
 
-const UserHeader = ({ userInfo, isLoading }) => {
-  // const {
-  //   showModal,
-  //   setShowModal,
-  //   updatedUserInfo,
-  //   phoneNumber,
-  //   isGettingPhone,
-  //   serverLoading,
-  //   serverError,
-  //   handleLogin,
-  //   handleLocationClick,
-  // } = useUserHeader(userInfo, isLoading);
+export const useUserHeader = () => {
   const [showModal, setShowModal] = useState(false);
   const [updatedUserInfo, setUpdatedUserInfo] = useState(null);
   const [isGettingPhone, setIsGettingPhone] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState(null);
 
-  if (isLoading) {
-    return <LoadingSkeleton />;
-  }
+  const {
+    sendTokenToServer,
+    loading: serverLoading,
+    error: serverError,
+  } = useServerAuth();
 
-  const currentUserInfo = updatedUserInfo || userInfo;
+  const handleLocationClick = useCallback(() => {
+    if (
+      phoneNumber === "Chưa có số điện thoại" ||
+      phoneNumber === "Cần cấp quyền"
+    ) {
+      setShowModal(true);
+    }
+  }, [phoneNumber]);
 
   const getZaloPhoneNumber = async (accessToken, token, secretKey) => {
     try {
@@ -117,37 +110,36 @@ const UserHeader = ({ userInfo, isLoading }) => {
     }
   };
 
+  const handlePermissionError = (error) => {
+    console.error("❌ Lỗi xin quyền:", error);
+
+    if (error.message.includes("từ chối")) {
+      alert(
+        "Bạn cần cấp quyền số điện thoại để sử dụng GoSafe. Vui lòng thử lại."
+      );
+    } else if (error.message.includes("Không thể lấy")) {
+      alert("Có lỗi khi lấy thông tin. Vui lòng thử lại sau.");
+    } else {
+      alert("Có lỗi xảy ra. Vui lòng thử lại.");
+    }
+
+    setPhoneNumber("Cần cấp quyền");
+  };
+
   const handleLogin = () => {
     setShowModal(false);
     handleAllowPermission();
   };
 
-  return (
-    <>
-      <Box
-        className="!px-4 relative bg-white shadow-sm"
-        style={{ paddingTop: "max(env(safe-area-inset-top), 30px)" }}
-      >
-        <Box className="flex items-center justify-between py-4 mt-[-20px] px-4 bg-white">
-          <UserInfoDisplay
-            userInfo={currentUserInfo}
-            phoneNumber={phoneNumber}
-            serverLoading={serverLoading}
-            isGettingPhone={isGettingPhone}
-            serverError={serverError}
-            onClick={handleLocationClick}
-          />
-        </Box>
-      </Box>
-
-      <PermissionModal
-        visible={showModal}
-        onClose={() => setShowModal(false)}
-        onAccept={handleLogin}
-        isLoading={isGettingPhone}
-      />
-    </>
-  );
+  return {
+    showModal,
+    setShowModal,
+    updatedUserInfo,
+    phoneNumber,
+    isGettingPhone,
+    serverLoading,
+    serverError,
+    handleLogin,
+    handleLocationClick,
+  };
 };
-
-export default React.memo(UserHeader);
