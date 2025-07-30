@@ -12,19 +12,13 @@ const UserHeader = () => {
     try {
       setLoading(true);
       
-      // STEP 1: Authorize với error handling tốt hơn
+      // STEP 1: Authorize
       console.log('🔐 Step 1: Requesting authorization...');
       const authResult = await new Promise((resolve, reject) => {
         authorize({
           scopes: ["scope.userPhonenumber"],
-          success: (res) => {
-            console.log('✅ Authorization success:', res);
-            resolve(res);
-          },
-          fail: (error) => {
-            console.error('❌ Authorization failed:', error);
-            reject(new Error(`Authorization failed: ${error.message || JSON.stringify(error)}`));
-          }
+          success: resolve,
+          fail: reject
         });
       });
 
@@ -32,21 +26,15 @@ const UserHeader = () => {
       console.log('📱 Step 2: Getting phone number...');
       const phoneResult = await new Promise((resolve, reject) => {
         getPhoneNumber({
-          success: (res) => {
-            console.log('✅ Phone number success:', res);
-            resolve(res);
-          },
-          fail: (error) => {
-            console.error('❌ Phone number failed:', error);
-            reject(new Error(`Get phone failed: ${error.message || JSON.stringify(error)}`));
-          }
+          success: resolve,
+          fail: reject
         });
       });
 
       const token = phoneResult.token || phoneResult;
       console.log('🎫 Token received:', token);
 
-      // STEP 3: Send to server
+      // STEP 3: Send to server với error handling tốt hơn
       const SERVER_URL = getServerUrl();
       console.log('🚀 Step 3: Sending to server:', SERVER_URL);
       
@@ -54,35 +42,81 @@ const UserHeader = () => {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Accept": "application/json"
+          "Accept": "application/json",
+          "ngrok-skip-browser-warning": "true"
         },
         body: JSON.stringify({ token }),
       });
 
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', response.headers);
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('❌ Server error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
       console.log('✅ Server response:', data);
       
+      if (data.success === false) {
+        throw new Error(data.error || 'Server returned error');
+      }
+      
       setPhoneNumber(data.phoneNumber || data.phone || "Không lấy được SĐT");
       
     } catch (error) {
       console.error("❌ Full error:", error);
-      alert(`Lỗi: ${error.message}`);
+      console.error("❌ Error name:", error.name);
+      console.error("❌ Error message:", error.message);
+      console.error("❌ Error stack:", error.stack);
+      
+      // Hiển thị lỗi chi tiết hơn
+      let errorMessage = "Lỗi không xác định";
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.name) {
+        errorMessage = error.name;
+      }
+      
+      alert(`Lỗi: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
   };
 
+  const testServerConnection = async () => {
+    try {
+      const SERVER_URL = getServerUrl();
+      console.log('🔍 Testing server:', SERVER_URL);
+      
+      const response = await fetch(`${SERVER_URL}/api/health`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
+      
+      console.log('📡 Health check status:', response.status);
+      const data = await response.json();
+      console.log('📡 Health check data:', data);
+      
+      alert(`Server OK: ${data.message}`);
+    } catch (error) {
+      console.error('❌ Server test failed:', error);
+      alert(`Server lỗi: ${error.message}`);
+    }
+  };
+
   return (
     <div>
+      <button onClick={testServerConnection}>Test Server</button>
       <button onClick={requestPhoneNumber}>
         {loading ? "Đang xử lý..." : "Lấy số điện thoại"}
       </button>
       {phoneNumber && <p>Số điện thoại: {phoneNumber}</p>}
-      {accessToken && <p>Access Token: {accessToken.substring(0, 20)}...</p>}
     </div>
   );
 };
