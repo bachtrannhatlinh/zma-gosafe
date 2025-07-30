@@ -3,13 +3,14 @@ export const getServerUrl = () => {
   if (process.env.NODE_ENV === 'development') {
     url = 'http://localhost:5000';
   } else {
+    // Đảm bảo có https:// prefix
     url = process.env.URL_SERVER || 'zma-gosafe.vercel.app';
+    if (!url.startsWith('http')) {
+      url = 'https://' + url;
+    }
   }
   
   console.log('🌐 Server URL:', url);
-  console.log('🌐 NODE_ENV:', process.env.NODE_ENV);
-  console.log('🌐 URL_SERVER:', process.env.URL_SERVER);
-  
   return url;
 };
 
@@ -17,6 +18,8 @@ export const getRequestHeaders = () => ({
   'Content-Type': 'application/json',
   'Accept': 'application/json',
   'ngrok-skip-browser-warning': 'true',
-  'User-Agent': navigator.userAgent || 'ZaloMiniApp'
+  'User-Agent': 'ZaloMiniApp/iOS',
+  'X-Requested-With': 'XMLHttpRequest'
 });
+
 

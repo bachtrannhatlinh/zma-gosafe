@@ -13,9 +13,11 @@ app.use(
   cors({
     origin: [
       "https://zalo.me",
-      "https://h5.zalo.me",
+      "https://h5.zalo.me", 
       "https://h5.zdn.vn",
       "https://zdn.vn",
+      "https://zmp.zalo.me",
+      "https://mini.zalo.me",
       "http://localhost:3000",
       "https://localhost:3000",
       "https://zma-gosafe.zalo.me",
@@ -24,10 +26,11 @@ app.use(
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
-      "Accept",
+      "Accept", 
       "Authorization",
       "User-Agent",
       "ngrok-skip-browser-warning",
+      "X-Requested-With"
     ],
   })
 );
