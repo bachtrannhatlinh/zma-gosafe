@@ -10,56 +10,70 @@ export const useChat = (userInfo) => {
   const [messages, setMessages] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState(null);
   const socketRef = useRef(null);
 
   useEffect(() => {
-    if (!userInfo?.phone) return;
+    if (!userInfo?.phone) {
+      console.log('🔍 useChat: No userInfo.phone, skipping connection');
+      return;
+    }
 
-    // Initialize socket connection
-    socketRef.current = io(SERVER_URL);
-    setSocket(socketRef.current);
+    console.log('🔍 useChat: Connecting with userInfo:', userInfo);
 
-    socketRef.current.on('connect', () => {
-      console.log('💬 Connected to chat server');
-      setIsConnected(true);
-      
-      // Register user as online
-      socketRef.current.emit('user-online', {
-        userId: userInfo.phone,
-        userName: userInfo.name || 'User',
-        userPhone: userInfo.phone
+    try {
+      // Initialize socket connection
+      socketRef.current = io(SERVER_URL, {
+        timeout: 10000,
+        forceNew: true
       });
-    });
+      setSocket(socketRef.current);
 
-    socketRef.current.on('disconnect', () => {
-      console.log('💬 Disconnected from chat server');
-      setIsConnected(false);
-    });
+      socketRef.current.on('connect', () => {
+        console.log('💬 Connected to chat server');
+        setIsConnected(true);
+        setError(null);
+        
+        // Register user as online
+        socketRef.current.emit('user-online', {
+          userId: userInfo.phone,
+          userName: userInfo.name || 'User',
+          userPhone: userInfo.phone
+        });
+      });
 
-    socketRef.current.on('users-online', (users) => {
-      setOnlineUsers(users.filter(u => u.userId !== userInfo.phone));
-    });
+      socketRef.current.on('connect_error', (err) => {
+        console.error('💬 Connection error:', err);
+        setError(err.message);
+        setIsConnected(false);
+      });
 
-    socketRef.current.on('receive-message', (message) => {
-      setMessages(prev => [...prev, message]);
-    });
+      socketRef.current.on('disconnect', () => {
+        console.log('💬 Disconnected from chat server');
+        setIsConnected(false);
+      });
 
-    socketRef.current.on('message-sent', (response) => {
-      if (response.success) {
-        console.log('✅ Message sent successfully');
-      }
-    });
+      socketRef.current.on('users-online', (users) => {
+        console.log('👥 Online users updated:', users);
+        setOnlineUsers(users.filter(u => u.userId !== userInfo.phone));
+      });
 
-    socketRef.current.on('message-error', (error) => {
-      console.error('❌ Message error:', error);
-    });
+      socketRef.current.on('receive-message', (message) => {
+        console.log('📨 Received message:', message);
+        setMessages(prev => [...prev, message]);
+      });
+
+    } catch (err) {
+      console.error('❌ useChat initialization error:', err);
+      setError(err.message);
+    }
 
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
     };
-  }, [userInfo]);
+  }, [userInfo?.phone]);
 
   const sendMessage = (receiverId, content, messageType = 'text') => {
     if (!socketRef.current || !isConnected) {
@@ -108,12 +122,11 @@ export const useChat = (userInfo) => {
   };
 
   return {
-    socket: socketRef.current,
+    socket,
     messages,
     onlineUsers,
     isConnected,
-    sendMessage,
-    loadMessages,
+    error,
     setMessages
   };
 };

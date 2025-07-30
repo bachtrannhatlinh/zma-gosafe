@@ -28,6 +28,12 @@ export const OTHER_SERVICES = [
     label: "Đăng kiểm hộ", 
     bgColor: "bg-blue-500",
   },
+  {
+    id: "chat",
+    icon: "💬",
+    label: "Chat",
+    bgColor: "bg-green-500",
+  },
   { 
     id: "bike-rental", 
     icon: "🛵", 
@@ -67,6 +73,7 @@ export const SERVICE_ROUTES = {
   "bike-driver": "/book-ride", 
   "daily-rental": "/book-ride",
   "vehicle-registration": null, // Coming soon
+  "chat": "/chat-list", // Chat route
   "bike-rental": null, // Coming soon
   "car-rental": null, // Coming soon
   "sms-brandname": "/sms-brandname", // SMS Brandname route

@@ -9,6 +9,8 @@ const mongoose = require("mongoose");
 const Message = require("./models/Message");
 require("dotenv").config();
 
+const PORT = 5000; // <-- Thêm dòng này thay cho dòng 21 cũ
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -36,9 +38,10 @@ const onlineUsers = new Map();
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log('🔌 User connected:', socket.id);
+  console.log('🔌 User connected:', socket.id, 'from:', socket.handshake.headers.origin);
 
   socket.on('user-online', (userData) => {
+    console.log('👤 User going online:', userData);
     onlineUsers.set(socket.id, {
       userId: userData.userId,
       userName: userData.userName,
@@ -47,8 +50,9 @@ io.on('connection', (socket) => {
     });
     
     // Broadcast online users list
-    io.emit('users-online', Array.from(onlineUsers.values()));
-    console.log('👤 User online:', userData.userName);
+    const usersList = Array.from(onlineUsers.values());
+    io.emit('users-online', usersList);
+    console.log('📡 Broadcasting online users:', usersList.length);
   });
 
   socket.on('send-message', async (messageData) => {

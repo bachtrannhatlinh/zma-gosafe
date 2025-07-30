@@ -21,7 +21,7 @@ import { useServiceNavigation } from "../../hooks/useNavigation";
 import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
 
 // Danh sách services đã phát triển
-const DEVELOPED_SERVICES = ['sms-brandname'];
+const DEVELOPED_SERVICES = ['sms-brandname', 'chat'];
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -142,16 +142,6 @@ const Dashboard = () => {
           </PullToRefresh>
         )}
       </DevFeatureToast>
-
-      {/* Stringee Demo Modal */}
-      {/* <Modal
-        visible={showStringeeDemo}
-        title="📞 Stringee Call Demo"
-        onClose={() => setShowStringeeDemo(false)}
-        className="stringee-demo-modal"
-      >
-        <StringeeDemo />
-      </Modal> */}
 
       {/* Bottom Navigation - Fixed */}
       <BottomNavigation activeTab="home" />
