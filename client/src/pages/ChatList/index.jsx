@@ -19,7 +19,7 @@ const ChatListContent = () => {
     try {
       const SERVER_URL = process.env.NODE_ENV === 'development' 
         ? 'http://localhost:5000' 
-        : 'https://zma-gosafe-git-feature-live-chat-bachtrannhatlinhs-projects.vercel.app';
+        : 'https://https://zma-gosafe-bachtrannhatlinhs-projects.vercel.app/';
       
       console.log('🔍 Checking server health:', SERVER_URL);
       
@@ -73,7 +73,7 @@ const ChatListContent = () => {
       
       const SERVER_URL = process.env.NODE_ENV === 'development' 
         ? 'http://localhost:5000' 
-        : 'https://zma-gosafe-git-feature-live-chat-bachtrannhatlinhs-projects.vercel.app';
+        : 'https://https://zma-gosafe-bachtrannhatlinhs-projects.vercel.app/';
         
       console.log('🔍 Loading conversations for:', userPhone);
       

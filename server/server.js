@@ -234,62 +234,6 @@ const ZALO_APP_SECRET = process.env.ZALO_APP_SECRET;
 const STRINGEE_API_KEY_SID = process.env.STRINGEE_API_KEY_SID;
 const STRINGEE_API_KEY_SECRET = process.env.STRINGEE_API_KEY_SECRET;
 
-app.post("/api/zalo-phone", async (req, res) => {
-  const { code } = req.body;
-
-  try {
-    const response = await axios.post("https://graph.zalo.me/v2.0/oa/getphone", null, {
-      params: {
-        code,
-        app_id: process.env.ZALO_APP_ID,
-        app_secret: process.env.ZALO_APP_SECRET,
-      },
-    });
-
-    const { data } = response;
-    if (data && data.data && data.data.phone) {
-      res.json({ phone: data.data.phone });
-    } else {
-      res.status(400).json({ error: "Không lấy được số điện thoại" });
-    }
-  } catch (error) {
-    console.error("Lỗi backend:", error.response?.data || error.message);
-    res.status(500).json({ error: "Lỗi server khi truy vấn Zalo API" });
-  }
-});
-
-// Cải thiện endpoint decode-phone với axios và headers đúng
-app.post("/api/decode-phone", async (req, res) => {
-  console.log("🚀 Received decode phone request");
-  const { token, accessToken } = req.body;
-
-  if (!token) {
-    return res.status(400).json({
-      success: false,
-      error: "Token is required"
-    });
-  }
-
-  try {
-    // Your existing decode logic here
-    const response = await axios.post("https://graph.zalo.me/v2.0/me/token", {
-      code: token,
-      app_id: process.env.ZALO_APP_ID,
-      app_secret: process.env.ZALO_APP_SECRET,
-      grant_type: "authorization_code"
-    });
-
-    // Continue with phone number retrieval...
-    
-  } catch (error) {
-    console.error("❌ Error decoding phone:", error);
-    return res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
 // Health check endpoints
 app.get("/health", (req, res) => {
   res.json({
