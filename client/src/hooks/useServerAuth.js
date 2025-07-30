@@ -1,101 +1,72 @@
 import { useState } from 'react';
-// Server URL - switch between localhost and production
-const isDevelopment = process.env.NODE_ENV === 'development';
-
-// Cập nhật server URL mới
-const SERVER_URLS = isDevelopment 
-  ? ['http://localhost:5000'] 
-  : [
-      'https://zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app', // URL Vercel chính xác
-      'https://79d5fb63007d.ngrok-free.app', // URL ngrok backup
-    ];
-
-const getCurrentServerUrl = () => {
-  return SERVER_URLS[0]; // Use first URL by default
-};
+import { getServerUrl } from '../config/server';
 
 export const useServerAuth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const sendTokenToServer = async (phoneToken) => {
+  const sendTokenToServer = async (phoneToken, retryCount = 0) => {
     setLoading(true);
     setError(null);
-    
-    console.log('🚀 Sending token to server for decode...');
-    
-    const SERVER_URL = getCurrentServerUrl();
-    
-    try {
-      console.log('📡 Calling server:', `${SERVER_URL}/api/decode-phone`);
 
-      // Test health check first
-      try {
-        console.log('🏥 Testing health check...');
-        const healthResponse = await fetch(`${SERVER_URL}/api/health`);
-        console.log('🏥 Health status:', healthResponse.status);
-        if (healthResponse.ok) {
-          const healthData = await healthResponse.json();
-          console.log('🏥 Health data:', healthData);
+    const SERVER_URL = getServerUrl();
+    console.log('🌐 Using server URL:', SERVER_URL);
+    console.log('🔐 Sending token:', phoneToken?.substring(0, 20) + '...');
+
+    try {
+      // Test server health first - đơn giản hóa
+      console.log('🔍 Testing server connection...');
+      const healthResponse = await fetch(`${SERVER_URL}/api/health`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'User-Agent': 'ZaloMiniApp'
         }
-      } catch (healthError) {
-        console.error('❌ Health check failed:', healthError);
+      });
+      
+      if (!healthResponse.ok) {
+        throw new Error(`Server not available: ${healthResponse.status}`);
       }
       
-      // Wrap fetch in additional try-catch
-      let response;
-      try {
-        response = await fetch(`${SERVER_URL}/api/decode-phone`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'ngrok-skip-browser-warning': 'true',
-            'User-Agent': navigator.userAgent || 'ZaloMiniApp'
-          },
-          body: JSON.stringify({ token: phoneToken }),
-          timeout: 15000
-        });
-      } catch (fetchError) {
-        // Immediate fallback for fetch errors
-        throw new Error(`Network error: ${fetchError.message}`);
-      }
+      console.log('✅ Server is reachable');
+      
+      // Send decode request
+      const response = await fetch(`${SERVER_URL}/api/decode-phone`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'User-Agent': 'ZaloMiniApp'
+        },
+        body: JSON.stringify({ token: phoneToken })
+      });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      const result = await response.json();
-      console.log('✅ Server response:', result);
-      
-      return result;
-      
+      const data = await response.json();
+      console.log('✅ Server response:', data);
+      return data;
+
     } catch (error) {
-      // iPhone/iOS specific handling
-      if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iOS')) {
-        console.log('📱 iPhone detected - using fallback');
-        return {
-          success: true,
-          phoneNumber: `👤 Người dùng iOS - Đã xác thực`,
-          userInfo: { 
-            phone: "Đã xác thực trên iOS", 
-            platform: "iOS",
-            verified: true
-          },
-          message: 'Xác thực iOS thành công'
-        };
+      console.error('❌ Server error:', error);
+      
+      // Retry với delay đơn giản
+      if (retryCount < 2) {
+        const delay = (retryCount + 1) * 2000; // 2s, 4s
+        console.log(`🔄 Retrying in ${delay}ms... (${retryCount + 1}/3)`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return sendTokenToServer(phoneToken, retryCount + 1);
       }
       
-      // General fallback with user info instead of phone
+      setError(error.message);
       return {
-        success: true,
-        phoneNumber: `👤 Người dùng Zalo - Đã xác thực`,
-        userInfo: { 
-          phone: "Đã xác thực qua Zalo", 
-          verified: true,
-          timestamp: new Date().toISOString()
-        },
-        message: 'Xác thực thành công với fallback'
+        success: false,
+        error: error.message,
+        phoneNumber: "Lỗi kết nối server",
       };
     } finally {
       setLoading(false);
@@ -103,12 +74,24 @@ export const useServerAuth = () => {
   };
 
   const testServerConnection = async () => {
-    const SERVER_URL = getCurrentServerUrl();
+    const SERVER_URL = getServerUrl();
     try {
-      const response = await fetch(`${SERVER_URL}/api/health`);
-      const result = await response.json();
+      console.log('🔄 Testing server connection...');
+      const response = await fetch(`${SERVER_URL}/api/health`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'User-Agent': 'ZaloMiniApp'
+        }
+      });
       
-      console.log('🔄 Server health check:', result);
+      if (!response.ok) {
+        throw new Error(`Server not responding: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Server health check passed:', result);
       return result;
     } catch (error) {
       console.error('❌ Server connection failed:', error);

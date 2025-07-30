@@ -140,7 +140,7 @@ const CallToUser = () => {
         </Box>
       </Box>
 
-      <BottomNavigation activeTab="other" />
+      <BottomNavigation activeTab="call" />
     </Page>
   );
 };

@@ -60,8 +60,6 @@ export const OTHER_SERVICES = [
   },
 ];
 
-export const OTHER_SERVICES_ACTIVE = OTHER_SERVICES.filter(s => SERVICE_ROUTES[s.id]);
-export const OTHER_SERVICES_COMING_SOON = OTHER_SERVICES.filter(s => !SERVICE_ROUTES[s.id]);
 
 // Service route mapping
 export const SERVICE_ROUTES = {
@@ -83,6 +81,9 @@ export const SERVICE_ROUTES = {
   bike: "/vehicle",
   market: null, // Coming soon
 };
+
+export const OTHER_SERVICES_ACTIVE = OTHER_SERVICES.filter(s => SERVICE_ROUTES[s.id]);
+export const OTHER_SERVICES_COMING_SOON = OTHER_SERVICES.filter(s => !SERVICE_ROUTES[s.id]);
 
 // Local storage keys
 export const STORAGE_KEYS = {

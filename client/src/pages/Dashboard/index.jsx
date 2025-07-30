@@ -20,6 +20,9 @@ import { useServiceNavigation } from "../../hooks/useNavigation";
 // Constants
 import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
 
+// Danh sách services đã phát triển
+const DEVELOPED_SERVICES = ['sms-brandname'];
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -27,6 +30,17 @@ const Dashboard = () => {
   // Custom hooks
   const { userInfo, isLoading, error, refetch } = useUserData();
   const { handleServiceClick } = useServiceNavigation(navigate);
+
+  // Function xử lý click service - nhận showToast từ DevFeatureToast
+  const handleServiceClickWithToast = (showToast) => (serviceId) => {
+    if (DEVELOPED_SERVICES.includes(serviceId)) {
+      // Service đã phát triển - navigate trực tiếp
+      handleServiceClick(serviceId);
+    } else {
+      // Service chưa phát triển - hiển thị toast
+      showToast();
+    }
+  };
 
   // Handle pull-to-refresh
   const handleRefresh = async () => {
@@ -102,6 +116,7 @@ const Dashboard = () => {
                 }}
               />
             </Box>
+            <UserHeader userInfo={userInfo} isLoading={isLoading} />
 
             {/* Main Content */}
             <Box
@@ -114,13 +129,13 @@ const Dashboard = () => {
               <ServiceSection
                 title="DỊCH VỤ TÀI XẾ"
                 services={DRIVER_SERVICES}
-                onServiceClick={showToast}
+                onServiceClick={handleServiceClickWithToast(showToast)}
                 columns={3}
               />
               <ServiceSection
                 title="CÁC DỊCH VỤ KHÁC CỦA GOSAFE"
                 services={OTHER_SERVICES}
-                onServiceClick={showToast}
+                onServiceClick={handleServiceClickWithToast(showToast)}
                 columns={3}
               />
             </Box>

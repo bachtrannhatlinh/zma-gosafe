@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from "react";
+import { getServerUrl } from '../config/server';
 // import StringeeClient from "stringee";
 
 // Function để lấy Stringee token từ server
 const getStringeeToken = async () => {
   try {
-    const SERVER_URL = process.env.NODE_ENV === 'development' 
-      ? 'http://localhost:5000' 
-      : 'https://cd0e7fcc5d19b.ngrok-free.app'; // URL ngrok mới
+    const SERVER_URL = getServerUrl();
     
     console.log('🔑 Getting Stringee token from server...');
     

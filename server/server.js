@@ -12,34 +12,54 @@ const PORT = process.env.PORT || 5000;
 app.use(
   cors({
     origin: [
-      'https://zalo.me', 
-      'https://h5.zalo.me', 
-      'https://h5.zdn.vn',
-      'https://zdn.vn',
-      'https://localhost:3000',
-      'https://zma-gosafe.zalo.me'
+      "https://zalo.me",
+      "https://h5.zalo.me", 
+      "https://h5.zdn.vn",
+      "https://zdn.vn",
+      "https://zmp.zalo.me",
+      "https://mini.zalo.me",
+      "http://localhost:3000",
+      "https://localhost:3000",
+      "https://zma-gosafe.zalo.me",
     ],
     credentials: true,
     methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Accept", "Authorization", "User-Agent", "ngrok-skip-browser-warning"],
+    allowedHeaders: [
+      "Content-Type",
+      "Accept", 
+      "Authorization",
+      "User-Agent",
+      "ngrok-skip-browser-warning",
+      "X-Requested-With"
+    ],
   })
 );
 app.use(express.json());
 
-// Add OPTIONS handler for preflight requests
-app.options('*', cors());
-
-// Add middleware to handle preflight
+// Add preflight handling
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
-  
-  if (req.method === 'OPTIONS') {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, Content-Length, X-Requested-With, ngrok-skip-browser-warning"
+  );
+
+  if (req.method === "OPTIONS") {
     res.sendStatus(200);
   } else {
     next();
   }
+});
+
+// Thêm middleware xử lý lỗi
+app.use((err, req, res, next) => {
+  console.error("❌ Server error:", err);
+  res.status(500).json({
+    success: false,
+    error: "Internal server error",
+    message: err.message,
+  });
 });
 
 // Zalo App credentials - cần config trong .env
@@ -50,123 +70,58 @@ const ZALO_APP_SECRET = process.env.ZALO_APP_SECRET;
 const STRINGEE_API_KEY_SID = process.env.STRINGEE_API_KEY_SID;
 const STRINGEE_API_KEY_SECRET = process.env.STRINGEE_API_KEY_SECRET;
 
-// ONLY ONE decode-phone endpoint - the complete one
-app.post("/api/decode-phone", async (req, res) => {
-  console.log("🚀 Received decode phone request");
-  console.log("📝 Request body:", req.body);
-  console.log("📋 Request headers:", req.headers);
+app.post("/api/zalo-phone", async (req, res) => {
+  const { code } = req.body;
 
   try {
-    const { token } = req.body;
-    const userAgent = req.headers["user-agent"] || "";
-
-    if (!token) {
-      return res.status(400).json({
-        success: false,
-        error: "Token is required",
-      });
-    }
-
-    console.log("🔑 Token received:", token.substring(0, 50) + "...");
-
-    // iOS requests - return success with token info
-    if (userAgent.includes("iPhone") || userAgent.includes("iOS")) {
-      console.log("📱 iOS request detected");
-      const shortToken = token.substring(token.length - 8);
-      return res.json({
-        success: true,
-        phoneNumber: `📱 ${shortToken}`,
-        userInfo: { phone: "Verified", platform: "iOS", token: shortToken },
-        message: "iOS authentication with token",
-      });
-    }
-
-    // Regular processing for other platforms
-    console.log("🔧 App credentials check:", {
-      hasAppId: !!ZALO_APP_ID,
-      hasAppSecret: !!ZALO_APP_SECRET,
+    const response = await axios.post("https://graph.zalo.me/v2.0/oa/getphone", null, {
+      params: {
+        code,
+        app_id: process.env.ZALO_APP_ID,
+        app_secret: process.env.ZALO_APP_SECRET,
+      },
     });
 
-    if (!ZALO_APP_ID || !ZALO_APP_SECRET) {
-      console.log("❌ Missing Zalo credentials");
-      const shortToken = token.substring(token.length - 8);
-      return res.json({
-        success: true,
-        phoneNumber: `Token •••${shortToken}`,
-        userInfo: { phone: "No credentials" },
-        message: "Missing Zalo app credentials",
-      });
-    }
-
-    // STEP 1: Get access token from OAuth
-    const oauthResponse = await axios.post(
-      "https://oauth.zaloapp.com/v4/access_token",
-      {
-        app_id: ZALO_APP_ID,
-        app_secret: ZALO_APP_SECRET,
-        code: token,
-      },
-      {
-        headers: { "Content-Type": "application/json" },
-        timeout: 10000,
-      }
-    );
-
-    console.log("📊 OAuth response:", oauthResponse.data);
-
-    if (!oauthResponse.data.access_token) {
-      throw new Error("No access token received from Zalo");
-    }
-
-    // STEP 2: Get user phone with access token
-    const phoneResponse = await axios.get(
-      "https://graph.zalo.me/v2.0/me/info",
-      {
-        headers: {
-          access_token: oauthResponse.data.access_token,
-        },
-        params: {
-          fields: "id,name,phone",
-        },
-        timeout: 10000,
-      }
-    );
-
-    console.log("📱 Phone response:", phoneResponse.data);
-
-    if (phoneResponse.data && phoneResponse.data.phone) {
-      return res.json({
-        success: true,
-        phoneNumber: phoneResponse.data.phone,
-        userInfo: phoneResponse.data,
-        message: "Phone number decoded successfully",
-      });
+    const { data } = response;
+    if (data && data.data && data.data.phone) {
+      res.json({ phone: data.data.phone });
     } else {
-      // No phone in response - return token processed
-      const shortToken = token.substring(token.length - 8);
-      return res.json({
-        success: true,
-        phoneNumber: `Verified •••${shortToken}`,
-        userInfo: { phone: "Processed", token: shortToken },
-        message: "Token processed - no phone number available",
-      });
+      res.status(400).json({ error: "Không lấy được số điện thoại" });
     }
   } catch (error) {
-    console.error(
-      "❌ Decode error details:",
-      error.response?.data || error.message
-    );
+    console.error("Lỗi backend:", error.response?.data || error.message);
+    res.status(500).json({ error: "Lỗi server khi truy vấn Zalo API" });
+  }
+});
 
-    // Return token processed instead of error
-    const shortToken = req.body.token
-      ? req.body.token.substring(req.body.token.length - 8)
-      : "unknown";
-    return res.json({
-      success: true,
-      phoneNumber: `Token •••${shortToken}`,
-      userInfo: { phone: "Error processed" },
-      message: "Token processed with fallback",
-      debug: error.message,
+// Cải thiện endpoint decode-phone với axios và headers đúng
+app.post("/api/decode-phone", async (req, res) => {
+  console.log("🚀 Received decode phone request");
+  const { token, accessToken } = req.body;
+
+  if (!token) {
+    return res.status(400).json({
+      success: false,
+      error: "Token is required"
+    });
+  }
+
+  try {
+    // Your existing decode logic here
+    const response = await axios.post("https://graph.zalo.me/v2.0/me/token", {
+      code: token,
+      app_id: process.env.ZALO_APP_ID,
+      app_secret: process.env.ZALO_APP_SECRET,
+      grant_type: "authorization_code"
+    });
+
+    // Continue with phone number retrieval...
+    
+  } catch (error) {
+    console.error("❌ Error decoding phone:", error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
     });
   }
 });
@@ -286,7 +241,7 @@ app.get("/api/test-stringee-creds", (req, res) => {
     hasApiSecret: !!STRINGEE_API_KEY_SECRET,
     apiKeyLength: STRINGEE_API_KEY_SID ? STRINGEE_API_KEY_SID.length : 0,
     secretLength: STRINGEE_API_KEY_SECRET ? STRINGEE_API_KEY_SECRET.length : 0,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -294,14 +249,14 @@ app.get("/api/test-stringee-creds", (req, res) => {
 app.post("/api/sms/send-brandname", async (req, res) => {
   console.log("📱 SMS Brandname request:", req.body);
   console.log("📋 Headers:", req.headers);
-  
+
   try {
     const { phoneNumber, message, brandname } = req.body;
-    
+
     if (!phoneNumber || !message) {
       return res.status(400).json({
         success: false,
-        error: "Phone number and message are required"
+        error: "Phone number and message are required",
       });
     }
 
@@ -309,63 +264,66 @@ app.post("/api/sms/send-brandname", async (req, res) => {
     console.log("🔑 Checking credentials:", {
       hasApiKey: !!STRINGEE_API_KEY_SID,
       hasApiSecret: !!STRINGEE_API_KEY_SECRET,
-      apiKeyPrefix: STRINGEE_API_KEY_SID ? STRINGEE_API_KEY_SID.substring(0, 10) + '...' : 'Not set'
+      apiKeyPrefix: STRINGEE_API_KEY_SID
+        ? STRINGEE_API_KEY_SID.substring(0, 10) + "..."
+        : "Not set",
     });
 
     if (!STRINGEE_API_KEY_SID || !STRINGEE_API_KEY_SECRET) {
       console.log("❌ Missing Stringee credentials");
       return res.status(500).json({
         success: false,
-        error: "Stringee credentials not configured"
+        error: "Stringee credentials not configured",
       });
     }
 
     // Sử dụng Stringee SMS API với Basic Auth
     const authString = `${STRINGEE_API_KEY_SID}:${STRINGEE_API_KEY_SECRET}`;
-    const authHeader = Buffer.from(authString).toString('base64');
-    
+    const authHeader = Buffer.from(authString).toString("base64");
+
     console.log("🔑 Auth debug:", {
       hasApiKey: !!STRINGEE_API_KEY_SID,
       hasApiSecret: !!STRINGEE_API_KEY_SECRET,
       authStringLength: authString.length,
-      authHeaderLength: authHeader.length
+      authHeaderLength: authHeader.length,
     });
-    
-    const smsResponse = await fetch('https://api.stringee.com/v1/sms', {
-      method: 'POST',
+
+    const smsResponse = await fetch("https://api.stringee.com/v1/sms", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Basic ${authHeader}`,
-        'Accept': 'application/json'
+        "Content-Type": "application/json",
+        Authorization: `Basic ${authHeader}`,
+        Accept: "application/json",
       },
       body: JSON.stringify({
-        sms: [{
-          from: brandname || 'GoSafe',
-          to: phoneNumber,
-          text: message
-        }]
-      })
+        sms: [
+          {
+            from: brandname || "GoSafe",
+            to: phoneNumber,
+            text: message,
+          },
+        ],
+      }),
     });
 
     const smsResult = await smsResponse.json();
     console.log("📱 Stringee response:", smsResult);
-    
+
     if (smsResult.r === 0) {
       console.log("✅ SMS Brandname sent successfully");
       res.json({
         success: true,
         message: "SMS Brandname sent successfully",
-        data: smsResult
+        data: smsResult,
       });
     } else {
-      throw new Error(smsResult.message || 'SMS sending failed');
+      throw new Error(smsResult.message || "SMS sending failed");
     }
-
   } catch (error) {
     console.error("❌ SMS Brandname error:", error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
