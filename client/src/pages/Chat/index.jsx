@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Page, Header, List, Input, Button, Box, Text } from 'zmp-ui';
-import { useNavigate } from 'zmp-ui';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'zmp-ui';
 import { useChat } from '../../hooks/useChat';
 import { useServerAuth } from '../../hooks/useServerAuth';
 

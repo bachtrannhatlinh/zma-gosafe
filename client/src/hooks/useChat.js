@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
-
-const SERVER_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://localhost:5000' 
-  : 'https://zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app';
+import { SERVER_URL } from '../config/server';
 
 export const useChat = (userInfo) => {
   const [socket, setSocket] = useState(null);
@@ -14,12 +11,15 @@ export const useChat = (userInfo) => {
   const socketRef = useRef(null);
 
   useEffect(() => {
+    console.log('🔍 useChat: Effect triggered with userInfo:', userInfo);
+    
     if (!userInfo?.phone) {
       console.log('🔍 useChat: No userInfo.phone, skipping connection');
       return;
     }
 
     console.log('🔍 useChat: Connecting with userInfo:', userInfo);
+    console.log('🔍 useChat: SERVER_URL:', SERVER_URL);
 
     try {
       // Initialize socket connection

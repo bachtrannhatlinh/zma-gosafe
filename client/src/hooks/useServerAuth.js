@@ -1,62 +1,68 @@
 import { useState, useCallback } from 'react';
+import { getUserInfo } from 'zmp-sdk/apis';
 
 export const useServerAuth = () => {
-  const [loading, setLoading] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
+  const [loading, setLoading] = useState(false); // Đổi thành false
   const [error, setError] = useState(null);
 
-  const sendTokenToServer = useCallback(async (tokenOrPhone) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log("🚀 Sending to server:", tokenOrPhone);
-      
-      // Nếu là token, gửi lên server để lấy số thật
-      if (tokenOrPhone === "Đã có token" || typeof tokenOrPhone === 'string' && tokenOrPhone.length > 20) {
-        // Gọi API server để decode token
-        const response = await fetch('/api/phone/verify-token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ token: tokenOrPhone })
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
+  const getZaloUserInfo = async () => {
+    return new Promise((resolve, reject) => {
+      getUserInfo({
+        success: (data) => {
+          console.log('✅ Zalo getUserInfo success:', data);
+          
+          let phone = localStorage.getItem('user_phone') || 
+                     localStorage.getItem('zalo_phone') ||
+                     localStorage.getItem('phoneNumber');
+          
+          if (!phone && data.userInfo) {
+            phone = data.userInfo.phone || data.userInfo.phoneNumber;
+          }
+          
+          console.log('📱 Phone found:', phone);
+          
+          const result = {
+            ...data.userInfo,
+            phone: phone || null
+          };
+          
+          console.log('📋 Final userInfo:', result);
+          resolve(result);
+        },
+        fail: (error) => {
+          console.error('❌ Zalo getUserInfo failed:', error);
+          reject(new Error('Không thể lấy thông tin người dùng'));
         }
-        
-        const result = await response.json();
-        console.log("✅ Server response:", result);
-        
-        return { 
-          success: true, 
-          phoneNumber: result.phoneNumber,
-          userInfo: result.userInfo 
-        };
-      }
+      });
+    });
+  };
+
+  const checkAuth = useCallback(async () => {
+    try {
+      setLoading(true);
+      console.log('🔍 useServerAuth: Starting auth check');
       
-      // Nếu đã có số điện thoại, return luôn
-      return { 
-        success: true, 
-        phoneNumber: tokenOrPhone 
-      };
+      const authResult = await getZaloUserInfo();
+      console.log('🔍 useServerAuth: Auth result:', authResult);
       
+      setUserInfo(authResult);
+      return authResult;
     } catch (err) {
-      console.error("❌ Server auth error:", err);
+      console.error('❌ useServerAuth error:', err);
       setError(err.message);
-      return { 
-        success: false, 
-        error: err.message 
-      };
+      throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Xóa useEffect - không tự động chạy nữa
+
   return {
-    sendTokenToServer,
+    userInfo,
     loading,
-    error
+    error,
+    checkAuth
   };
 };

@@ -15,22 +15,24 @@ const UserHeader = ({ userInfo, isLoading }) => {
   const [updatedUserInfo, setUpdatedUserInfo] = useState(userInfo);
   const [phoneNumber, setPhoneNumber] = useState(null);
   const [isGettingPhone, setIsGettingPhone] = useState(false);
-  const {
+  
+  // Xóa useServerAuth hook - không cần tự động chạy
+    const {
     sendTokenToServer,
     loading: serverLoading,
     error: serverError,
   } = useServerAuth();
-
+  
   const handleLocationClick = () => {
-    // Show modal if no user info or no phone number yet
-    if (!currentUserInfo?.name || !phoneNumber) {
+    // Chỉ show modal khi user click
+    if (!updatedUserInfo?.name || !phoneNumber) {
       setShowModal(true);
     }
   };
 
   const handleLogin = () => {
     setShowModal(false);
-    handleAllowPermission();
+    handleAllowPermission(); // Chỉ chạy khi user click
   };
 
   const handleAllowPermission = async () => {
@@ -96,10 +98,6 @@ const UserHeader = ({ userInfo, isLoading }) => {
 
   const handlePhoneResult = async (phoneResult, accessToken) => {
     if (!phoneResult) {
-      console.warn("⚠️ Không có kết quả số điện thoại");
-      // setPhoneNumber(
-      //   `👤 ${currentUserInfo?.name || "Người dùng Zalo"} - Đang xử lý`
-      // );
       return;
     }
 
@@ -114,11 +112,6 @@ const UserHeader = ({ userInfo, isLoading }) => {
   };
 
   const handleDirectPhone = async (number) => {
-    console.log("📞 Số trực tiếp:", number);
-    // setPhoneNumber(
-    //   `👤 ${currentUserInfo?.name || "Người dùng Zalo"} - Đã xác thực`
-    // );
-
     try {
       await sendTokenToServer(number);
       console.log("✅ Đã gửi số lên server");
@@ -142,6 +135,12 @@ const UserHeader = ({ userInfo, isLoading }) => {
       if (result) {
         console.log("✅ Server giải mã thành công:", result);
         setPhoneNumber(result?.phoneNumber);
+        try {
+          localStorage.setItem("phoneNumber", result?.phoneNumber); // Lưu vào localStorage
+          console.log("💾 Đã lưu phoneNumber vào localStorage");
+        } catch (storageErr) {
+          console.warn("⚠️ Không thể lưu phoneNumber:", storageErr);
+        }
       } else {
         setPhoneNumber(null);
       }
@@ -261,17 +260,6 @@ const UserHeader = ({ userInfo, isLoading }) => {
                   ? "Chào mừng bạn đến với GoSafe!"
                   : "Cung cấp số điện thoại để sử dụng app!"}
               </Text>
-              {/* {phoneNumber && (
-                <Text
-                  className={`text-xs mt-1 ${
-                    phoneNumber.includes("✅")
-                      ? "text-blue-600"
-                      : "text-green-600"
-                  }`}
-                >
-                  📱 {phoneNumber}
-                </Text>
-              )} */}
               {(serverLoading || isGettingPhone) && (
                 <Text className="text-blue-500 text-xs mt-1">
                   🔄{" "}
