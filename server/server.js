@@ -93,86 +93,32 @@ app.post("/api/zalo-phone", async (req, res) => {
 
 // Cải thiện endpoint decode-phone với axios và headers đúng
 app.post("/api/decode-phone", async (req, res) => {
-  console.log("🚀 Received decode phone request (new flow)");
+  console.log("🚀 Received decode phone request");
+  const { token, accessToken } = req.body;
+
+  if (!token) {
+    return res.status(400).json({
+      success: false,
+      error: "Token is required"
+    });
+  }
 
   try {
-    const { token } = req.body;
+    // Your existing decode logic here
+    const response = await axios.post("https://graph.zalo.me/v2.0/me/token", {
+      code: token,
+      app_id: process.env.ZALO_APP_ID,
+      app_secret: process.env.ZALO_APP_SECRET,
+      grant_type: "authorization_code"
+    });
 
-    if (!token) {
-      return res.status(400).json({
-        success: false,
-        error: "Token is required",
-      });
-    }
-
-    // Kiểm tra credentials
-    if (!ZALO_APP_ID || !ZALO_APP_SECRET) {
-      return res.status(500).json({
-        success: false,
-        error: "Server configuration error",
-      });
-    }
-
-    // STEP 1: Get access token từ Zalo
-    console.log("🔄 Getting access token...");
-    const tokenResponse = await axios.post(
-      "https://oauth.zaloapp.com/v4/access_token",
-      {
-        app_id: ZALO_APP_ID,
-        app_secret: ZALO_APP_SECRET,
-        grant_type: "authorization_code",
-        code: token,
-      },
-      {
-        timeout: 10000,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (!tokenResponse.data.access_token) {
-      throw new Error("No access token received");
-    }
-
-    // STEP 2: Get phone number với access token
-    console.log("🔄 Getting phone number...");
-    const phoneResponse = await axios.get(
-      "https://graph.zalo.me/v2.0/me/info",
-      {
-        headers: {
-          access_token: tokenResponse.data.access_token,
-        },
-        params: {
-          fields: "id,name,phone",
-        },
-        timeout: 10000,
-      }
-    );
-
-    console.log("📱 Phone response:", phoneResponse.data);
-
-    if (phoneResponse.data?.phone) {
-      return res.json({
-        success: true,
-        phoneNumber: phoneResponse.data.phone,
-        userInfo: phoneResponse.data,
-        message: "Phone number retrieved successfully",
-      });
-    } else {
-      return res.json({
-        success: true,
-        phoneNumber: "Không thể lấy số điện thoại",
-        userInfo: phoneResponse.data || {},
-        message: "User info retrieved but no phone available",
-      });
-    }
+    // Continue with phone number retrieval...
+    
   } catch (error) {
     console.error("❌ Error decoding phone:", error);
     return res.status(500).json({
       success: false,
-      error: error.message,
-      message: "Failed to decode phone number",
+      error: error.message
     });
   }
 });
