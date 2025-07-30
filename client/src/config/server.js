@@ -3,7 +3,7 @@ export const getServerUrl = () => {
   if (process.env.NODE_ENV === 'development') {
     url = 'http://localhost:5000';
   } else {
-    url = process.env.URL_SERVER || 'https://zma-gosafe-git-develop-bachtrannhatlinhs-projects.vercel.app';
+    url = process.env.URL_SERVER || 'zma-gosafe.vercel.app';
   }
   
   console.log('🌐 Server URL:', url);
