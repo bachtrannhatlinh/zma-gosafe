@@ -65,9 +65,22 @@ const ChatPage = () => {
           const resHistory = await fetch(
             `https://lighting-christmas-emperor-killing.trycloudflare.com/history?from=${userId}&to=${targetId}`
           );
-          if (!resHistory.ok) throw new Error("API error");
-          const history = await resHistory.json();
-          setMessages(history);
+          console.log("resHistory status:", resHistory.status);
+          const text = await resHistory.text();
+          console.log("resHistory text:", text);
+
+          if (resHistory.ok) {
+            try {
+              const history = JSON.parse(text);
+              setMessages(history);
+            } catch (e) {
+              console.error("Parse history failed:", e);
+              setMessages([]);
+            }
+          } else {
+            console.error("API trả về lỗi:", resHistory.status, text);
+            setMessages([]);
+          }
         } catch (e) {
           console.error("Load history failed:", e);
           setMessages([]);
