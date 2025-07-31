@@ -18,6 +18,7 @@ import VNPayPolicy from "../pages/VNPayPolicy";
 import Promotions from "../pages/Promotions";
 import PromotionDetail from "../pages/PromotionDetail";
 import CallToUser from "../pages/CallToUser";
+import LiveChat from "../pages/Chat/ChatPage";
 
 const Layout = () => {
   console.log("Layout rendered, current path:", window.location.pathname);
@@ -30,6 +31,7 @@ const Layout = () => {
             <Route path="/" element={<Dashboard />} />
             <Route path="/call-to-user" element={<CallToUser />} />
             <Route path="/sms-brandname" element={<SMSBrandnamePage />} />
+            <Route path="/zalo-chat" element={<LiveChat />} />
             <Route path="/history" element={<History />} />
             <Route path="/account" element={<Account />} />
             <Route path="/vehicle-management" element={<VehicleManagement />} />

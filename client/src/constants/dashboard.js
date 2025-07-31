@@ -58,6 +58,12 @@ export const OTHER_SERVICES = [
     label: "Vé khu vui chơi toàn quốc", 
     bgColor: "bg-teal-500",
   },
+  { 
+    id: "zalo-chat", 
+    icon: "💬", 
+    label: "Live Chat", 
+    bgColor: "bg-gray-500",
+  },
 ];
 
 
@@ -72,7 +78,7 @@ export const SERVICE_ROUTES = {
   "sms-brandname": "/sms-brandname", // SMS Brandname route
   "flight-tickets": null, // Coming soon
   "travel-tours": null, // Coming soon
-  food: "/food",
+  "zalo-chat": "/zalo-chat",
   vehicle: "/vehicle",
   delivery: null, // Coming soon
   gift: null, // Coming soon

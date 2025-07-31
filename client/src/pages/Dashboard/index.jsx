@@ -21,7 +21,7 @@ import { useServiceNavigation } from "../../hooks/useNavigation";
 import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
 
 // Danh sách services đã phát triển
-const DEVELOPED_SERVICES = ['sms-brandname'];
+const DEVELOPED_SERVICES = ['sms-brandname', 'zalo-chat'];
 
 const Dashboard = () => {
   const navigate = useNavigate();
