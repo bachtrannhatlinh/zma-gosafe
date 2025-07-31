@@ -8,6 +8,7 @@ import CustomModal from "./CustomModal";
 const BottomNavigation = ({ activeTab = "home" }) => {
   const navigate = useNavigate();
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [pendingPath, setPendingPath] = useState(null);
   
   const { 
     phoneNumber, 
@@ -26,7 +27,7 @@ const BottomNavigation = ({ activeTab = "home" }) => {
     { id: "home", icon: <Icon icon="zi-home" style={{ fontSize: 24 }} />, label: "Trang chủ", isActive: activeTab === "home", path: "/" },
     { id: "activity", icon: <Icon icon="zi-call" style={{ fontSize: 24 }} />, label: "Gọi", isActive: activeTab === "call", path: "/call-to-user", requirePhone: true },
     { id: "notification", icon: <Icon icon="zi-notif" style={{ fontSize: 24 }} />, label: "Lịch sử", isActive: activeTab === "history", path: "/history" },
-    { id: "account", icon: <Icon icon="zi-user" style={{ fontSize: 24 }} />, label: "Tài khoản", isActive: activeTab === "account", path: "/account" },
+    { id: "account", icon: <Icon icon="zi-user" style={{ fontSize: 24 }} />, label: "Tài khoản", isActive: activeTab === "account", path: "/account", requirePhone: true },
   ];
 
   const handleNavClick = async (item) => {
@@ -34,30 +35,53 @@ const BottomNavigation = ({ activeTab = "home" }) => {
     
     // Check if this navigation requires phone number
     if (item.requirePhone) {
-      // Debug trước khi check
-      debugPhoneStorage();
-      
-      const hasPhone = checkPhoneExists();
+      // Luôn lấy số điện thoại mới nhất từ localStorage
       const currentPhone = localStorage.getItem("user_phone");
+      const hasPhone = checkPhoneExists();
       
+      debugPhoneStorage();
       console.log("📱 Phone check result:", { 
         hasPhone, 
         currentPhone, 
         phoneNumber,
         phoneNumberType: typeof phoneNumber
       });
+
+      // Prioritize currentPhone over phoneNumber
+      const displayPhone = currentPhone || phoneNumber;
       
       if (!hasPhone || 
-          !currentPhone || 
-          currentPhone === "Chưa có số điện thoại" || 
-          currentPhone === "Cần cấp quyền" ||
-          currentPhone === "null" ||
-          currentPhone === "undefined") {
-        console.log("📱 Cần số điện thoại để truy cập:", item.label);
-        setShowPhoneModal(true);
+          !displayPhone || 
+          displayPhone === "Chưa có số điện thoại" || 
+          displayPhone === "Cần cấp quyền" ||
+          displayPhone === "null" ||
+          displayPhone === "undefined") {
+        
+        // Kiểm tra lại lần cuối trước khi show modal (tránh race condition)
+        setTimeout(() => {
+          const recheckPhone = localStorage.getItem("user_phone");
+          const recheckDisplayPhone = recheckPhone || phoneNumber;
+          const recheckHasPhone = checkPhoneExists();
+          
+          if (!recheckHasPhone || 
+              !recheckDisplayPhone || 
+              recheckDisplayPhone === "Chưa có số điện thoại" || 
+              recheckDisplayPhone === "Cần cấp quyền" || 
+              recheckDisplayPhone === "null" || 
+              recheckDisplayPhone === "undefined") {
+            setPendingPath(item.path);
+            setShowPhoneModal(true);
+          } else {
+            setShowPhoneModal(false);
+            setPendingPath(null);
+            navigate(item.path);
+          }
+        }, 50);
         return;
+      } else {
+        setShowPhoneModal(false);
+        setPendingPath(null);
       }
-      
       console.log("✅ Phone exists, navigating to:", item.path);
     }
     
@@ -69,11 +93,17 @@ const BottomNavigation = ({ activeTab = "home" }) => {
 
   const handlePhonePermission = async () => {
     const result = await requestPhonePermission();
-    
     if (result.success) {
       setShowPhoneModal(false);
-      // Navigate to call page after getting phone
-      navigate("/call-to-user");
+      // Đợi localStorage cập nhật, sau đó kiểm tra lại số điện thoại
+      setTimeout(() => {
+        const recheckPhone = localStorage.getItem("user_phone");
+        const recheckHasPhone = checkPhoneExists();
+        if (pendingPath && recheckHasPhone && recheckPhone && recheckPhone !== "Chưa có số điện thoại" && recheckPhone !== "Cần cấp quyền" && recheckPhone !== "null" && recheckPhone !== "undefined") {
+          navigate(pendingPath);
+          setPendingPath(null);
+        }
+      }, 100);
     }
   };
 

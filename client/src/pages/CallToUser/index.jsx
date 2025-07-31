@@ -22,8 +22,6 @@ const CallToUser = () => {
     setIsLoading(true);
 
     try {
-      console.log('📞 Mở ứng dụng gọi điện với số:', phoneNumber);
-      
       await new Promise((resolve, reject) => {
         openPhone({
           phoneNumber: phoneNumber.trim(),
@@ -48,14 +46,15 @@ const CallToUser = () => {
   return (
     <Page className="bg-gray-50 min-h-screen flex flex-col">
       {/* Custom Header */}
-      <Box style={{
+      <Box className="pt-safe-area-top" style={{
         display: 'flex',
         alignItems: 'center',
-        padding: '8px 12px', // giảm padding
-        paddingTop: 'calc(4px + env(safe-area-inset-top))', // giảm padding top
+        padding: '12px 16px',
         backgroundColor: 'white',
         borderBottom: '1px solid #f3f4f6',
-        position: 'relative'
+        position: 'relative',
+        minHeight: '60px',
+        zIndex: 10
       }}>
         <Box
           onClick={handleBack}

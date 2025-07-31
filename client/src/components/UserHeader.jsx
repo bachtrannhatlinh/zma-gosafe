@@ -143,7 +143,7 @@ const UserHeader = ({ userInfo, isLoading }) => {
               fullWidth
               className="custom-btn-filled"
               style={{ 
-                backgroundColor: 'red', // Tạm thời để dễ nhìn
+                backgroundColor: 'red',
                 zIndex: 9999,
                 position: 'relative'
               }}
