@@ -7,27 +7,38 @@ import {
   disconnectSocket,
 } from "./socket";
 
+const ADMIN_ID = "3368637342326461234";
+
 const ChatPage = () => {
   const [userId, setUserId] = useState(null);
-  const [targetId, setTargetId] = useState(""); // Chọn người nhận
+  const [targetId, setTargetId] = useState(""); // Đối tượng đang chat
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
-  useEffect(() => {
-    getUserInfo({
-      success: (res) => {
-        const uid = res.userInfo.id;
-        setUserId(uid);
-        connectSocket(uid); // kết nối vào socket room của mình
+  const isAdmin = userId === ADMIN_ID;
 
-        onMessageReceived((msg) => {
-          setMessages((prev) => [...prev, msg]);
-        });
-      },
-    });
+useEffect(() => {
+  getUserInfo({
+    success: async (res) => {
+      const uid = res.userInfo.id;
+      setUserId(uid);
+      connectSocket(uid);
 
-    return () => disconnectSocket();
-  }, []);
+      // Load lịch sử chat
+      const resHistory = await fetch(
+        `https://https://lighting-christmas-emperor-killing.trycloudflare.com/history?from=${uid}&to=${targetId}`
+      );
+      const history = await resHistory.json();
+      setMessages(history);
+
+      onMessageReceived((msg) => {
+        setMessages((prev) => [...prev, msg]);
+      });
+    }
+  });
+
+  return () => disconnectSocket();
+}, []);
 
   const handleSend = () => {
     if (!targetId || !input.trim()) return;
@@ -39,23 +50,33 @@ const ChatPage = () => {
   };
 
   return (
-    <div style={{ padding: 16, background: "#fff", minHeight: "100vh" }}>
-      <div style={{ marginBottom: 12 }}>
-        <strong>Bạn là:</strong> {userId || "Đang lấy ID..."}
+    <div
+      style={{
+        paddingTop: "max(env(safe-area-inset-top), 44px)",
+        background: "#fff",
+        minHeight: "100vh",
+      }}
+    >
+      <div style={{ marginBottom: 8 }}>
+        <strong>Bạn là:</strong> {userId || "Đang lấy ID..."} (
+        {isAdmin ? "Quản trị viên" : "Người dùng"})
       </div>
-      <div style={{ marginBottom: 12 }}>
-        <input
-          value={targetId}
-          onChange={(e) => setTargetId(e.target.value)}
-          placeholder="Nhập ID người nhận"
-          style={{
-            width: "100%",
-            padding: 8,
-            border: "1px solid #ccc",
-            borderRadius: 4,
-          }}
-        />
-      </div>
+
+      {isAdmin && (
+        <div style={{ marginBottom: 12 }}>
+          <input
+            value={targetId}
+            onChange={(e) => setTargetId(e.target.value)}
+            placeholder="Nhập ID người dùng để trả lời"
+            style={{
+              width: "100%",
+              padding: 8,
+              border: "1px solid #ccc",
+              borderRadius: 4,
+            }}
+          />
+        </div>
+      )}
 
       <div
         style={{
@@ -68,23 +89,29 @@ const ChatPage = () => {
           background: "#f9f9f9",
         }}
       >
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            style={{
-              textAlign: m.from === userId ? "right" : "left",
-              margin: "4px 0",
-              padding: "4px 8px",
-              background: m.from === userId ? "#d1fae5" : "#e5e7eb",
-              borderRadius: 8,
-              display: "inline-block",
-              maxWidth: "80%",
-              color: "#222",
-            }}
-          >
-            {m.message}
-          </div>
-        ))}
+        {messages.map((m, i) => {
+          const isMine = m.from === userId;
+          return (
+            <div
+              key={i}
+              style={{
+                textAlign: isMine ? "right" : "left",
+                margin: "4px 0",
+                padding: "6px 12px",
+                background: isMine ? "#d1fae5" : "#e5e7eb",
+                borderRadius: 12,
+                display: "inline-block",
+                maxWidth: "80%",
+                color: "#222",
+              }}
+            >
+              <div style={{ fontSize: 14 }}>{m.message}</div>
+              <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
+                {isMine ? "Bạn" : m.from}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div style={{ display: "flex", gap: 8 }}>

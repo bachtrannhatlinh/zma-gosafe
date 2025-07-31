@@ -1,7 +1,7 @@
 // socket.js
 import { io } from "socket.io-client";
 
-const socket = io("https://increases-richardson-k-mission.trycloudflare.com", {
+const socket = io("https://hurt-resident-medicines-photograph.trycloudflare.com", {
   transports: ["websocket"],
   autoConnect: false,
 });
