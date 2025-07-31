@@ -108,22 +108,22 @@ const Dashboard = () => {
                 alt="GOSafe Banner"
                 style={{
                   width: "100%",
-                  height: "270px", // tăng chiều cao banner
-                  objectFit: "contain", // đảm bảo hình ảnh không bị cắt
+                  height: "270px",
+                  objectFit: "contain",
                   userSelect: "none",
                   pointerEvents: "none",
                   display: "block",
                 }}
               />
             </Box>
-            <UserHeader userInfo={userInfo} isLoading={isLoading} />
+            {/* <UserHeader userInfo={userInfo} isLoading={isLoading} /> */}
 
             {/* Main Content */}
             <Box
               style={{
                 background: "linear-gradient(to bottom, #fb923c, #ef4444)",
-                minHeight: "calc(100vh - 192px)", // Trừ đi chiều cao banner
-                paddingBottom: "120px", // Space cho bottom nav
+                minHeight: "calc(100vh - 192px)",
+                paddingBottom: "120px",
               }}
             >
               <ServiceSection
@@ -143,17 +143,6 @@ const Dashboard = () => {
         )}
       </DevFeatureToast>
 
-      {/* Stringee Demo Modal */}
-      {/* <Modal
-        visible={showStringeeDemo}
-        title="📞 Stringee Call Demo"
-        onClose={() => setShowStringeeDemo(false)}
-        className="stringee-demo-modal"
-      >
-        <StringeeDemo />
-      </Modal> */}
-
-      {/* Bottom Navigation - Fixed */}
       <BottomNavigation activeTab="home" />
     </Page>
   );

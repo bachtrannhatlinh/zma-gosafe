@@ -31,10 +31,10 @@ export const usePhoneAuth = () => {
     localStorage.removeItem("zalo_phone_token");
   }, []);
 
-  // Force clear on mount để test
-  useEffect(() => {
-    clearPhoneData();
-  }, []);
+  // Force clear on mount để test - COMMENT OUT
+  // useEffect(() => {
+  //   clearPhoneData();
+  // }, []);
 
   const requestPhonePermission = useCallback(async () => {
     setIsGettingPhone(true);
