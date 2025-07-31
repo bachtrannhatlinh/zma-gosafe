@@ -7,38 +7,84 @@ import {
   disconnectSocket,
 } from "./socket";
 
+import { useUserData } from "../../hooks/useUserData";
+
 const ADMIN_ID = "3368637342326461234";
 
 const ChatPage = () => {
   const [userId, setUserId] = useState(null);
-  const [targetId, setTargetId] = useState(""); // Đối tượng đang chat
+  const [targetId, setTargetId] = useState("");
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const { userInfo } = useUserData();
 
   const isAdmin = userId === ADMIN_ID;
 
-useEffect(() => {
-  getUserInfo({
-    success: async (res) => {
-      const uid = res.userInfo.id;
-      setUserId(uid);
-      connectSocket(uid);
+  useEffect(() => {
+    let unsub = () => {};
+    // Nếu đã có userInfo.id thì chỉ cần setUserId và connectSocket
+    if (userInfo?.id) {
+      setUserId(userInfo.id);
+      connectSocket(userInfo.id);
 
-      // Load lịch sử chat
-      const resHistory = await fetch(
-        `https://https://lighting-christmas-emperor-killing.trycloudflare.com/history?from=${uid}&to=${targetId}`
-      );
-      const history = await resHistory.json();
-      setMessages(history);
-
-      onMessageReceived((msg) => {
+      unsub = onMessageReceived((msg) => {
         setMessages((prev) => [...prev, msg]);
       });
-    }
-  });
+    } else {
+      // Nếu chưa có thì mới gọi getUserInfo
+      getUserInfo({
+        success: async (res) => {
+          setUserId(res.userInfo.id);
+          connectSocket(res.userInfo.id);
 
-  return () => disconnectSocket();
-}, []);
+          unsub = onMessageReceived((msg) => {
+            setMessages((prev) => [...prev, msg]);
+          });
+        },
+        fail: (err) => {
+          setUserId(null);
+          alert("Không lấy được thông tin người dùng. Vui lòng mở trong Zalo Mini App.");
+          console.error("getUserInfo error:", err);
+        },
+      });
+    }
+
+    return () => {
+      disconnectSocket();
+      unsub && unsub();
+    };
+    // Chỉ phụ thuộc userInfo, KHÔNG phụ thuộc targetId để tránh gọi lại nhiều lần
+  }, [userInfo]);
+
+  // Lấy lịch sử chat khi userId và targetId đã sẵn sàng
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (userId && targetId) {
+        try {
+          console.log("Fetch history with:", { userId, targetId });
+          const resHistory = await fetch(
+            `https://lighting-christmas-emperor-killing.trycloudflare.com/history?from=${userId}&to=${targetId}`
+          );
+          if (!resHistory.ok) throw new Error("API error");
+          const history = await resHistory.json();
+          setMessages(history);
+        } catch (e) {
+          console.error("Load history failed:", e);
+          setMessages([]);
+        }
+      } else {
+        setMessages([]);
+      }
+    };
+    fetchHistory();
+  }, [userId, targetId]);
+
+  useEffect(() => {
+    // Nếu không phải admin thì tự động gán targetId là ADMIN_ID
+    if (!isAdmin) {
+      setTargetId(ADMIN_ID);
+    }
+  }, [isAdmin]);
 
   const handleSend = () => {
     if (!targetId || !input.trim()) return;
