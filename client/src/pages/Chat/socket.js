@@ -1,28 +1,20 @@
 // socket.js
 import { io } from "socket.io-client";
-
-const socket = io("https://hurt-resident-medicines-photograph.trycloudflare.com", {
-  transports: ["websocket"],
-  autoConnect: false,
-});
+const socket = io("https://cent-identifier-eos-ld.trycloudflare.com", { autoConnect: true });
 
 export const connectSocket = (userId) => {
-  if (!socket.connected) {
-    socket.connect();
-    socket.emit("join", userId); // Tham gia room
-  }
+  socket.emit("join", userId);
 };
 
-export const sendMessage = ({ from, to, message }) => {
-  socket.emit("chat message", { from, to, message });
+export const sendMessage = (msg) => {
+  socket.emit("send-message", msg);
 };
 
-export const onMessageReceived = (callback) => {
-  socket.on("chat message", callback);
+export const onMessageReceived = (cb) => {
+  socket.on("receive-message", cb);
+  return () => socket.off("receive-message", cb);
 };
 
 export const disconnectSocket = () => {
   socket.disconnect();
 };
-
-export default socket;

@@ -22,17 +22,14 @@ const StringeeDemo = () => {
   // Handle demo call with actual Stringee
   const handleDemoCall = () => {
     if (!sdkLoaded) {
-      alert('Stringee SDK chưa load xong, vui lòng đợi!');
       return;
     }
     
     if (!isConnected) {
-      alert('Vui lòng đợi kết nối Stringee!');
       return;
     }
     
     if (!phoneNumber.trim()) {
-      alert('Vui lòng nhập số điện thoại!');
       return;
     }
     

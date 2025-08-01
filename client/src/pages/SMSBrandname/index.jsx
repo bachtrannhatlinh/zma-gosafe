@@ -39,7 +39,6 @@ const SMSBrandname = () => {
         await sendRegularSMS();
       }
     } catch (error) {
-      alert("Gửi SMS thất bại: " + error.message);
     }
   };
 
@@ -58,7 +57,6 @@ const SMSBrandname = () => {
       })
     });
 
-    alert("SMS Brandname đã được gửi thành công!");
   };
 
   const sendRegularSMS = async () => {
@@ -70,7 +68,6 @@ const SMSBrandname = () => {
         fail: reject
       });
     });
-    alert("Đã mở Messages app!");
   };
 
   return (

@@ -49,7 +49,6 @@ const AddVehicle = () => {
 
   const handleSubmit = () => {
     if (!formData.brand || !formData.licensePlate) {
-      alert("Vui lòng điền đầy đủ thông tin bắt buộc");
       return;
     }
     

@@ -9,6 +9,7 @@ const cors = require('cors');
 dotenv.config();
 
 const app = express();
+app.use(cors()); // <-- Thêm dòng này để bật CORS cho REST API
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*" }
@@ -54,14 +55,12 @@ io.on("connection", (socket) => {
 // API để lấy lịch sử chat
 app.get("/history", async (req, res) => {
   const { from, to } = req.query;
-
   const messages = await Message.find({
     $or: [
       { from, to },
       { from: to, to: from }
     ]
   }).sort({ timestamp: 1 });
-
   res.json(messages);
 });
 

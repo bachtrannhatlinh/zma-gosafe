@@ -23,22 +23,18 @@ const ChangePassword = () => {
 
   const handleSubmit = () => {
     if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
-      alert("Vui lòng điền đầy đủ thông tin");
       return;
     }
     
     if (formData.newPassword !== formData.confirmPassword) {
-      alert("Mật khẩu mới và xác nhận mật khẩu không khớp");
       return;
     }
 
     if (formData.newPassword.length < 6) {
-      alert("Mật khẩu mới phải có ít nhất 6 ký tự");
       return;
     }
     
     console.log("Đổi mật khẩu:", formData);
-    alert("Đổi mật khẩu thành công!");
     navigate(-1);
   };
 
