@@ -3,7 +3,7 @@ import { Box, Button, Input, Text } from 'zmp-ui';
 import { openPhone } from 'zmp-sdk/apis';
 
 const OpenPhoneDemo = () => {
-  const [phoneNumber, setPhoneNumber] = useState('0969897468');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleOpenPhone = async () => {
@@ -39,7 +39,7 @@ const OpenPhoneDemo = () => {
   };
 
   return (
-    <Box className="p-6 space-y-6">
+    <Box className="px-6 pb-4 space-y-6">
       {/* Hero Section */}
       <Box className="text-center">
         <Box className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
