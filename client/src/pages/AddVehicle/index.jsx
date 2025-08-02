@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Page, Box, Text, Button, Input, Select } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
 import { useEffect } from "react";
+import PageHeader from '../../components/PageHeader';
 
 const AddVehicle = () => {
   const navigate = useNavigate();
@@ -67,42 +68,7 @@ const AddVehicle = () => {
       touchAction: 'none'
     }}>
       {/* Header */}
-      <Box style={{
-        display: 'flex',
-        alignItems: 'center',
-        padding: '12px 16px',
-        paddingTop: 'calc(12px + env(safe-area-inset-top))',
-        backgroundColor: 'white',
-        borderBottom: '1px solid #f3f4f6',
-        position: 'relative'
-      }}>
-        <Box
-          onClick={handleBack}
-          style={{
-            width: '40px',
-            height: '40px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            borderRadius: '8px',
-            backgroundColor: 'transparent'
-          }}
-        >
-          <Text style={{ fontSize: '20px', color: '#374151' }}>←</Text>
-        </Box>
-        
-        <Text style={{
-          position: 'absolute',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          fontSize: '18px',
-          fontWeight: '600',
-          color: '#111827'
-        }}>
-          Thêm phương tiện
-        </Text>
-      </Box>
+      <PageHeader title="Thêm phương tiện" />
 
       {/* Form Content */}
       <Box style={{ 

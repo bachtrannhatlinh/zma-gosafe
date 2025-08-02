@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Page, Box, Button, Input, Text, useNavigate, Icon } from 'zmp-ui';
 import { openPhone } from 'zmp-sdk/apis';
 import BottomNavigation from '../../components/BottomNavigation';
+import PageHeader from '../../components/PageHeader';
 
 const CallToUser = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -44,33 +45,7 @@ const CallToUser = () => {
 
   return (
     <Page className="bg-gray-50 min-h-screen flex flex-col">
-      {/* Custom Header */}
-      <Box className="pt-safe-area-top" style={{
-        display: 'flex',
-        alignItems: 'center',
-        padding: '12px 16px',
-        backgroundColor: 'white',
-        borderBottom: '1px solid #f3f4f6',
-        position: 'relative',
-        minHeight: '60px',
-        zIndex: 10
-      }}>
-        <Box
-          onClick={handleBack}
-          style={{
-            width: '40px',
-            height: '40px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            borderRadius: '8px',
-            backgroundColor: 'transparent'
-          }}
-        >
-          <Icon icon="zi-chevron-left-header" style={{ fontSize: '30px', color: '#374151' }} />
-        </Box>
-      </Box>
+      <PageHeader />
       
       {/* Centered content container */}
       <Box className="flex-1 flex items-start justify-center px-6 pt-4">
