@@ -1,141 +1,83 @@
-import React, { useState } from "react";
-import { Page, Box, Text, Button } from "zmp-ui";
+import React, { useState, useEffect } from "react";
+import { Page, Box, Text, Button, Avatar } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
+import { useUserInfo } from "../../contexts/UserContext";
+import { usePhoneAuth } from "../../hooks/usePhoneAuth";
 
 // Components
 import BottomNavigation from "../../components/BottomNavigation";
-import MenuItem from "../../components/MenuItem";
-import UserProfile from "../../components/UserProfile";
 import CustomModal from "../../components/CustomModal";
-import { useEffect } from "react";
 
 const Account = () => {
-  console.log("Account component rendered");
   const navigate = useNavigate();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const { userInfo, isLoading, clearUserInfo } = useUserInfo();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Ngăn scroll khi vào trang này
+  // Thêm hook để lấy số điện thoại
+  const { phoneNumber, checkPhoneExists, clearPhoneData } = usePhoneAuth();
+
+  // Kiểm tra số điện thoại khi component mount
   useEffect(() => {
-    const preventScroll = (e) => {
-      e.preventDefault();
-    };
-    window.addEventListener('touchmove', preventScroll, { passive: false });
-    window.addEventListener('wheel', preventScroll, { passive: false });
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('touchmove', preventScroll);
-      window.removeEventListener('wheel', preventScroll);
-      document.body.style.overflow = '';
-    };
-  }, []);
+    checkPhoneExists();
+  }, [checkPhoneExists]);
 
-  // User data - trong thực tế sẽ fetch từ API hoặc context
-  const [userInfo] = useState({
-    name: "a a",
-    email: "sieutronkid325@gmail.com",
-    phone: "0969897468",
-    avatar: null,
-  });
-
-  const menuItems = [
-    {
-      id: "payment",
-      icon: "🚗",
-      title: "Quản lý phương tiện",
-      hasArrow: true,
-    },
-    {
-      id: "password",
-      icon: "🔒",
-      title: "Đổi mật khẩu",
-      hasArrow: true,
-    },
-    {
-      id: "vnpay",
-      icon: "💳",
-      title: "Chính sách thanh toán VNPAY-QR",
-      hasArrow: true,
-    },
-    {
-      id: "terms",
-      icon: "⚖️",
-      title: "Điều khoản sử dụng",
-      hasArrow: true,
-    },
-    {
-      id: "privacy",
-      icon: "🛡️",
-      title: "Chính sách bảo mật",
-      hasArrow: true,
-    },
-    {
-      id: "promotions",
-      icon: "🎁",
-      title: "Danh sách khuyến mãi",
-      hasArrow: true,
-    },
-    {
-      id: "delete",
-      icon: "🗑️",
-      title: "Yêu cầu xóa tài khoản",
-      hasArrow: true,
-      isDestructive: true,
-    },
-  ];
-
-  const handleMenuClick = (itemId) => {
-    console.log("Menu clicked:", itemId);
-    switch (itemId) {
-      case "payment":
-        navigate("/vehicle-management");
-        break;
-      case "password":
-        navigate("/change-password");
-        break;
-      case "vnpay":
-        navigate("/vnpay-policy");
-        break;
-      case "terms":
-        // Navigate to terms of service
-        break;
-      case "privacy":
-        // Navigate to privacy policy
-        break;
-      case "promotions":
-        navigate("/promotions");
-        break;
-      case "delete":
-        setShowDeleteModal(true);
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleDeleteAccount = () => {
-    console.log("Account deletion confirmed");
-    setShowDeleteModal(false);
-  };
-
-  const handleCancelDelete = () => {
-    setShowDeleteModal(false);
-  };
-
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
     setShowLogoutModal(true);
   };
 
   const handleConfirmLogout = () => {
-    console.log("User logged out");
+    // Clear localStorage
+    localStorage.clear();
+
+    // Clear userInfo trong context
+    clearUserInfo();
+
+    // Clear phone data
+    clearPhoneData();
+
+    // Close modal
     setShowLogoutModal(false);
-    // Implement logout logic here
-    // navigate("/login") or clear user data
+
+    // Navigate về trang chủ
+    navigate("/");
   };
 
   const handleCancelLogout = () => {
     setShowLogoutModal(false);
   };
+
+  // Prevent scroll
+  useEffect(() => {
+    const preventScroll = (e) => {
+      e.preventDefault();
+    };
+    window.addEventListener("touchmove", preventScroll, { passive: false });
+    window.addEventListener("wheel", preventScroll, { passive: false });
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("touchmove", preventScroll);
+      window.removeEventListener("wheel", preventScroll);
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <Page style={{ height: "100vh", backgroundColor: "#f9fafb" }}>
+        <Box
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+          }}
+        >
+          <Text>Đang tải thông tin...</Text>
+        </Box>
+        <BottomNavigation activeTab="account" />
+      </Page>
+    );
+  }
 
   return (
     <Page
@@ -144,266 +86,269 @@ const Account = () => {
         backgroundColor: "#f9fafb",
         display: "flex",
         flexDirection: "column",
-        position: "relative",
-        overflow: "hidden", // Prevent scroll
-        touchAction: "none"
+        overflow: "hidden",
+        touchAction: "none",
       }}
     >
-      {/* User Profile Section - Tăng chiều cao */}
+      {/* Header */}
       <Box
         style={{
-          background: "linear-gradient(to right, #fb923c, #ef4444)",
-          padding: "0 16px",
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          padding: "20px",
           paddingTop: "calc(20px + env(safe-area-inset-top))",
-          paddingBottom: "30px",
           color: "white",
-          position: "relative",
-          flexShrink: 0,
-          minHeight: "100px",
+          textAlign: "center",
         }}
       >
-        {/* Settings Icon */}
-        <Box
+        <Text
           style={{
-            position: "absolute",
-            top: "calc(16px + env(safe-area-inset-top))",
-            right: "16px",
-            cursor: "pointer",
+            fontSize: "20px",
+            fontWeight: "bold",
+            marginBottom: "20px",
           }}
         >
-          <Text style={{ fontSize: "18px", color: "white" }}>⚙️</Text>
-        </Box>
+          Thông tin tài khoản
+        </Text>
 
-        {/* User Info Layout - Tăng khoảng cách */}
+        {/* User Avatar */}
         <Box
           style={{
             display: "flex",
-            alignItems: "center",
-            gap: "16px", // Tăng gap từ 12px lên 16px
-            paddingTop: "12px", // Tăng padding top
-            paddingBottom: "8px", // Thêm padding bottom
+            justifyContent: "center",
+            marginBottom: "16px",
           }}
         >
-          {/* Avatar - Tăng size */}
-          <Box
+          {userInfo?.avatar ? (
+            <Avatar
+              src={userInfo.avatar}
+              size={80}
+              style={{
+                border: "3px solid rgba(255,255,255,0.3)",
+              }}
+            />
+          ) : (
+            <Box
+              style={{
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                backgroundColor: "rgba(255,255,255,0.2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "3px solid rgba(255,255,255,0.3)",
+              }}
+            >
+              <Text style={{ fontSize: "32px" }}>👤</Text>
+            </Box>
+          )}
+        </Box>
+
+        {/* User Name */}
+        <Text
+          style={{
+            fontSize: "18px",
+            fontWeight: "600",
+            marginBottom: "8px",
+          }}
+        >
+          {userInfo?.name || "Người dùng Zalo"}
+        </Text>
+
+        {/* User ID */}
+        <Text
+          style={{
+            fontSize: "14px",
+            opacity: 0.8,
+          }}
+        >
+          ID: {userInfo?.id || "Không có thông tin"}
+        </Text>
+      </Box>
+
+      {/* User Details Card */}
+      <Box
+        style={{
+          margin: "20px",
+          backgroundColor: "white",
+          borderRadius: "12px",
+          padding: "20px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+        }}
+      >
+        <Text
+          style={{
+            fontSize: "16px",
+            fontWeight: "600",
+            marginBottom: "16px",
+            color: "#333",
+          }}
+        >
+          Chi tiết thông tin
+        </Text>
+
+        {/* Info Items */}
+        <Box style={{ marginBottom: "12px" }}>
+          <Text
+            style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}
+          >
+            Tên hiển thị
+          </Text>
+          <Text style={{ fontSize: "14px", color: "#333" }}>
+            {userInfo?.name || "Chưa có thông tin"}
+          </Text>
+        </Box>
+
+        <Box style={{ marginBottom: "12px" }}>
+          <Text
+            style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}
+          >
+            Zalo ID
+          </Text>
+          <Text style={{ fontSize: "14px", color: "#333" }}>
+            {userInfo?.id || "Chưa có thông tin"}
+          </Text>
+        </Box>
+
+        <Box style={{ marginBottom: "12px" }}>
+          <Text
+            style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}
+          >
+            Trạng thái
+          </Text>
+          <Text style={{ fontSize: "14px", color: "#10b981" }}>
+            Đã xác thực qua Zalo
+          </Text>
+        </Box>
+
+        <Box style={{ marginBottom: "12px" }}>
+          <Text
+            style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}
+          >
+            Số điện thoại
+          </Text>
+          {/* Debug info */}
+          {process.env.NODE_ENV === "development" && (
+            <Text
+              style={{ fontSize: "10px", color: "#999", marginBottom: "4px" }}
+            >
+              Debug: "{phoneNumber}" (type: {typeof phoneNumber})
+            </Text>
+          )}
+          <Text
             style={{
-              width: "50px", // Tăng từ 40px lên 50px
-              height: "50px",
-              borderRadius: "50%",
-              backgroundColor: "rgba(255, 255, 255, 0.3)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
+              fontSize: "14px",
+              color: (() => {
+                const currentPhone = localStorage.getItem("user_phone");
+                const displayPhone = currentPhone || phoneNumber;
+                return displayPhone &&
+                  displayPhone !== "Chưa có số điện thoại" &&
+                  displayPhone !== "Cần cấp quyền" &&
+                  displayPhone !== "null" &&
+                  displayPhone !== "undefined"
+                  ? "#333"
+                  : "#ef4444";
+              })(),
             }}
           >
-            <Text style={{ fontSize: "22px", color: "white" }}>👤</Text>
-          </Box>
-
-          {/* User Details - Tăng spacing */}
-          <Box style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontSize: "16px", // Tăng từ 14px lên 16px
-                fontWeight: "bold",
-                color: "white",
-                marginBottom: "6px", // Tăng margin
-              }}
-            >
-              {userInfo.name}
-            </Text>
-            <Text
-              style={{
-                fontSize: "12px",
-                color: "white",
-                opacity: 0.9,
-                lineHeight: "1.4", // Tăng line height
-              }}
-            >
-              {userInfo.email}
-            </Text>
-            <Text
-              style={{
-                fontSize: "12px",
-                color: "white",
-                opacity: 0.9,
-                marginTop: "2px", // Thêm margin top
-              }}
-            >
-              {userInfo.phone}
-            </Text>
-          </Box>
+            {(() => {
+              const currentPhone = localStorage.getItem("user_phone");
+              const displayPhone = currentPhone || phoneNumber;
+              return displayPhone &&
+                displayPhone !== "Chưa có số điện thoại" &&
+                displayPhone !== "Cần cấp quyền" &&
+                displayPhone !== "null" &&
+                displayPhone !== "undefined"
+                ? displayPhone
+                : "Chưa cấp quyền số điện thoại";
+            })()}
+          </Text>
         </Box>
       </Box>
 
-      {/* Menu Items - Fixed height */}
+      {/* Action Buttons */}
       <Box
         style={{
           flex: 1,
-          backgroundColor: "white",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
+          padding: "0 20px",
+          paddingBottom: "100px",
         }}
       >
-        {/* Menu List */}
-        <Box style={{ flex: 1, overflow: "hidden" }}>
-          {menuItems.map((item, index) => (
-            <MenuItem
-              key={item.id}
-              icon={item.icon}
-              title={item.title}
-              hasArrow={item.hasArrow}
-              isDestructive={item.isDestructive}
-              onClick={() => handleMenuClick(item.id)}
-              showBorder={index < menuItems.length - 1}
-            />
-          ))}
-        </Box>
-
-        {/* Logout Button - Fixed at bottom */}
-        <Box
+        <Button
+          onClick={() => navigate("/")}
           style={{
-            padding: "12px 16px",
-            backgroundColor: "white",
-            borderTop: "1px solid #e5e7eb",
-            flexShrink: 0,
-            marginBottom: "80px", // Space for bottom nav
+            width: "100%",
+            backgroundColor: "#667eea",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            padding: "16px",
+            fontSize: "16px",
+            fontWeight: "500",
+            marginBottom: "12px",
           }}
         >
-          <Button
-            onClick={handleLogout}
-            style={{
-              width: "100%",
-              backgroundColor: "transparent",
-              border: "2px solid #ef4444",
-              color: "#ef4444",
-              borderRadius: "8px",
-              padding: "10px",
-              fontSize: "14px",
-              fontWeight: "500",
-            }}
-          >
-            🚪 Đăng xuất
-          </Button>
-        </Box>
+          🏠 Về trang chủ
+        </Button>
+
+        <Button
+          onClick={handleLogoutClick}
+          style={{
+            width: "100%",
+            backgroundColor: "transparent",
+            border: "2px solid #ef4444",
+            color: "#ef4444",
+            borderRadius: "8px",
+            padding: "16px",
+            fontSize: "16px",
+            fontWeight: "500",
+          }}
+        >
+          🚪 Đăng xuất
+        </Button>
       </Box>
 
-      {/* Logout Confirmation Modal */}
+      <BottomNavigation activeTab="account" />
+
+      {/* Modal xác nhận đăng xuất */}
       <CustomModal
         visible={showLogoutModal}
         onClose={handleCancelLogout}
         showCloseButton={false}
         position="center"
-        hideBottomNav={false}
       >
         <Box className="text-center p-6">
-          <Text
-            style={{
-              fontSize: "18px",
-              fontWeight: "600",
-              color: "#111827",
-              marginBottom: "16px",
-            }}
-          >
-            Đăng xuất
-          </Text>
+          <Box className="mb-4">
+            <Text className="text-3xl mb-3">⚠️</Text>
+            <Text className="text-lg font-bold text-black mb-2">
+              Xác nhận đăng xuất
+            </Text>
+            <Text className="text-sm text-gray-600">
+              Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?
+            </Text>
+          </Box>
 
-          <Text
-            style={{
-              fontSize: "14px",
-              color: "#6b7280",
-              lineHeight: "1.5",
-              marginBottom: "24px",
-            }}
-          >
-            Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng GOSafe không?
-          </Text>
-
-          <Box
-            style={{
-              display: "flex",
-              gap: "12px",
-            }}
-          >
+          <Box className="flex flex-row gap-3 mt-6">
             <Button
-              onClick={handleConfirmLogout}
-              style={{
-                flex: 1,
-                backgroundColor: "#16a34a",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                padding: "12px",
-                fontSize: "14px",
-                fontWeight: "500",
-              }}
-            >
-              Đồng ý
-            </Button>
-
-            <Button
+              fullWidth
               onClick={handleCancelLogout}
               style={{
-                flex: 1,
-                backgroundColor: "#ef4444",
-                color: "white",
-                border: "none",
+                backgroundColor: "transparent",
+                border: "2px solid #6b7280",
+                color: "#6b7280",
                 borderRadius: "8px",
                 padding: "12px",
                 fontSize: "14px",
                 fontWeight: "500",
               }}
             >
-              Hủy
+              Từ chối
             </Button>
-          </Box>
-        </Box>
-      </CustomModal>
-
-      {/* Delete Account Modal */}
-      <CustomModal
-        visible={showDeleteModal}
-        onClose={handleCancelDelete}
-        showCloseButton={false}
-        position="center"
-        hideBottomNav={false}
-      >
-        <Box className="text-center p-6">
-          <Text
-            style={{
-              fontSize: "18px",
-              fontWeight: "600",
-              color: "#111827",
-              marginBottom: "16px",
-            }}
-          >
-            Xóa tài khoản
-          </Text>
-
-          <Text
-            style={{
-              fontSize: "14px",
-              color: "#6b7280",
-              lineHeight: "1.5",
-              marginBottom: "24px",
-            }}
-          >
-            Chúng tôi rất tiếc khi bạn muốn rời GOSafe, nhưng xin lưu ý các tài
-            khoản đã xóa sẽ không hoạt động trở lại.
-          </Text>
-
-          <Box
-            style={{
-              display: "flex",
-              gap: "12px",
-            }}
-          >
             <Button
-              onClick={handleDeleteAccount}
+              fullWidth
+              onClick={handleConfirmLogout}
               style={{
-                flex: 1,
-                backgroundColor: "#16a34a",
+                backgroundColor: "#ef4444",
                 color: "white",
                 border: "none",
                 borderRadius: "8px",
@@ -414,28 +359,9 @@ const Account = () => {
             >
               Đồng ý
             </Button>
-
-            <Button
-              onClick={handleCancelDelete}
-              style={{
-                flex: 1,
-                backgroundColor: "#ef4444",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                padding: "12px",
-                fontSize: "14px",
-                fontWeight: "500",
-              }}
-            >
-              Hủy
-            </Button>
           </Box>
         </Box>
       </CustomModal>
-
-      {/* Bottom Navigation - Fixed */}
-      <BottomNavigation activeTab="account" />
     </Page>
   );
 };

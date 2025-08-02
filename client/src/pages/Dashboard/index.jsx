@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Page, Box, Text, Modal, Button } from "zmp-ui";
+import { Page, Box, Text } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
 
 // Import banner image
@@ -7,34 +7,54 @@ import bannerImage from "../../static/img/banner_GOSafe.jpg";
 
 // Components
 import LoadingScreen from "../../components/LoadingScreen";
-import UserHeader from "../../components/UserHeader";
 import ServiceSection from "../../components/ServiceSection";
 import BottomNavigation from "../../components/BottomNavigation";
 import PullToRefresh from "../../components/PullToRefresh";
-import StringeeCall from '../../components/StringeeCall';
-import StringeeDemo from '../../components/StringeeDemo';
+import DevFeatureToast from "../../components/DevFeatureToast";
+import PhonePermissionModal from "../../components/PhonePermissionModal"; // Thêm dòng này
 
 // Hooks
-import { useUserData } from "../../hooks/useUserData";
+import { usePhoneAuth } from "../../hooks/usePhoneAuth";
 import { useServiceNavigation } from "../../hooks/useNavigation";
+import { useUserInfo } from "../../contexts/UserContext";
 
 // Constants
 import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
 
+// Danh sách services đã phát triển
+const DEVELOPED_SERVICES = ["sms-brandname", "zalo-chat", "jwt-test"];
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showStringeeModal, setShowStringeeModal] = useState(false);
-  const [showStringeeDemo, setShowStringeeDemo] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false); // Thêm state này
+  const [pendingServiceId, setPendingServiceId] = useState(null); // Để lưu serviceId đang chờ
 
-  // Add Stringee demo handler
-  const handleStringeeDemo = () => {
-    setShowStringeeDemo(true);
-  };
+  const {
+    phoneNumber,
+    isGettingPhone,
+    checkPhoneExists,
+    requestPhonePermission,
+  } = usePhoneAuth();
+
+  const { userInfo, fetchUserInfo } = useUserInfo();
 
   // Custom hooks
-  const { userInfo, isLoading, error, refetch } = useUserData();
   const { handleServiceClick } = useServiceNavigation(navigate);
+
+  // Function xử lý click service - nhận showToast từ DevFeatureToast
+  const handleServiceClickWithToast = (showToast) => (serviceId) => {
+    // Kiểm tra userInfo trước tiên
+    if (!userInfo) {
+      // Chưa có userInfo - hiện modal xin quyền
+      setPendingServiceId(serviceId);
+      setShowPhoneModal(true);
+      return;
+    }
+
+    // Có userInfo - navigate trực tiếp
+    handleServiceClick(serviceId);
+  };
 
   // Handle pull-to-refresh
   const handleRefresh = async () => {
@@ -57,22 +77,36 @@ const Dashboard = () => {
     }
   };
 
-  // Early return for loading state
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
-  // Early return for error state
-  if (error) {
-    return (
-      <Page className="bg-gray-50 min-h-screen flex items-center justify-center">
-        <Box className="text-center p-4">
-          <Text className="text-red-600 mb-2">Đã xảy ra lỗi</Text>
-          <Text className="text-gray-600 text-sm">{error}</Text>
-        </Box>
-      </Page>
-    );
-  }
+  // Xử lý khi người dùng đồng ý cấp quyền số điện thoại
+  const handlePhonePermission = async () => {
+    const result = await requestPhonePermission();
+    if (result.success) {
+      // Fetch userInfo từ Zalo API sau khi có số điện thoại
+      try {
+        await fetchUserInfo();
+      } catch (error) {
+        console.error("❌ Error fetching user info:", error);
+      }
+      
+      setShowPhoneModal(false);
+      setTimeout(() => {
+        const recheckPhone = localStorage.getItem("user_phone");
+        const recheckHasPhone = checkPhoneExists();
+        if (
+          pendingServiceId &&
+          recheckHasPhone &&
+          recheckPhone &&
+          recheckPhone !== "Chưa có số điện thoại" &&
+          recheckPhone !== "Cần cấp quyền" &&
+          recheckPhone !== "null" &&
+          recheckPhone !== "undefined"
+        ) {
+          handleServiceClick(pendingServiceId);
+          setPendingServiceId(null);
+        }
+      }, 100);
+    }
+  };
 
   return (
     <Page
@@ -87,86 +121,65 @@ const Dashboard = () => {
         overflow: "hidden",
       }}
     >
-      <PullToRefresh onRefresh={handleRefresh} refreshing={isRefreshing}>
-        {/* Header with user info */}
-        <UserHeader userInfo={userInfo} isLoading={isLoading} />
-
-        {/* Hero Banner */}
-        <Box
-          style={{
-            position: "relative",
-            background: "linear-gradient(to right, #fb923c, #ef4444)",
-          }}
-        >
-          <img
-            src={bannerImage}
-            alt="GOSafe Banner"
-            style={{
-              width: "100%",
-              height: "192px",
-              objectFit: "cover",
-              opacity: 0.9,
-              userSelect: "none",
-              pointerEvents: "none",
-              display: "block",
-            }}
-          />
-          
-          {/* Stringee Demo Button - Floating on banner */}
-          <Box
-            style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
-              zIndex: 10
-            }}
-          >
-            <Button
-              onClick={handleStringeeDemo}
-              size="small"
-              className="bg-green-500 text-white shadow-lg"
+      <DevFeatureToast>
+        {(showToast) => (
+          <PullToRefresh onRefresh={handleRefresh} refreshing={isRefreshing}>
+            {/* Hero Banner */}
+            <Box
+              style={{
+                background: "linear-gradient(to right, #fb923c, #ef4444)",
+                paddingTop: "env(safe-area-inset-top, 32px)", // tránh Dynamic Island che mất
+              }}
             >
-              📞 Demo Call
-            </Button>
-          </Box>
-        </Box>
+              <img
+                src={bannerImage}
+                alt="GOSafe Banner"
+                style={{
+                  width: "100%",
+                  height: "270px",
+                  objectFit: "contain",
+                  userSelect: "none",
+                  pointerEvents: "none",
+                  display: "block",
+                }}
+              />
+            </Box>
+            {/* <UserHeader userInfo={userInfo} isLoading={isLoading} /> */}
 
-        {/* Main Content */}
-        <Box
-          style={{
-            background: "linear-gradient(to bottom, #fb923c, #ef4444)",
-            minHeight: "calc(100vh - 192px)", // Trừ đi chiều cao banner
-            paddingBottom: "120px", // Space cho bottom nav
-          }}
-        >
-          <ServiceSection
-            title="DỊCH VỤ TÀI XẾ"
-            services={DRIVER_SERVICES}
-            onServiceClick={handleServiceClick}
-            columns={3}
-          />
+            {/* Main Content */}
+            <Box
+              style={{
+                background: "linear-gradient(to bottom, #fb923c, #ef4444)",
+                minHeight: "calc(100vh - 192px)",
+                paddingBottom: "120px",
+              }}
+            >
+              <ServiceSection
+                title="DỊCH VỤ TÀI XẾ"
+                services={DRIVER_SERVICES}
+                onServiceClick={handleServiceClickWithToast(showToast)}
+                columns={3}
+              />
+              <ServiceSection
+                title="CÁC DỊCH VỤ KHÁC CỦA GOSAFE"
+                services={OTHER_SERVICES}
+                onServiceClick={handleServiceClickWithToast(showToast)}
+                columns={3}
+              />
+            </Box>
+          </PullToRefresh>
+        )}
+      </DevFeatureToast>
 
-          <ServiceSection
-            title="CÁC DỊCH VỤ KHÁC CỦA GOSAFE"
-            services={OTHER_SERVICES}
-            onServiceClick={handleServiceClick}
-            columns={3}
-          />
-        </Box>
-      </PullToRefresh>
-
-      {/* Stringee Demo Modal */}
-      <Modal
-        visible={showStringeeDemo}
-        title="📞 Stringee Call Demo"
-        onClose={() => setShowStringeeDemo(false)}
-        className="stringee-demo-modal"
-      >
-        <StringeeDemo />
-      </Modal>
-
-      {/* Bottom Navigation - Fixed */}
       <BottomNavigation activeTab="home" />
+
+      {/* Modal xin quyền số điện thoại */}
+      <PhonePermissionModal
+        visible={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onAgree={handlePhonePermission}
+        isGettingPhone={isGettingPhone}
+      />
     </Page>
   );
 };

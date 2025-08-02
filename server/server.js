@@ -1,237 +1,83 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 const cors = require('cors');
-const axios = require('axios');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-require('dotenv').config();
+const authMiddleware = require('./middleware/authMiddleware');
+
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-
-// Middleware - Allow all origins for testing
-app.use(cors({
-  origin: '*',
-  credentials: false,
-  methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
-}));
+app.use(cors());
 app.use(express.json());
 
-// Add explicit CORS headers for all responses
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
-  
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: "*" }
 });
 
-// Test endpoint
-app.get('/api/test', (req, res) => {
-  console.log('✅ Test endpoint được gọi');
-  res.json({
-    success: true,
-    message: 'Kết nối server thành công!',
-    timestamp: new Date().toISOString(),
-    port: PORT
-  });
+// MongoDB connection
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch(err => console.error("❌ MongoDB connection error:", err));
+
+// Message Schema
+const messageSchema = new mongoose.Schema({
+  from: String,
+  to: String,
+  message: String,
+  timestamp: { type: Date, default: Date.now }
+});
+const Message = mongoose.model("Message", messageSchema);
+
+// Protected API routes
+app.get("/history", authMiddleware, async (req, res) => {
+  const { from, to } = req.query;
+  const messages = await Message.find({
+    $or: [
+      { from, to },
+      { from: to, to: from }
+    ]
+  }).sort({ timestamp: 1 });
+  res.json(messages);
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'GoSafe Server đang chạy',
-    timestamp: new Date().toISOString(),
-    port: PORT
-  });
-});
-
-// API health check endpoint (cho client sử dụng)
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'GoSafe API Server đang chạy',
-    timestamp: new Date().toISOString(),
-    port: PORT,
-    cors: 'enabled'
-  });
-});
-
-// Zalo App credentials - cần config trong .env
-const ZALO_APP_ID = process.env.ZALO_APP_ID;
-const ZALO_APP_SECRET = process.env.ZALO_APP_SECRET;
-
-// Stringee configuration - sử dụng API_KEY và API_SECRET
-const API_KEY_SID = process.env.API_KEY_SID;
-const API_SECRET_KEY = process.env.API_SECRET_KEY;
-
-// Debug endpoint để kiểm tra credentials
-app.get('/api/stringee/debug', (req, res) => {
-  res.json({
-    hasApiKey: !!API_KEY_SID,
-    hasApiSecret: !!API_SECRET_KEY,
-    apiKeyPrefix: API_KEY_SID ? API_KEY_SID.substring(0, 10) + '...' : 'Not set',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// API endpoint để decode phone token
-app.post('/api/decode-phone', async (req, res) => {
-  console.log('🚀 Received decode phone request');
-  
-  try {
-    const { token } = req.body;
-    
-    if (!token) {
-      return res.status(400).json({
-        success: false,
-        error: 'Token is required'
-      });
+// Socket.io with JWT authentication
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (token) {
+    try {
+      const JWTService = require('./services/jwtService');
+      const decoded = JWTService.verifyToken(token);
+      socket.user = decoded;
+      next();
+    } catch (err) {
+      next(new Error('Authentication error'));
     }
-
-    console.log('🔑 Token received, length:', token.length);
-
-    // Kiểm tra App Secret
-    if (!ZALO_APP_SECRET || ZALO_APP_SECRET === 'your_actual_app_secret_here') {
-      console.log('⚠️ Using mock response - App Secret not configured');
-      return res.json({
-        success: true,
-        phoneNumber: "0987654321",
-        userInfo: { phone: "0987654321" },
-        message: 'Mock response - cần cấu hình ZALO_APP_SECRET'
-      });
-    }
-
-    // Thử decode với Zalo API
-    console.log('🔄 Decoding with Zalo API...');
-    
-    const response = await axios.post('https://openapi.zalo.me/v2.0/user/phone', {
-      token: token,
-      app_secret: ZALO_APP_SECRET
-    }, {
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      timeout: 10000
-    });
-
-    console.log('✅ Zalo API response:', response.data);
-
-    if (response.data && response.data.data && response.data.data.number) {
-      return res.json({
-        success: true,
-        phoneNumber: response.data.data.number,
-        userInfo: { phone: response.data.data.number },
-        message: 'Phone decoded successfully'
-      });
-    }
-
-    throw new Error('Invalid response from Zalo API');
-
-  } catch (error) {
-    console.error('❌ Decode error:', error.message);
-    
-    // Fallback response
-    return res.json({
-      success: true,
-      phoneNumber: "✅ Đã xác thực",
-      userInfo: { phone: "Đã xác thực" },
-      message: 'Token received but decode failed - using fallback'
-    });
+  } else {
+    next(new Error('Authentication error'));
   }
 });
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'Server is running',
-    timestamp: new Date().toISOString()
+io.on("connection", (socket) => {
+  console.log("🟢 New client connected:", socket.id, "User:", socket.user?.name);
+
+  socket.on("join", (userId) => {
+    socket.join(userId);
+  });
+
+  socket.on("send-message", async (msg) => {
+    const { from, to, message } = msg;
+    await Message.create({ from, to, message });
+    io.to(to).emit("receive-message", msg);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("🔴 Client disconnected:", socket.id);
   });
 });
 
-// Simple test endpoint without CORS issues
-app.get('/api/stringee/test', (req, res) => {
-  res.json({
-    success: true,
-    message: 'CORS test successful',
-    timestamp: new Date().toISOString()
-  });
+server.listen(process.env.PORT, () => {
+  console.log(`🚀 Server running on port ${process.env.PORT}`);
 });
-
-// Stringee token endpoint với better error handling
-app.post('/api/stringee/token', async (req, res) => {
-  console.log('🔑 Stringee token request received');
-  
-  try {
-    const API_KEY_SID = process.env.API_KEY_SID;
-    const API_SECRET_KEY = process.env.API_SECRET_KEY;
-
-    if (!API_KEY_SID || !API_SECRET_KEY) {
-      console.log('❌ Missing Stringee credentials');
-      return res.json({
-        success: false,
-        error: 'Stringee credentials not configured'
-      });
-    }
-
-    const now = Math.floor(Date.now() / 1000);
-    const exp = now + (24 * 60 * 60);
-
-    const payload = {
-      jti: API_KEY_SID + '-' + now,
-      iss: API_KEY_SID,
-      exp: exp,
-      userId: req.body.userId || 'user_' + Date.now()
-    };
-
-    const token = jwt.sign(payload, API_SECRET_KEY, {
-      algorithm: 'HS256',
-      header: {
-        typ: 'JWT',
-        alg: 'HS256',
-        cty: 'stringee-api;v=1'
-      }
-    });
-
-    console.log('✅ Stringee token generated successfully');
-    res.json({
-      success: true,
-      token: token,
-      expires: exp
-    });
-
-  } catch (error) {
-    console.error('❌ Stringee token error:', error);
-    res.json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-app.get('/api/debug', (req, res) => {
-  res.json({
-    status: 'OK',
-    hasAppId: !!ZALO_APP_ID,
-    hasAppSecret: !!ZALO_APP_SECRET,
-    timestamp: new Date().toISOString()
-  });
-});
-
-app.listen(PORT, () => {
-  console.log(`🚀 GoSafe Backend Server running on port ${PORT}`);
-  console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🔧 Decode phone: POST http://localhost:${PORT}/api/decode-phone`);
-  
-  if (!ZALO_APP_ID || !ZALO_APP_SECRET) {
-    console.warn('⚠️  Warning: ZALO_APP_ID and ZALO_APP_SECRET not configured in .env');
-  }
-});
-
-// Export for Vercel
-module.exports = app;
