@@ -1,159 +1,187 @@
-import React from "react";
-import { Box, Text, Avatar, Button } from "zmp-ui";
-import CustomModal from "./CustomModal";
-import { useUserHeader } from "../hooks/useUserHeader";
-import { useUserInfo } from "../contexts/UserContext";
+import React, { useState } from "react";
+import { Page, Box, Text } from "zmp-ui";
+import { useNavigate } from "zmp-ui";
 
-const UserHeader = () => {
-  const { userInfo, isLoading } = useUserInfo();
+// Import banner image
+import bannerImage from "../../static/img/banner_GOSafe.jpg";
+
+// Components
+import LoadingScreen from "../../components/LoadingScreen";
+import ServiceSection from "../../components/ServiceSection";
+import BottomNavigation from "../../components/BottomNavigation";
+import PullToRefresh from "../../components/PullToRefresh";
+import DevFeatureToast from "../../components/DevFeatureToast";
+import PhonePermissionModal from "../../components/PhonePermissionModal"; // Thêm dòng này
+
+// Hooks
+import { usePhoneAuth } from "../../hooks/usePhoneAuth";
+import { useServiceNavigation } from "../../hooks/useNavigation";
+import { useUserInfo } from "../../contexts/UserContext";
+
+// Constants
+import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
+
+// Danh sách services đã phát triển
+const DEVELOPED_SERVICES = ["sms-brandname", "zalo-chat", "jwt-test"];
+
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false); // Thêm state này
+  const [pendingServiceId, setPendingServiceId] = useState(null); // Để lưu serviceId đang chờ
+
   const {
-    showModal,
-    setShowModal,
-    updatedUserInfo,
     phoneNumber,
     isGettingPhone,
-    handleLogin,
-    handleLocationClick,
-  } = useUserHeader();
+    checkPhoneExists,
+    requestPhonePermission,
+  } = usePhoneAuth();
 
-  // Get current user info to display
-  const currentUserInfo = updatedUserInfo || userInfo;
+  const { userInfo, fetchUserInfo } = useUserInfo();
 
-  if (isLoading) {
-    return (
-      <Box
-        className="px-4 relative bg-white shadow-sm"
-        style={{ paddingTop: "max(env(safe-area-inset-top), 44px)" }}
-      >
-        <Box className="flex items-center space-x-3 py-4">
-          <Box className="w-10 h-10 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-full animate-pulse relative overflow-hidden">
-            <Box className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></Box>
-          </Box>
-          <Box className="flex-1">
-            <Box className="h-3 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded w-32 mb-2 animate-pulse relative overflow-hidden">
-              <Box className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></Box>
-            </Box>
-            <Box className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded w-48 animate-pulse relative overflow-hidden">
-              <Box className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-shimmer"></Box>
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-    );
-  }
+  // Custom hooks
+  const { handleServiceClick } = useServiceNavigation(navigate);
+
+  // Function xử lý click service - nhận showToast từ DevFeatureToast
+  const handleServiceClickWithToast = (showToast) => (serviceId) => {
+    // Kiểm tra userInfo trước tiên
+    if (!userInfo) {
+      // Chưa có userInfo - hiện modal xin quyền
+      setPendingServiceId(serviceId);
+      setShowPhoneModal(true);
+      return;
+    }
+
+    // Có userInfo - navigate trực tiếp
+    handleServiceClick(serviceId);
+  };
+
+  // Handle pull-to-refresh
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // Simulate network delay for better UX
+      const refreshPromise = refetch();
+      const minDelayPromise = new Promise((resolve) =>
+        setTimeout(resolve, 800)
+      );
+
+      // Wait for both data refresh and minimum delay
+      await Promise.all([refreshPromise, minDelayPromise]);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      // Still wait minimum time even on error for consistent UX
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Xử lý khi người dùng đồng ý cấp quyền số điện thoại
+  const handlePhonePermission = async () => {
+    const result = await requestPhonePermission();
+    if (result.success) {
+      // Fetch userInfo từ Zalo API sau khi có số điện thoại
+      try {
+        await fetchUserInfo();
+      } catch (error) {
+        console.error("❌ Error fetching user info:", error);
+      }
+      
+      setShowPhoneModal(false);
+      setTimeout(() => {
+        const recheckPhone = localStorage.getItem("user_phone");
+        const recheckHasPhone = checkPhoneExists();
+        if (
+          pendingServiceId &&
+          recheckHasPhone &&
+          recheckPhone &&
+          recheckPhone !== "Chưa có số điện thoại" &&
+          recheckPhone !== "Cần cấp quyền" &&
+          recheckPhone !== "null" &&
+          recheckPhone !== "undefined"
+        ) {
+          handleServiceClick(pendingServiceId);
+          setPendingServiceId(null);
+        }
+      }, 100);
+    }
+  };
 
   return (
-    <>
-      <Box
-        className="!px-4 relative bg-white shadow-sm"
-        style={{ paddingTop: "max(env(safe-area-inset-top), 30px)" }}
-      >
-        <Box className="flex items-center justify-between py-4 mt-[-20px] px-4 bg-white">
-          <Box
-            className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors"
-            onClick={handleLocationClick}
-          >
-            <Avatar
-              src={currentUserInfo?.avatar || ""}
-              size="40"
-              className="bg-white"
-            >
-              {currentUserInfo?.name?.charAt(0) || "U"}
-            </Avatar>
-            <Box>
-              <Text className="text-black text-xs">
-                {currentUserInfo?.name &&
-                phoneNumber &&
-                phoneNumber !== "Chưa có số điện thoại" &&
-                phoneNumber !== "Cần cấp quyền"
-                  ? `Xin chào, ${currentUserInfo.name} - ${phoneNumber} 👋`
-                  : "Cần cấp quyền số điện thoại 📱"}
-              </Text>
-              <Text className="text-black text-sm font-bold">
-                {currentUserInfo?.name &&
-                phoneNumber &&
-                phoneNumber !== "Chưa có số điện thoại" &&
-                phoneNumber !== "Cần cấp quyền"
-                  ? "Chào mừng bạn đến với GoSafe!"
-                  : "Cung cấp số điện thoại để sử dụng app!"}
-              </Text>
-              {isGettingPhone && (
-                <Text className="text-blue-500 text-xs mt-1">
-                  🔄 Đang lấy thông tin...
-                </Text>
-              )}
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-
-      <CustomModal
-        visible={showModal}
-        onClose={() => setShowModal(false)}
-        showCloseButton={false}
-        position="center"
-      >
-        {console.log("🔍 Modal render:", { showModal, isGettingPhone })}
-        <Box className="text-center p-4">
-          <Box className="mb-4">
-            <Text className="text-2xl mb-2">📱</Text>
-            <Text className="text-lg font-bold text-black mb-2">
-              Cần số điện thoại để sử dụng GoSafe
-            </Text>
-          </Box>
-
-          <Box className="text-left mb-6 space-y-3">
-            <Text className="text-gray-700 text-sm">
-              <strong>Mục đích sử dụng:</strong>
-            </Text>
-            <Box className="space-y-2 text-sm text-gray-600">
-              <Text>• Định danh tài khoản của bạn</Text>
-              <Text>• Liên hệ khẩn cấp khi cần thiết</Text>
-              <Text>• Xác thực thông tin cá nhân</Text>
-              <Text>• Bảo mật và bảo vệ tài khoản</Text>
-            </Box>
-
-            <Text className="text-xs text-gray-500 mt-4">
-              Số điện thoại của bạn sẽ được bảo mật và chỉ sử dụng cho mục đích
-              trên
-            </Text>
-          </Box>
-
-          <Box className="flex flex-row gap-2">
-            <Button
-              fullWidth
-              className="custom-btn-outline"
-              onClick={handleClose}
-              disabled={isGettingPhone}
-            >
-              Đóng
-            </Button>
-            <Button
-              fullWidth
-              className="custom-btn-filled"
-              style={{ 
-                backgroundColor: 'red',
-                zIndex: 9999,
-                position: 'relative'
+    <Page
+      className="dashboard-page"
+      style={{
+        height: "100vh",
+        backgroundColor: "#fb923c",
+        background: "linear-gradient(to bottom, #fb923c, #ef4444)",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <DevFeatureToast>
+        {(showToast) => (
+          <PullToRefresh onRefresh={handleRefresh} refreshing={isRefreshing}>
+            {/* Hero Banner */}
+            <Box
+              style={{
+                background: "linear-gradient(to right, #fb923c, #ef4444)",
+                paddingTop: "env(safe-area-inset-top, 32px)", // tránh Dynamic Island che mất
               }}
-              onClick={() => {
-                console.log("🔥 Button clicked - isGettingPhone:", isGettingPhone);
-                console.log("🔥 handleLogin type:", typeof handleLogin);
-                if (handleLogin) {
-                  handleLogin();
-                } else {
-                  console.error("❌ handleLogin is undefined!");
-                }
-              }}
-              disabled={isGettingPhone}
             >
-              {isGettingPhone ? "🔄 Đang xử lý..." : "Đồng ý cung cấp"}
-            </Button>
-          </Box>
-        </Box>
-      </CustomModal>
-    </>
+              <img
+                src={bannerImage}
+                alt="GOSafe Banner"
+                style={{
+                  width: "100%",
+                  height: "270px",
+                  objectFit: "contain",
+                  userSelect: "none",
+                  pointerEvents: "none",
+                  display: "block",
+                }}
+              />
+            </Box>
+            {/* <UserHeader userInfo={userInfo} isLoading={isLoading} /> */}
+
+            {/* Main Content */}
+            <Box
+              style={{
+                background: "linear-gradient(to bottom, #fb923c, #ef4444)",
+                minHeight: "calc(100vh - 192px)",
+                paddingBottom: "120px",
+              }}
+            >
+              <ServiceSection
+                title="DỊCH VỤ TÀI XẾ"
+                services={DRIVER_SERVICES}
+                onServiceClick={handleServiceClickWithToast(showToast)}
+                columns={3}
+              />
+              <ServiceSection
+                title="CÁC DỊCH VỤ KHÁC CỦA GOSAFE"
+                services={OTHER_SERVICES}
+                onServiceClick={handleServiceClickWithToast(showToast)}
+                columns={3}
+              />
+            </Box>
+          </PullToRefresh>
+        )}
+      </DevFeatureToast>
+
+      <BottomNavigation activeTab="home" />
+
+      {/* Modal xin quyền số điện thoại */}
+      <PhonePermissionModal
+        visible={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onAgree={handlePhonePermission}
+        isGettingPhone={isGettingPhone}
+      />
+    </Page>
   );
 };
 
-export default React.memo(UserHeader);
+export default Dashboard;
