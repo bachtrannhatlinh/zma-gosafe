@@ -27,6 +27,14 @@ if (!window.APP_CONFIG) {
   window.APP_CONFIG = appConfig;
 }
 
+// Comment tạm thời Stringee initialization nếu có
+// import { StringeeClient } from 'stringee';
+
+// Comment tạm thời Stringee setup code
+// const initStringee = () => {
+//   // Stringee initialization code
+// };
+
 // Mount the app
 import Layout from "./components/layout";
 const root = createRoot(document.getElementById("app"));

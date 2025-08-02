@@ -1,555 +1,90 @@
-.page {
-  padding: 16px 16px 96px 16px;
+/* Open Phone Demo Modal */
+.open-phone-demo-modal .zm-modal {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 400px;
+  margin: 0 auto;
 }
 
-.section-container {
-  padding: 16px;
-  background: #ffffff;
-  border-radius: 8px;
-  margin-bottom: 24px;
+.open-phone-demo-modal .zm-modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 0;
+  border-radius: 20px;
 }
 
-.zaui-list-item {
-  cursor: pointer;
+/* Enhanced Close Button */
+.open-phone-demo-modal .close-button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-/* Custom button styles for modal */
-.custom-btn-outline {
-  background-color: white !important;
-  border: 2px solid #6b7280 !important;
-  color: #6b7280 !important;
-  border-radius: 50px !important;
-  padding: 12px 24px !important;
-  font-weight: 500 !important;
-  font-size: 16px !important;
+.open-phone-demo-modal .close-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
-.custom-btn-outline:hover {
-  background-color: #f9fafb !important;
+.open-phone-demo-modal .close-button:active {
+  transform: scale(0.95);
 }
 
-.custom-btn-filled {
-  background-color: #ff6b35 !important;
-  border: none !important;
-  color: white !important;
-  border-radius: 50px !important;
-  padding: 12px 24px !important;
-  font-weight: 500 !important;
-  font-size: 16px !important;
+/* Header gradient animation */
+.modal-header-gradient {
+  background: linear-gradient(135deg, #dbeafe, #e0e7ff);
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
 }
 
-.custom-btn-filled:hover {
-  background-color: #e55a2b !important;
-}
-
-/* Custom Bottom Sheet Style */
-.permission-overlay {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  background-color: rgba(0, 0, 0, 0.5) !important;
-  z-index: 999999 !important;
-  animation: fadeIn 0.3s ease-out !important;
-  touch-action: none !important;
-}
-
-.permission-bottom-sheet {
-  position: fixed !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  background: white !important;
-  border-radius: 20px 20px 0 0 !important;
-  z-index: 999999 !important;
-  animation: slideUpFromBottom 0.3s ease-out !important;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
-  max-height: 90vh !important;
-  overflow-y: auto !important;
-  transform: translateY(0) !important;
-  will-change: transform !important;
-}
-
-.bottom-sheet-handle {
-  position: absolute !important;
-  top: 12px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  width: 40px !important;
-  height: 4px !important;
-  background-color: #d1d5db !important;
-  border-radius: 2px !important;
-  z-index: 1 !important;
-}
-
-/* Ensure bottom sheet is always on top */
-.permission-bottom-sheet * {
-  z-index: inherit !important;
-}
-
-/* Animation for overlay */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation for bottom sheet */
-@keyframes slideUpFromBottom {
-  0% {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Prevent body scroll when bottom sheet is open */
-body.modal-no-scroll,
-html.modal-no-scroll {
-  overflow: hidden !important;
-  height: 100% !important;
-  position: fixed !important;
-  width: 100% !important;
-}
-
-/* Force hide BottomNavigation when permission modal is open */
-body.modal-no-scroll [data-fixed-element="true"] {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  z-index: -1 !important;
-}
-
-/* Ensure permission modal is always on top */
-.permission-overlay,
-.permission-bottom-sheet {
-  z-index: 999999 !important;
-  position: fixed !important;
-}
-
-/* Permission modal bottom sheet style - Remove old styles */
-.permission-modal {
-  display: none !important;
-}
-
-.permission-modal .zaui-modal {
-  display: none !important;
-}
-
-.permission-modal .zaui-modal-content {
-  display: none !important;
-}
-
-.permission-modal .zaui-modal-backdrop {
-  display: none !important;
-}
-
-.permission-modal .zaui-modal-backdrop {
-  z-index: 10051 !important;
-  background-color: rgba(0, 0, 0, 0.8) !important;
-}
-
-.permission-modal .zaui-modal-content {
-  margin: 0 !important;
-  margin-bottom: 0 !important;
-  border-radius: 16px 16px 0 0 !important;
-  max-height: 85vh !important;
-  width: 100% !important;
-  animation: slideUpFromBottom 0.3s ease-out !important;
-  z-index: 10053 !important;
-  position: relative !important;
-  background-color: #f8fafc !important;
-  /* Ensure it covers the bottom navigation */
-  min-height: 65vh !important;
-}
-
-/* Prevent scroll on modal backdrop */
-.zaui-modal-backdrop {
-  touch-action: none !important;
-  -webkit-overflow-scrolling: auto !important;
-  overflow: hidden !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  z-index: 9999 !important;
-  background-color: rgba(0, 0, 0, 0.5) !important;
-}
-
-.zaui-modal {
-  touch-action: none !important;
-  -webkit-overflow-scrolling: auto !important;
-  position: fixed !important;
-  z-index: 10000 !important;
-}
-
-/* Lock body scroll when modal is open */
-body.modal-open,
-body:has(.zaui-modal) {
-  overflow: hidden !important;
-  position: fixed !important;
-  width: 100% !important;
-  height: 100% !important;
-  touch-action: none !important;
-  -webkit-overflow-scrolling: auto !important;
-}
-
-html:has(.zaui-modal) {
-  overflow: hidden !important;
-  height: 100% !important;
-}
-
-/* Disable scroll for entire document when modal is open */
-.modal-no-scroll {
-  overflow: hidden !important;
-  position: fixed !important;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.modal-no-scroll * {
-  -webkit-overflow-scrolling: auto !important;
-}
-
-/* Ensure modal content is above everything */
-.zaui-modal-content {
-  position: relative !important;
-  z-index: 10001 !important;
-}
-
-@keyframes slideUpFromBottom {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Custom scrollbar styling for horizontal scroll */
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
-  scrollbar-width: none;  /* Firefox */
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Safari and Chrome */
-}
-
-/* Smooth scrolling behavior */
-.overflow-x-auto {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  /* Allow horizontal scroll */
-  overscroll-behavior-x: auto !important;
-  touch-action: pan-x pan-y !important;
-}
-
-/* Pull to refresh optimizations */
-.pull-to-refresh-container {
-  /* GPU acceleration for smooth animations */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  perspective: 1000px;
-  -webkit-perspective: 1000px;
-  
-  /* Smooth touch interactions */
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
-  
-  /* Prevent text selection during drag */
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-/* Skeleton loading animations */
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite;
-}
-
-/* Enhanced pulse animation */
-@keyframes enhanced-pulse {
+@keyframes gradient-shift {
   0%, 100% {
-    opacity: 1;
+    background-position: 0% 50%;
   }
   50% {
-    opacity: 0.7;
+    background-position: 100% 50%;
   }
 }
 
-.animate-enhanced-pulse {
-  animation: enhanced-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+/* Phone input styling for iOS */
+input[type="tel"] {
+  font-size: 18px !important;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  font-weight: 500;
 }
 
-/* Fix for overscroll behavior - prevent orange/rubber band effect */
-html, body {
-  height: 100%;
-  overflow-x: hidden;
-  position: relative;
-  width: 100%;
-  margin: 0;
+input[type="tel"]:focus {
+  outline: none;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+  transform: scale(1.01);
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Modal backdrop blur */
+.open-phone-demo-modal .zm-modal-mask {
+  backdrop-filter: blur(8px);
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Compact modal styling */
+.open-phone-demo-modal {
+  --modal-padding: 0;
+}
+
+.open-phone-demo-modal .zm-modal-content {
   padding: 0;
-  background-color: white;
-  -webkit-overflow-scrolling: touch;
-  /* Hide scrollbar */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-}
-
-/* Safe area support for iPhone with Dynamic Island/Notch */
-@supports (padding-top: env(safe-area-inset-top)) {
-  .pt-safe-area-top {
-    padding-top: env(safe-area-inset-top);
-  }
-  
-  .pb-safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-}
-
-/* Fallback for devices without safe area */
-.pt-safe-area-top {
-  padding-top: 44px; /* Default status bar height */
-}
-
-.pb-safe-area-bottom {
-  padding-bottom: 34px; /* Default home indicator height */
-}
-
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
-}
-
-#app {
-  height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  background-color: white;
-  /* Support for iPhone safe area */
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-  /* Hide scrollbar */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-}
-
-#app::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
-}
-
-/* Additional fixes for Zalo Mini App pages */
-.zmp-page {
-  padding-bottom: 0;
-  -webkit-overflow-scrolling: touch;
-  background-color: white;
-  /* Hide scrollbar */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-}
-
-.zmp-page::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
-}
-
-/* Prevent overscroll on specific containers */
-.zmp-scroll-view,
-.zmp-page-container,
-.page {
-  -webkit-overflow-scrolling: touch;
-  background-color: white;
-  /* Hide scrollbar */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-}
-
-.zmp-scroll-view::-webkit-scrollbar,
-.zmp-page-container::-webkit-scrollbar,
-.page::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
-}
-
-/* Remove complex overscroll behavior rules that cause conflicts */
-/* Keep it simple for better mobile performance */
-
-/* iPhone Safe Area Support */
-@supports (padding: max(0px)) {
-  .ios-safe-header {
-    padding-top: max(1rem, env(safe-area-inset-top)) !important;
-  }
-  
-  .ios-safe-bottom {
-    padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
-  }
-}
-
-/* iPhone 14 Pro Max specific fixes */
-@media screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) {
-  .pt-safe-area-top {
-    padding-top: max(1.5rem, env(safe-area-inset-top)) !important;
-  }
-  
-  #app {
-    padding-top: 0 !important; /* Let individual components handle their safe area */
-  }
-}
-
-/* Ensure pages have proper bottom spacing for fixed navigation */
-.page-with-bottom-nav {
-  padding-bottom: 80px !important;
-  min-height: calc(100vh - 80px) !important;
-  background-color: white !important;
-}
-
-/* Fixed bottom navigation styling */
-.bottom-nav-fixed {
-  position: fixed !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  z-index: 1000 !important;
-  background: white !important;
-  border-top: 1px solid #e5e7eb !important;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Global scrollbar hiding - Apply to all elements */
-* {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-}
-
-*::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
-}
-
-/* Specific targeting for common scrollable elements */
-div, main, section, article, aside, nav, 
-.container, .content, .scroll, .scrollable,
-[class*="scroll"], [class*="overflow"] {
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
-}
-
-div::-webkit-scrollbar, main::-webkit-scrollbar, section::-webkit-scrollbar, 
-article::-webkit-scrollbar, aside::-webkit-scrollbar, nav::-webkit-scrollbar,
-.container::-webkit-scrollbar, .content::-webkit-scrollbar, 
-.scroll::-webkit-scrollbar, .scrollable::-webkit-scrollbar,
-[class*="scroll"]::-webkit-scrollbar, [class*="overflow"]::-webkit-scrollbar {
-  display: none !important; /* Safari and Chrome */
-}
-
-/* Additional page fixes for smooth scrolling */
-.zmp-page-content {
-  -webkit-overflow-scrolling: touch !important;
-  /* Hide scrollbar */
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
-}
-
-.zmp-page-content::-webkit-scrollbar {
-  display: none !important; /* Safari and Chrome */
-}
-
-/* Prevent scroll bouncing on iOS - Keep minimal */
-.zmp-ui-page {
-  -webkit-overflow-scrolling: touch !important;
-  /* Hide scrollbar */
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
-}
-
-.zmp-ui-page::-webkit-scrollbar {
-  display: none !important; /* Safari and Chrome */
-}
-
-/* Smooth scrolling for all pages */
-.smooth-page {
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: auto; /* Disable CSS scroll-behavior for native smoothness */
-  /* Hide scrollbar */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-}
-
-.smooth-page::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
-}
-
-/* Page content with bottom navigation */
-.page-with-nav {
-  padding-bottom: 80px;
-  -webkit-overflow-scrolling: touch;
-  /* Hide scrollbar */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-}
-
-/* Page content with header and bottom navigation */
-.page-with-header-nav {
-  padding-top: 60px; /* Space for header with safe area */
-  padding-bottom: 80px; /* Space for bottom navigation */
-  -webkit-overflow-scrolling: touch;
-  /* Hide scrollbar */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-}
-
-/* Safe area support for devices with notch */
-@supports (padding: max(0px)) {
-  .page-with-header-nav {
-    padding-top: max(60px, calc(50px + env(safe-area-inset-top))) !important;
-  }
-}
-
-/* iPhone specific adjustments */
-@media screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) {
-  .page-with-header-nav {
-    padding-top: max(70px, calc(50px + env(safe-area-inset-top))) !important;
-  }
-}
-
-.page-with-nav::-webkit-scrollbar,
-.page-with-header-nav::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
-}
-
-.custom-btn-outline {
-  @apply bg-white border-2 border-orange-500 text-orange-500 rounded-full font-medium;
-  border: 2px solid #f97316 !important;
-  background-color: white !important;
-  color: #f97316 !important;
-}
-
-.custom-btn-filled {
-  @apply bg-orange-500 text-white rounded-full font-medium;
-  background-color: #f97316 !important;
-  color: white !important;
-  border: none !important;
 }
