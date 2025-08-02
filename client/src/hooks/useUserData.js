@@ -36,8 +36,6 @@ export const useUserData = () => {
     await getUserData();
   };
 
-
-
   const updateUserPhone = (phone) => {
     setUserPhone(phone);
     localStorage.setItem(STORAGE_KEYS.USER_PHONE, phone);
@@ -50,6 +48,6 @@ export const useUserData = () => {
     error,
     updateUserPhone,
     refetch,
-    getUserData, // export hàm này để gọi khi muốn fetch user info
+    getUserData,
   };
 };
