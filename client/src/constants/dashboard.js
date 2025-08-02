@@ -88,9 +88,6 @@ export const SERVICE_ROUTES = {
   "jwt-test": "/jwt-test",
 };
 
-export const OTHER_SERVICES_ACTIVE = OTHER_SERVICES.filter(s => SERVICE_ROUTES[s.id]);
-export const OTHER_SERVICES_COMING_SOON = OTHER_SERVICES.filter(s => !SERVICE_ROUTES[s.id]);
-
 // Local storage keys
 export const STORAGE_KEYS = {
   USER_PHONE: "userPhone",
