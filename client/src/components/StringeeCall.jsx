@@ -9,7 +9,6 @@ const StringeeCall = () => {
 
   const handleMakeCall = () => {
     if (!phoneNumber.trim()) {
-      alert('Vui lòng nhập số điện thoại');
       return;
     }
     makeCall(phoneNumber);

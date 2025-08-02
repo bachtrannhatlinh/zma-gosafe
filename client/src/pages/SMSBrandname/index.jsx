@@ -1,14 +1,14 @@
 import React from "react";
-import { Page, Box, Button, Text, useNavigate } from "zmp-ui";
+import { Page, Box } from "zmp-ui";
 import { openSMS } from "zmp-sdk/apis";
 import PhoneInput from '../../components/shared/PhoneInput';
 import LoadingButton from '../../components/shared/LoadingButton';
+import PageHeader from '../../components/PageHeader';
 import { useForm } from '../../hooks/useForm';
 import { useApi } from '../../hooks/useApi';
 import { usePlatformDetection } from '../../hooks/usePlatformDetection';
 
 const SMSBrandname = () => {
-  const navigate = useNavigate();
   const { request, loading } = useApi();
   const { isRealDevice, isZalo } = usePlatformDetection();
 
@@ -40,7 +40,6 @@ const SMSBrandname = () => {
         await sendRegularSMS();
       }
     } catch (error) {
-      alert("Gửi SMS thất bại: " + error.message);
     }
   };
 
@@ -58,8 +57,6 @@ const SMSBrandname = () => {
         brandname: 'GoSafe'
       })
     });
-
-    alert("SMS Brandname đã được gửi thành công!");
   };
 
   const sendRegularSMS = async () => {
@@ -71,11 +68,12 @@ const SMSBrandname = () => {
         fail: reject
       });
     });
-    alert("Đã mở Messages app!");
   };
 
   return (
-    <Page>
+    <Page className="pt-safe-area-top pb-safe-area-bottom">
+      <PageHeader title="SMS Brandname" />
+      
       <Box className="p-4">
         <PhoneInput
           value={values.phoneNumber}
@@ -83,7 +81,6 @@ const SMSBrandname = () => {
           error={errors.phoneNumber}
           placeholder="Nhập số điện thoại"
         />
-        
         <LoadingButton
           loading={loading}
           onClick={handleSendSMS}
@@ -97,4 +94,3 @@ const SMSBrandname = () => {
 };
 
 export default SMSBrandname;
-

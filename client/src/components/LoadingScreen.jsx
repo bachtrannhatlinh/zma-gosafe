@@ -25,7 +25,7 @@ const LoadingScreen = ({ compact = false }) => {
             <Text className="text-white text-lg font-bold">G</Text>
           </Box>
           <Text className="text-lg font-bold text-gray-800 mb-1">GOSafe</Text>
-          <Text className="text-xs text-gray-500">Ứng dụng bảo hiểm thông minh</Text>
+          <Text className="text-xs text-gray-500">Ứng dụng đặt tài xế thông minh</Text>
         </Box>
         
         {/* Loading animation - giảm kích thước */}

@@ -7,39 +7,53 @@ import bannerImage from "../../static/img/banner_GOSafe.jpg";
 
 // Components
 import LoadingScreen from "../../components/LoadingScreen";
-import UserHeader from "../../components/UserHeader";
 import ServiceSection from "../../components/ServiceSection";
 import BottomNavigation from "../../components/BottomNavigation";
 import PullToRefresh from "../../components/PullToRefresh";
 import DevFeatureToast from "../../components/DevFeatureToast";
+import PhonePermissionModal from "../../components/PhonePermissionModal"; // Thêm dòng này
 
 // Hooks
-import { useUserData } from "../../hooks/useUserData";
+import { usePhoneAuth } from "../../hooks/usePhoneAuth";
 import { useServiceNavigation } from "../../hooks/useNavigation";
+import { useUserInfo } from "../../contexts/UserContext";
 
 // Constants
 import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
 
 // Danh sách services đã phát triển
-const DEVELOPED_SERVICES = ['sms-brandname', 'zalo-chat'];
+const DEVELOPED_SERVICES = ["sms-brandname", "zalo-chat"];
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false); // Thêm state này
+  const [pendingServiceId, setPendingServiceId] = useState(null); // Để lưu serviceId đang chờ
+
+  const {
+    phoneNumber,
+    isGettingPhone,
+    checkPhoneExists,
+    requestPhonePermission,
+  } = usePhoneAuth();
+
+  const { userInfo, fetchUserInfo } = useUserInfo();
 
   // Custom hooks
-  const { userInfo, isLoading, error, refetch } = useUserData();
   const { handleServiceClick } = useServiceNavigation(navigate);
 
   // Function xử lý click service - nhận showToast từ DevFeatureToast
   const handleServiceClickWithToast = (showToast) => (serviceId) => {
-    if (DEVELOPED_SERVICES.includes(serviceId)) {
-      // Service đã phát triển - navigate trực tiếp
-      handleServiceClick(serviceId);
-    } else {
-      // Service chưa phát triển - hiển thị toast
-      showToast();
+    // Kiểm tra userInfo trước tiên
+    if (!userInfo) {
+      // Chưa có userInfo - hiện modal xin quyền
+      setPendingServiceId(serviceId);
+      setShowPhoneModal(true);
+      return;
     }
+
+    // Có userInfo - navigate trực tiếp
+    handleServiceClick(serviceId);
   };
 
   // Handle pull-to-refresh
@@ -63,22 +77,36 @@ const Dashboard = () => {
     }
   };
 
-  // Early return for loading state
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
-  // Early return for error state
-  if (error) {
-    return (
-      <Page className="bg-gray-50 min-h-screen flex items-center justify-center">
-        <Box className="text-center p-4">
-          <Text className="text-red-600 mb-2">Đã xảy ra lỗi</Text>
-          <Text className="text-gray-600 text-sm">{error}</Text>
-        </Box>
-      </Page>
-    );
-  }
+  // Xử lý khi người dùng đồng ý cấp quyền số điện thoại
+  const handlePhonePermission = async () => {
+    const result = await requestPhonePermission();
+    if (result.success) {
+      // Fetch userInfo từ Zalo API sau khi có số điện thoại
+      try {
+        await fetchUserInfo();
+      } catch (error) {
+        console.error("❌ Error fetching user info:", error);
+      }
+      
+      setShowPhoneModal(false);
+      setTimeout(() => {
+        const recheckPhone = localStorage.getItem("user_phone");
+        const recheckHasPhone = checkPhoneExists();
+        if (
+          pendingServiceId &&
+          recheckHasPhone &&
+          recheckPhone &&
+          recheckPhone !== "Chưa có số điện thoại" &&
+          recheckPhone !== "Cần cấp quyền" &&
+          recheckPhone !== "null" &&
+          recheckPhone !== "undefined"
+        ) {
+          handleServiceClick(pendingServiceId);
+          setPendingServiceId(null);
+        }
+      }, 100);
+    }
+  };
 
   return (
     <Page
@@ -100,7 +128,7 @@ const Dashboard = () => {
             <Box
               style={{
                 background: "linear-gradient(to right, #fb923c, #ef4444)",
-                paddingTop: 'env(safe-area-inset-top, 32px)', // tránh Dynamic Island che mất
+                paddingTop: "env(safe-area-inset-top, 32px)", // tránh Dynamic Island che mất
               }}
             >
               <img
@@ -144,6 +172,14 @@ const Dashboard = () => {
       </DevFeatureToast>
 
       <BottomNavigation activeTab="home" />
+
+      {/* Modal xin quyền số điện thoại */}
+      <PhonePermissionModal
+        visible={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onAgree={handlePhonePermission}
+        isGettingPhone={isGettingPhone}
+      />
     </Page>
   );
 };

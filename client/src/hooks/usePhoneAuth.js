@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { authorize, getUserInfo, getPhoneNumber, getAccessToken } from "zmp-sdk/apis";
 import { useServerAuth } from "./useServerAuth";
 import axios from "axios";
@@ -31,11 +31,6 @@ export const usePhoneAuth = () => {
     localStorage.removeItem("zalo_phone_token");
   }, []);
 
-  // Force clear on mount để test - COMMENT OUT
-  // useEffect(() => {
-  //   clearPhoneData();
-  // }, []);
-
   const requestPhonePermission = useCallback(async () => {
     setIsGettingPhone(true);
 
@@ -65,6 +60,7 @@ export const usePhoneAuth = () => {
         fail: () => reject(new Error("Cần cấp quyền số điện thoại để sử dụng ứng dụng")),
       });
     });
+    console.log("✅ Authorization success:", authResult);
 
     const accessToken = await new Promise((resolve, reject) => {
       getAccessToken({ success: resolve, fail: reject });
@@ -160,15 +156,6 @@ export const usePhoneAuth = () => {
 
   const handlePermissionError = (error) => {
     console.error("❌ Lỗi xin quyền:", error);
-    
-    if (error.message.includes("từ chối")) {
-      alert("Bạn cần cấp quyền số điện thoại để sử dụng GoSafe. Vui lòng thử lại.");
-    } else if (error.message.includes("Không thể lấy")) {
-      alert("Có lỗi khi lấy thông tin. Vui lòng thử lại sau.");
-    } else {
-      alert("Có lỗi xảy ra. Vui lòng thử lại.");
-    }
-
     setPhoneNumber("Cần cấp quyền");
   };
 
@@ -181,5 +168,4 @@ export const usePhoneAuth = () => {
     clearPhoneData,
   };
 };
-
 

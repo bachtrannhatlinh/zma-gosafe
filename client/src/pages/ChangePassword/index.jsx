@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Page, Box, Text, Button, Input } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
+import PageHeader from '../../components/PageHeader';
 
 const ChangePassword = () => {
   const navigate = useNavigate();
@@ -23,22 +24,18 @@ const ChangePassword = () => {
 
   const handleSubmit = () => {
     if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
-      alert("Vui lòng điền đầy đủ thông tin");
       return;
     }
     
     if (formData.newPassword !== formData.confirmPassword) {
-      alert("Mật khẩu mới và xác nhận mật khẩu không khớp");
       return;
     }
 
     if (formData.newPassword.length < 6) {
-      alert("Mật khẩu mới phải có ít nhất 6 ký tự");
       return;
     }
     
     console.log("Đổi mật khẩu:", formData);
-    alert("Đổi mật khẩu thành công!");
     navigate(-1);
   };
 
@@ -54,42 +51,7 @@ const ChangePassword = () => {
       touchAction: 'none' 
     }}>
       {/* Header */}
-      <Box style={{
-        display: 'flex',
-        alignItems: 'center',
-        padding: '12px 16px',
-        paddingTop: 'calc(12px + env(safe-area-inset-top))',
-        backgroundColor: 'white',
-        borderBottom: '1px solid #f3f4f6',
-        position: 'relative'
-      }}>
-        <Box
-          onClick={handleBack}
-          style={{
-            width: '40px',
-            height: '40px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            borderRadius: '8px',
-            backgroundColor: 'transparent'
-          }}
-        >
-          <Text style={{ fontSize: '20px', color: '#374151' }}>←</Text>
-        </Box>
-        
-        <Text style={{
-          position: 'absolute',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          fontSize: '18px',
-          fontWeight: '600',
-          color: '#111827'
-        }}>
-          Đổi mật khẩu
-        </Text>
-      </Box>
+      <PageHeader title="Đổi mật khẩu" />
 
       {/* Form Content */}
       <Box style={{ 

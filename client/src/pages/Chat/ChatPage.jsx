@@ -1,33 +1,70 @@
 import React, { useEffect, useState } from "react";
-import { getUserInfo } from "zmp-sdk/apis";
+import { useUserInfo } from "../../contexts/UserContext";
 import {
   connectSocket,
   sendMessage,
   onMessageReceived,
   disconnectSocket,
 } from "./socket";
+import { useNavigate } from "zmp-ui";
+
+const ADMIN_ID = "3368637342326461234";
+const SERVER_URL = "https://cent-identifier-eos-ld.trycloudflare.com";
 
 const ChatPage = () => {
   const [userId, setUserId] = useState(null);
-  const [targetId, setTargetId] = useState(""); // Chọn người nhận
+  const [targetId, setTargetId] = useState("");
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const { userInfo } = useUserInfo();
+  const navigate = useNavigate();
+
+  const isAdmin = userId === ADMIN_ID;
 
   useEffect(() => {
-    getUserInfo({
-      success: (res) => {
-        const uid = res.userInfo.id;
-        setUserId(uid);
-        connectSocket(uid); // kết nối vào socket room của mình
+    let unsub = () => {};
+    
+    if (userInfo?.id) {
+      setUserId(userInfo.id);
+      connectSocket(userInfo.id);
 
-        onMessageReceived((msg) => {
-          setMessages((prev) => [...prev, msg]);
-        });
-      },
-    });
+      unsub = onMessageReceived((msg) => {
+        setMessages((prev) => [...prev, msg]);
+      });
+    }
 
-    return () => disconnectSocket();
-  }, []);
+    return () => {
+      disconnectSocket();
+      unsub && unsub();
+    };
+  }, [userInfo]);
+
+  // Lấy lịch sử chat khi userId và targetId đã sẵn sàng
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (userId && targetId) {
+        try {
+          const resHistory = await fetch(
+            `${SERVER_URL}/history?from=${userId}&to=${targetId}`
+          );
+          const history = await resHistory.json();
+          setMessages(history);
+        } catch (e) {
+          setMessages([]);
+        }
+      } else {
+        setMessages([]);
+      }
+    };
+    fetchHistory();
+  }, [userId, targetId]);
+
+  useEffect(() => {
+    // Nếu không phải admin thì tự động gán targetId là ADMIN_ID
+    if (!isAdmin) {
+      setTargetId(ADMIN_ID);
+    }
+  }, [isAdmin]);
 
   const handleSend = () => {
     if (!targetId || !input.trim()) return;
@@ -39,23 +76,64 @@ const ChatPage = () => {
   };
 
   return (
-    <div style={{ padding: 16, background: "#fff", minHeight: "100vh" }}>
-      <div style={{ marginBottom: 12 }}>
-        <strong>Bạn là:</strong> {userId || "Đang lấy ID..."}
-      </div>
-      <div style={{ marginBottom: 12 }}>
-        <input
-          value={targetId}
-          onChange={(e) => setTargetId(e.target.value)}
-          placeholder="Nhập ID người nhận"
+    <div
+      style={{
+        paddingTop: "max(env(safe-area-inset-top), 44px)",
+        background: "#fff",
+        minHeight: "100vh",
+      }}
+    >
+      {/* Header với nút quay lại */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          padding: "12px 16px",
+          borderBottom: "1px solid #eee",
+          background: "#fff",
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+        }}
+      >
+        <button
+          onClick={() => navigate(-1)}
           style={{
-            width: "100%",
-            padding: 8,
-            border: "1px solid #ccc",
-            borderRadius: 4,
+            background: "none",
+            border: "none",
+            padding: 0,
+            marginRight: 12,
+            cursor: "pointer",
+            fontSize: 22,
+            color: "#fb923c",
           }}
-        />
+          aria-label="Quay lại"
+        >
+          ←
+        </button>
+        <span style={{ fontWeight: "bold", fontSize: 18 }}>Live Chat</span>
       </div>
+
+      <div style={{ marginBottom: 8 }}>
+        <strong>Bạn là:</strong> {userId || "Đang lấy ID..."} (
+        {isAdmin ? "Quản trị viên" : "Người dùng"})
+      </div>
+
+      {isAdmin && (
+        <div style={{ marginBottom: 12 }}>
+          <input
+            value={targetId}
+            onChange={(e) => setTargetId(e.target.value)}
+            placeholder="Nhập ID người dùng để trả lời"
+            style={{
+              width: "100%",
+              padding: 8,
+              border: "1px solid #ccc",
+              borderRadius: 4,
+            }}
+          />
+        </div>
+      )}
 
       <div
         style={{
@@ -66,25 +144,69 @@ const ChatPage = () => {
           marginBottom: 16,
           padding: 8,
           background: "#f9f9f9",
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
         }}
       >
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            style={{
-              textAlign: m.from === userId ? "right" : "left",
-              margin: "4px 0",
-              padding: "4px 8px",
-              background: m.from === userId ? "#d1fae5" : "#e5e7eb",
-              borderRadius: 8,
-              display: "inline-block",
-              maxWidth: "80%",
-              color: "#222",
-            }}
-          >
-            {m.message}
-          </div>
-        ))}
+        {messages.map((m, i) => {
+          const isMine = m.from === userId;
+          const isAdminMsg = m.from === ADMIN_ID;
+          return (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                flexDirection: isMine ? "row-reverse" : "row",
+                alignItems: "flex-end",
+              }}
+            >
+              {/* Avatar giả lập */}
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  background: isAdminMsg ? "#fb923c" : "#3b82f6",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: "bold",
+                  fontSize: 16,
+                  margin: "0 8px",
+                }}
+              >
+                {isAdminMsg ? "A" : "U"}
+              </div>
+              <div
+                style={{
+                  background: isMine
+                    ? "#d1fae5"
+                    : isAdminMsg
+                    ? "#fde68a"
+                    : "#e5e7eb",
+                  borderRadius: 12,
+                  padding: "8px 14px",
+                  maxWidth: "70%",
+                  color: "#222",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                }}
+              >
+                <div style={{ fontSize: 15, marginBottom: 2 }}>{m.message}</div>
+                <div style={{ fontSize: 11, color: "#888" }}>
+                  {isAdminMsg
+                    ? isMine
+                      ? "Bạn (Admin)"
+                      : "Quản trị viên"
+                    : isMine
+                    ? "Bạn"
+                    : "Người dùng"}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div style={{ display: "flex", gap: 8 }}>
