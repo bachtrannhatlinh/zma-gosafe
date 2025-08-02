@@ -3,6 +3,7 @@ import { Page, Box } from "zmp-ui";
 import { openSMS } from "zmp-sdk/apis";
 import PhoneInput from '../../components/shared/PhoneInput';
 import LoadingButton from '../../components/shared/LoadingButton';
+import PageHeader from '../../components/PageHeader';
 import { useForm } from '../../hooks/useForm';
 import { useApi } from '../../hooks/useApi';
 import { usePlatformDetection } from '../../hooks/usePlatformDetection';
@@ -56,7 +57,6 @@ const SMSBrandname = () => {
         brandname: 'GoSafe'
       })
     });
-
   };
 
   const sendRegularSMS = async () => {
@@ -72,6 +72,8 @@ const SMSBrandname = () => {
 
   return (
     <Page className="pt-safe-area-top pb-safe-area-bottom">
+      <PageHeader title="SMS Brandname" />
+      
       <Box className="p-4">
         <PhoneInput
           value={values.phoneNumber}
@@ -79,7 +81,6 @@ const SMSBrandname = () => {
           error={errors.phoneNumber}
           placeholder="Nhập số điện thoại"
         />
-        
         <LoadingButton
           loading={loading}
           onClick={handleSendSMS}

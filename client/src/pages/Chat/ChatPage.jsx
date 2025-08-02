@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { getUserInfo } from "zmp-sdk/apis";
+import { useUserInfo } from "../../contexts/UserContext";
 import {
   connectSocket,
   sendMessage,
   onMessageReceived,
   disconnectSocket,
 } from "./socket";
-import { useUserData } from "../../hooks/useUserData";
-import { useNavigate } from "zmp-ui"; // hoặc từ react-router-dom
+import { useNavigate } from "zmp-ui";
 
 const ADMIN_ID = "3368637342326461234";
 const SERVER_URL = "https://cent-identifier-eos-ld.trycloudflare.com";
@@ -17,14 +16,14 @@ const ChatPage = () => {
   const [targetId, setTargetId] = useState("");
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const { userInfo } = useUserData();
+  const { userInfo } = useUserInfo();
   const navigate = useNavigate();
 
   const isAdmin = userId === ADMIN_ID;
 
   useEffect(() => {
     let unsub = () => {};
-    // Nếu đã có userInfo.id thì chỉ cần setUserId và connectSocket
+    
     if (userInfo?.id) {
       setUserId(userInfo.id);
       connectSocket(userInfo.id);
@@ -32,30 +31,12 @@ const ChatPage = () => {
       unsub = onMessageReceived((msg) => {
         setMessages((prev) => [...prev, msg]);
       });
-    } else {
-      // Nếu chưa có thì mới gọi getUserInfo
-      getUserInfo({
-        success: async (res) => {
-          console.log("getUserInfo success:", res);
-          setUserId(res.userInfo.id);
-          connectSocket(res.userInfo.id);
-
-          unsub = onMessageReceived((msg) => {
-            setMessages((prev) => [...prev, msg]);
-          });
-        },
-        fail: (err) => {
-          setUserId(null);
-          console.error("getUserInfo error:", err);
-        },
-      });
     }
 
     return () => {
       disconnectSocket();
       unsub && unsub();
     };
-    // Chỉ phụ thuộc userInfo, KHÔNG phụ thuộc targetId để tránh gọi lại nhiều lần
   }, [userInfo]);
 
   // Lấy lịch sử chat khi userId và targetId đã sẵn sàng

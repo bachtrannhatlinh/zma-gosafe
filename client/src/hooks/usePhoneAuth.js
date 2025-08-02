@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { authorize, getUserInfo, getPhoneNumber, getAccessToken } from "zmp-sdk/apis";
 import { useServerAuth } from "./useServerAuth";
 import axios from "axios";
@@ -31,11 +31,6 @@ export const usePhoneAuth = () => {
     localStorage.removeItem("zalo_phone_token");
   }, []);
 
-  // Force clear on mount để test - COMMENT OUT
-  // useEffect(() => {
-  //   clearPhoneData();
-  // }, []);
-
   const requestPhonePermission = useCallback(async () => {
     setIsGettingPhone(true);
 
@@ -65,6 +60,7 @@ export const usePhoneAuth = () => {
         fail: () => reject(new Error("Cần cấp quyền số điện thoại để sử dụng ứng dụng")),
       });
     });
+    console.log("✅ Authorization success:", authResult);
 
     const accessToken = await new Promise((resolve, reject) => {
       getAccessToken({ success: resolve, fail: reject });

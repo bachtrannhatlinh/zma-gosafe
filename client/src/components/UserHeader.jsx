@@ -2,8 +2,10 @@ import React from "react";
 import { Box, Text, Avatar, Button } from "zmp-ui";
 import CustomModal from "./CustomModal";
 import { useUserHeader } from "../hooks/useUserHeader";
+import { useUserInfo } from "../contexts/UserContext";
 
-const UserHeader = ({ userInfo, isLoading }) => {
+const UserHeader = () => {
+  const { userInfo, isLoading } = useUserInfo();
   const {
     showModal,
     setShowModal,
@@ -13,19 +15,6 @@ const UserHeader = ({ userInfo, isLoading }) => {
     handleLogin,
     handleLocationClick,
   } = useUserHeader();
-
-  // Debug log để kiểm tra handleLogin
-  console.log("🔍 UserHeader render:", { 
-    showModal, 
-    isGettingPhone, 
-    handleLogin: typeof handleLogin,
-    phoneNumber,
-    storedPhone: localStorage.getItem("user_phone")
-  });
-
-  const handleClose = () => {
-    setShowModal(false);
-  };
 
   // Get current user info to display
   const currentUserInfo = updatedUserInfo || userInfo;

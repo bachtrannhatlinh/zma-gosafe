@@ -11,6 +11,7 @@ export { default as CustomModal } from './CustomModal';
 export { default as LocationInput } from './LocationInput';
 export { default as HistoryItem } from './HistoryItem';
 export { default as MenuItem } from './MenuItem';
+export { default as PageHeader } from './PageHeader';
 
 // Shared components
 export { default as PhoneInput } from './shared/PhoneInput';

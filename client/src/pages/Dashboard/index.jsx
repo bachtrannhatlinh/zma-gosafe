@@ -16,6 +16,7 @@ import PhonePermissionModal from "../../components/PhonePermissionModal"; // Th�
 // Hooks
 import { usePhoneAuth } from "../../hooks/usePhoneAuth";
 import { useServiceNavigation } from "../../hooks/useNavigation";
+import { useUserInfo } from "../../contexts/UserContext";
 
 // Constants
 import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
@@ -36,31 +37,23 @@ const Dashboard = () => {
     requestPhonePermission,
   } = usePhoneAuth();
 
+  const { userInfo, fetchUserInfo } = useUserInfo();
+
   // Custom hooks
   const { handleServiceClick } = useServiceNavigation(navigate);
 
   // Function xử lý click service - nhận showToast từ DevFeatureToast
   const handleServiceClickWithToast = (showToast) => (serviceId) => {
-    if (DEVELOPED_SERVICES.includes(serviceId)) {
-      // Nếu chưa có số điện thoại thì hiện modal xin quyền
-      if (
-        !checkPhoneExists() ||
-        !phoneNumber ||
-        phoneNumber === "Chưa có số điện thoại" ||
-        phoneNumber === "Cần cấp quyền" ||
-        phoneNumber === "null" ||
-        phoneNumber === "undefined"
-      ) {
-        setPendingServiceId(serviceId);
-        setShowPhoneModal(true);
-        return;
-      }
-      // Service đã phát triển - navigate trực tiếp
-      handleServiceClick(serviceId);
-    } else {
-      // Service chưa phát triển - hiển thị toast
-      showToast();
+    // Kiểm tra userInfo trước tiên
+    if (!userInfo) {
+      // Chưa có userInfo - hiện modal xin quyền
+      setPendingServiceId(serviceId);
+      setShowPhoneModal(true);
+      return;
     }
+
+    // Có userInfo - navigate trực tiếp
+    handleServiceClick(serviceId);
   };
 
   // Handle pull-to-refresh
@@ -88,6 +81,13 @@ const Dashboard = () => {
   const handlePhonePermission = async () => {
     const result = await requestPhonePermission();
     if (result.success) {
+      // Fetch userInfo từ Zalo API sau khi có số điện thoại
+      try {
+        await fetchUserInfo();
+      } catch (error) {
+        console.error("❌ Error fetching user info:", error);
+      }
+      
       setShowPhoneModal(false);
       setTimeout(() => {
         const recheckPhone = localStorage.getItem("user_phone");

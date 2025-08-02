@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Page, Box, Text, Button, Avatar } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
-import { getUserInfo } from "zmp-sdk/apis";
+import { useUserInfo } from "../../contexts/UserContext";
 import { usePhoneAuth } from "../../hooks/usePhoneAuth";
 
 // Components
@@ -9,29 +9,35 @@ import BottomNavigation from "../../components/BottomNavigation";
 
 const Account = () => {
   const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { userInfo, isLoading, clearUserInfo } = useUserInfo();
+  
+  // Debug userInfo
+  useEffect(() => {
+    console.log("🔍 Account userInfo:", userInfo);
+    console.log("🔍 Account isLoading:", isLoading);
+  }, [userInfo, isLoading]);
   
   // Thêm hook để lấy số điện thoại
-  const { phoneNumber, checkPhoneExists } = usePhoneAuth();
+  const { phoneNumber, checkPhoneExists, clearPhoneData } = usePhoneAuth();
 
-  // Lấy thông tin người dùng từ Zalo SDK
+  // Kiểm tra số điện thoại khi component mount
   useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const { userInfo: zaloUserInfo } = await getUserInfo({});
-        setUserInfo(zaloUserInfo);
-        // Kiểm tra số điện thoại
-        checkPhoneExists();
-      } catch (error) {
-        console.error("Error fetching user info:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUserInfo();
+    checkPhoneExists();
   }, [checkPhoneExists]);
+
+  const handleLogout = () => {
+    // Clear localStorage
+    localStorage.clear();
+    
+    // Clear userInfo trong context
+    clearUserInfo();
+    
+    // Clear phone data
+    clearPhoneData();
+    
+    // Navigate về trang chủ
+    navigate("/");
+  };
 
   // Prevent scroll
   useEffect(() => {
@@ -265,10 +271,7 @@ const Account = () => {
         </Button>
 
         <Button
-          onClick={() => {
-            localStorage.clear();
-            navigate("/");
-          }}
+          onClick={handleLogout}
           style={{
             width: "100%",
             backgroundColor: "transparent",
