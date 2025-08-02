@@ -69,23 +69,16 @@ export const OTHER_SERVICES = [
 
 // Service route mapping
 export const SERVICE_ROUTES = {
-  "car-driver": "/book-ride",
-  "bike-driver": "/book-ride", 
-  "daily-rental": "/book-ride",
-  "vehicle-registration": null, // Coming soon
-  "bike-rental": null, // Coming soon
-  "car-rental": null, // Coming soon
-  "sms-brandname": "/sms-brandname", // SMS Brandname route
-  "flight-tickets": null, // Coming soon
-  "travel-tours": null, // Coming soon
+  "car-driver": null,
+  "bike-driver": null, 
+  "daily-rental": null,
+  "vehicle-registration": null,
+  "bike-rental": null,
+  "car-rental": null,
+  "sms-brandname": "/sms-brandname",
+  "flight-tickets": null,
+  "travel-tours": null,
   "zalo-chat": "/zalo-chat",
-  vehicle: "/vehicle",
-  delivery: null, // Coming soon
-  gift: null, // Coming soon
-  gas: null, // Coming soon
-  car: "/vehicle",
-  bike: "/vehicle",
-  market: null, // Coming soon
 };
 
 export const OTHER_SERVICES_ACTIVE = OTHER_SERVICES.filter(s => SERVICE_ROUTES[s.id]);

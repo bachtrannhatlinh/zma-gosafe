@@ -21,8 +21,6 @@ import CallToUser from "../pages/CallToUser";
 import LiveChat from "../pages/Chat/ChatPage";
 
 const Layout = () => {
-  console.log("Layout rendered, current path:", window.location.pathname);
-  
   return (
     <App theme={getSystemInfo().zaloTheme}>
       <SnackbarProvider>

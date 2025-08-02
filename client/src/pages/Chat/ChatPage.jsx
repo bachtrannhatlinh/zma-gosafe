@@ -6,11 +6,11 @@ import {
   onMessageReceived,
   disconnectSocket,
 } from "./socket";
-
 import { useUserData } from "../../hooks/useUserData";
+import { useNavigate } from "zmp-ui"; // hoặc từ react-router-dom
 
 const ADMIN_ID = "3368637342326461234";
-const SERVER_URL = "https://cent-identifier-eos-ld.trycloudflare.com"
+const SERVER_URL = "https://cent-identifier-eos-ld.trycloudflare.com";
 
 const ChatPage = () => {
   const [userId, setUserId] = useState(null);
@@ -18,6 +18,7 @@ const ChatPage = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const { userInfo } = useUserData();
+  const navigate = useNavigate();
 
   const isAdmin = userId === ADMIN_ID;
 
@@ -35,7 +36,7 @@ const ChatPage = () => {
       // Nếu chưa có thì mới gọi getUserInfo
       getUserInfo({
         success: async (res) => {
-          console.log("getUserInfo success:", res); 
+          console.log("getUserInfo success:", res);
           setUserId(res.userInfo.id);
           connectSocket(res.userInfo.id);
 
@@ -101,6 +102,37 @@ const ChatPage = () => {
         minHeight: "100vh",
       }}
     >
+      {/* Header với nút quay lại */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          padding: "12px 16px",
+          borderBottom: "1px solid #eee",
+          background: "#fff",
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+        }}
+      >
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            background: "none",
+            border: "none",
+            padding: 0,
+            marginRight: 12,
+            cursor: "pointer",
+            fontSize: 22,
+            color: "#fb923c",
+          }}
+          aria-label="Quay lại"
+        >
+          ←
+        </button>
+        <span style={{ fontWeight: "bold", fontSize: 18 }}>Live Chat</span>
+      </div>
+
       <div style={{ marginBottom: 8 }}>
         <strong>Bạn là:</strong> {userId || "Đang lấy ID..."} (
         {isAdmin ? "Quản trị viên" : "Người dùng"})
