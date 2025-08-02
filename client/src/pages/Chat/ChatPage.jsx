@@ -10,6 +10,7 @@ import {
 import { useUserData } from "../../hooks/useUserData";
 
 const ADMIN_ID = "3368637342326461234";
+const SERVER_URL = "https://cent-identifier-eos-ld.trycloudflare.com"
 
 const ChatPage = () => {
   const [userId, setUserId] = useState(null);
@@ -34,6 +35,7 @@ const ChatPage = () => {
       // Nếu chưa có thì mới gọi getUserInfo
       getUserInfo({
         success: async (res) => {
+          console.log("getUserInfo success:", res); 
           setUserId(res.userInfo.id);
           connectSocket(res.userInfo.id);
 
@@ -43,7 +45,6 @@ const ChatPage = () => {
         },
         fail: (err) => {
           setUserId(null);
-          alert("Không lấy được thông tin người dùng. Vui lòng mở trong Zalo Mini App.");
           console.error("getUserInfo error:", err);
         },
       });
@@ -61,28 +62,12 @@ const ChatPage = () => {
     const fetchHistory = async () => {
       if (userId && targetId) {
         try {
-          console.log("Fetch history with:", { userId, targetId });
           const resHistory = await fetch(
-            `https://lighting-christmas-emperor-killing.trycloudflare.com/history?from=${userId}&to=${targetId}`
+            `${SERVER_URL}/history?from=${userId}&to=${targetId}`
           );
-          console.log("resHistory status:", resHistory.status);
-          const text = await resHistory.text();
-          console.log("resHistory text:", text);
-
-          if (resHistory.ok) {
-            try {
-              const history = JSON.parse(text);
-              setMessages(history);
-            } catch (e) {
-              console.error("Parse history failed:", e);
-              setMessages([]);
-            }
-          } else {
-            console.error("API trả về lỗi:", resHistory.status, text);
-            setMessages([]);
-          }
+          const history = await resHistory.json();
+          setMessages(history);
         } catch (e) {
-          console.error("Load history failed:", e);
           setMessages([]);
         }
       } else {
@@ -146,27 +131,65 @@ const ChatPage = () => {
           marginBottom: 16,
           padding: 8,
           background: "#f9f9f9",
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
         }}
       >
         {messages.map((m, i) => {
           const isMine = m.from === userId;
+          const isAdminMsg = m.from === ADMIN_ID;
           return (
             <div
               key={i}
               style={{
-                textAlign: isMine ? "right" : "left",
-                margin: "4px 0",
-                padding: "6px 12px",
-                background: isMine ? "#d1fae5" : "#e5e7eb",
-                borderRadius: 12,
-                display: "inline-block",
-                maxWidth: "80%",
-                color: "#222",
+                display: "flex",
+                flexDirection: isMine ? "row-reverse" : "row",
+                alignItems: "flex-end",
               }}
             >
-              <div style={{ fontSize: 14 }}>{m.message}</div>
-              <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>
-                {isMine ? "Bạn" : m.from}
+              {/* Avatar giả lập */}
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  background: isAdminMsg ? "#fb923c" : "#3b82f6",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: "bold",
+                  fontSize: 16,
+                  margin: "0 8px",
+                }}
+              >
+                {isAdminMsg ? "A" : "U"}
+              </div>
+              <div
+                style={{
+                  background: isMine
+                    ? "#d1fae5"
+                    : isAdminMsg
+                    ? "#fde68a"
+                    : "#e5e7eb",
+                  borderRadius: 12,
+                  padding: "8px 14px",
+                  maxWidth: "70%",
+                  color: "#222",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                }}
+              >
+                <div style={{ fontSize: 15, marginBottom: 2 }}>{m.message}</div>
+                <div style={{ fontSize: 11, color: "#888" }}>
+                  {isAdminMsg
+                    ? isMine
+                      ? "Bạn (Admin)"
+                      : "Quản trị viên"
+                    : isMine
+                    ? "Bạn"
+                    : "Người dùng"}
+                </div>
               </div>
             </div>
           );

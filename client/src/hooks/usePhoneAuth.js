@@ -160,15 +160,6 @@ export const usePhoneAuth = () => {
 
   const handlePermissionError = (error) => {
     console.error("❌ Lỗi xin quyền:", error);
-    
-    if (error.message.includes("từ chối")) {
-      alert("Bạn cần cấp quyền số điện thoại để sử dụng GoSafe. Vui lòng thử lại.");
-    } else if (error.message.includes("Không thể lấy")) {
-      alert("Có lỗi khi lấy thông tin. Vui lòng thử lại sau.");
-    } else {
-      alert("Có lỗi xảy ra. Vui lòng thử lại.");
-    }
-
     setPhoneNumber("Cần cấp quyền");
   };
 

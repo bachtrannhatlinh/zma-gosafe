@@ -15,7 +15,6 @@ const CallToUser = () => {
 
   const handleOpenPhone = async () => {
     if (!phoneNumber.trim()) {
-      alert('Vui lòng nhập số điện thoại!');
       return;
     }
 

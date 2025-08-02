@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { getUserInfo } from "zmp-sdk/apis";
 import { STORAGE_KEYS } from "../constants/dashboard";
 
 export const useUserData = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [userPhone, setUserPhone] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchUserData = async () => {
+  const getUserData = async () => {
+    setIsLoading(true);
     try {
       setError(null);
       console.log("🔄 Bắt đầu fetch user data...");
@@ -25,35 +26,17 @@ export const useUserData = () => {
       console.error("❌ Không thể lấy thông tin user:", error);
       setError(error.message || "Không thể lấy thông tin user");
       throw error;
+    } finally {
+      setIsLoading(false);
+      console.log("🏁 Loading state = false");
     }
   };
 
   const refetch = async () => {
-    await fetchUserData();
+    await getUserData();
   };
 
-  useEffect(() => {
-    const initializeUser = async () => {
-      try {
-        console.log("🚀 Bắt đầu initialize user...");
-        setIsLoading(true);
-        
-        // Thêm minimum loading time để user thấy được loading state
-        const dataPromise = fetchUserData();
-        const minDelayPromise = new Promise(resolve => setTimeout(resolve, 1000));
-        
-        await Promise.all([dataPromise, minDelayPromise]);
-        console.log("✅ Initialize user hoàn thành");
-      } catch (error) {
-        console.error("❌ Lỗi khi initialize user:", error);
-      } finally {
-        setIsLoading(false);
-        console.log("🏁 Loading state = false");
-      }
-    };
 
-    initializeUser();
-  }, []);
 
   const updateUserPhone = (phone) => {
     setUserPhone(phone);
@@ -67,5 +50,6 @@ export const useUserData = () => {
     error,
     updateUserPhone,
     refetch,
+    getUserData, // export hàm này để gọi khi muốn fetch user info
   };
 };
