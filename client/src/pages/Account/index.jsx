@@ -6,17 +6,13 @@ import { usePhoneAuth } from "../../hooks/usePhoneAuth";
 
 // Components
 import BottomNavigation from "../../components/BottomNavigation";
+import CustomModal from "../../components/CustomModal";
 
 const Account = () => {
   const navigate = useNavigate();
   const { userInfo, isLoading, clearUserInfo } = useUserInfo();
-  
-  // Debug userInfo
-  useEffect(() => {
-    console.log("🔍 Account userInfo:", userInfo);
-    console.log("🔍 Account isLoading:", isLoading);
-  }, [userInfo, isLoading]);
-  
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   // Thêm hook để lấy số điện thoại
   const { phoneNumber, checkPhoneExists, clearPhoneData } = usePhoneAuth();
 
@@ -25,18 +21,29 @@ const Account = () => {
     checkPhoneExists();
   }, [checkPhoneExists]);
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleConfirmLogout = () => {
     // Clear localStorage
     localStorage.clear();
-    
+
     // Clear userInfo trong context
     clearUserInfo();
-    
+
     // Clear phone data
     clearPhoneData();
-    
+
+    // Close modal
+    setShowLogoutModal(false);
+
     // Navigate về trang chủ
     navigate("/");
+  };
+
+  const handleCancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   // Prevent scroll
@@ -44,25 +51,27 @@ const Account = () => {
     const preventScroll = (e) => {
       e.preventDefault();
     };
-    window.addEventListener('touchmove', preventScroll, { passive: false });
-    window.addEventListener('wheel', preventScroll, { passive: false });
-    document.body.style.overflow = 'hidden';
+    window.addEventListener("touchmove", preventScroll, { passive: false });
+    window.addEventListener("wheel", preventScroll, { passive: false });
+    document.body.style.overflow = "hidden";
     return () => {
-      window.removeEventListener('touchmove', preventScroll);
-      window.removeEventListener('wheel', preventScroll);
-      document.body.style.overflow = '';
+      window.removeEventListener("touchmove", preventScroll);
+      window.removeEventListener("wheel", preventScroll);
+      document.body.style.overflow = "";
     };
   }, []);
 
   if (isLoading) {
     return (
       <Page style={{ height: "100vh", backgroundColor: "#f9fafb" }}>
-        <Box style={{ 
-          display: "flex", 
-          justifyContent: "center", 
-          alignItems: "center", 
-          height: "100%" 
-        }}>
+        <Box
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+          }}
+        >
           <Text>Đang tải thông tin...</Text>
         </Box>
         <BottomNavigation activeTab="account" />
@@ -78,7 +87,7 @@ const Account = () => {
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
-        touchAction: "none"
+        touchAction: "none",
       }}
     >
       {/* Header */}
@@ -180,7 +189,9 @@ const Account = () => {
 
         {/* Info Items */}
         <Box style={{ marginBottom: "12px" }}>
-          <Text style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}>
+          <Text
+            style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}
+          >
             Tên hiển thị
           </Text>
           <Text style={{ fontSize: "14px", color: "#333" }}>
@@ -189,7 +200,9 @@ const Account = () => {
         </Box>
 
         <Box style={{ marginBottom: "12px" }}>
-          <Text style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}>
+          <Text
+            style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}
+          >
             Zalo ID
           </Text>
           <Text style={{ fontSize: "14px", color: "#333" }}>
@@ -198,7 +211,9 @@ const Account = () => {
         </Box>
 
         <Box style={{ marginBottom: "12px" }}>
-          <Text style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}>
+          <Text
+            style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}
+          >
             Trạng thái
           </Text>
           <Text style={{ fontSize: "14px", color: "#10b981" }}>
@@ -207,38 +222,44 @@ const Account = () => {
         </Box>
 
         <Box style={{ marginBottom: "12px" }}>
-          <Text style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}>
+          <Text
+            style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}
+          >
             Số điện thoại
           </Text>
           {/* Debug info */}
-          {process.env.NODE_ENV === 'development' && (
-            <Text style={{ fontSize: "10px", color: "#999", marginBottom: "4px" }}>
+          {process.env.NODE_ENV === "development" && (
+            <Text
+              style={{ fontSize: "10px", color: "#999", marginBottom: "4px" }}
+            >
               Debug: "{phoneNumber}" (type: {typeof phoneNumber})
             </Text>
           )}
-          <Text style={{ 
-            fontSize: "14px", 
-            color: (() => {
-              const currentPhone = localStorage.getItem("user_phone");
-              const displayPhone = currentPhone || phoneNumber;
-              return displayPhone && 
-                     displayPhone !== "Chưa có số điện thoại" && 
-                     displayPhone !== "Cần cấp quyền" &&
-                     displayPhone !== "null" &&
-                     displayPhone !== "undefined"
-                ? "#333" 
-                : "#ef4444";
-            })()
-          }}>
+          <Text
+            style={{
+              fontSize: "14px",
+              color: (() => {
+                const currentPhone = localStorage.getItem("user_phone");
+                const displayPhone = currentPhone || phoneNumber;
+                return displayPhone &&
+                  displayPhone !== "Chưa có số điện thoại" &&
+                  displayPhone !== "Cần cấp quyền" &&
+                  displayPhone !== "null" &&
+                  displayPhone !== "undefined"
+                  ? "#333"
+                  : "#ef4444";
+              })(),
+            }}
+          >
             {(() => {
               const currentPhone = localStorage.getItem("user_phone");
               const displayPhone = currentPhone || phoneNumber;
-              return displayPhone && 
-                     displayPhone !== "Chưa có số điện thoại" && 
-                     displayPhone !== "Cần cấp quyền" &&
-                     displayPhone !== "null" &&
-                     displayPhone !== "undefined"
-                ? displayPhone 
+              return displayPhone &&
+                displayPhone !== "Chưa có số điện thoại" &&
+                displayPhone !== "Cần cấp quyền" &&
+                displayPhone !== "null" &&
+                displayPhone !== "undefined"
+                ? displayPhone
                 : "Chưa cấp quyền số điện thoại";
             })()}
           </Text>
@@ -271,7 +292,7 @@ const Account = () => {
         </Button>
 
         <Button
-          onClick={handleLogout}
+          onClick={handleLogoutClick}
           style={{
             width: "100%",
             backgroundColor: "transparent",
@@ -288,6 +309,59 @@ const Account = () => {
       </Box>
 
       <BottomNavigation activeTab="account" />
+
+      {/* Modal xác nhận đăng xuất */}
+      <CustomModal
+        visible={showLogoutModal}
+        onClose={handleCancelLogout}
+        showCloseButton={false}
+        position="center"
+      >
+        <Box className="text-center p-6">
+          <Box className="mb-4">
+            <Text className="text-3xl mb-3">⚠️</Text>
+            <Text className="text-lg font-bold text-black mb-2">
+              Xác nhận đăng xuất
+            </Text>
+            <Text className="text-sm text-gray-600">
+              Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?
+            </Text>
+          </Box>
+
+          <Box className="flex flex-row gap-3 mt-6">
+            <Button
+              fullWidth
+              onClick={handleCancelLogout}
+              style={{
+                backgroundColor: "transparent",
+                border: "2px solid #6b7280",
+                color: "#6b7280",
+                borderRadius: "8px",
+                padding: "12px",
+                fontSize: "14px",
+                fontWeight: "500",
+              }}
+            >
+              Từ chối
+            </Button>
+            <Button
+              fullWidth
+              onClick={handleConfirmLogout}
+              style={{
+                backgroundColor: "#ef4444",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                padding: "12px",
+                fontSize: "14px",
+                fontWeight: "500",
+              }}
+            >
+              Đồng ý
+            </Button>
+          </Box>
+        </Box>
+      </CustomModal>
     </Page>
   );
 };

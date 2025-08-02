@@ -9,7 +9,7 @@ import {
 import { useNavigate } from "zmp-ui";
 
 const ADMIN_ID = "3368637342326461234";
-const SERVER_URL = "https://cent-identifier-eos-ld.trycloudflare.com";
+const SERVER_URL = "https://subjective-x-sections-are.trycloudflare.com";
 
 const ChatPage = () => {
   const [userId, setUserId] = useState(null);

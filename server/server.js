@@ -1,26 +1,28 @@
-// server.js (hoặc index.js)
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const authMiddleware = require('./middleware/authMiddleware');
 
 dotenv.config();
 
 const app = express();
-app.use(cors()); // <-- Thêm dòng này để bật CORS cho REST API
+app.use(cors());
+app.use(express.json());
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*" }
 });
 
-// Kết nối MongoDB
+// MongoDB connection
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log("✅ MongoDB connected"))
   .catch(err => console.error("❌ MongoDB connection error:", err));
 
-// Khai báo Schema tin nhắn
+// Message Schema
 const messageSchema = new mongoose.Schema({
   from: String,
   to: String,
@@ -29,31 +31,8 @@ const messageSchema = new mongoose.Schema({
 });
 const Message = mongoose.model("Message", messageSchema);
 
-// Socket.io xử lý
-io.on("connection", (socket) => {
-  console.log("🟢 New client connected:", socket.id);
-
-  socket.on("join", (userId) => {
-    socket.join(userId);
-  });
-
-  socket.on("send-message", async (msg) => {
-    const { from, to, message } = msg;
-
-    // Lưu vào MongoDB
-    await Message.create({ from, to, message });
-
-    // Gửi tới client đích
-    io.to(to).emit("receive-message", msg);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("🔴 Client disconnected:", socket.id);
-  });
-});
-
-// API để lấy lịch sử chat
-app.get("/history", async (req, res) => {
+// Protected API routes
+app.get("/history", authMiddleware, async (req, res) => {
   const { from, to } = req.query;
   const messages = await Message.find({
     $or: [
@@ -62,6 +41,41 @@ app.get("/history", async (req, res) => {
     ]
   }).sort({ timestamp: 1 });
   res.json(messages);
+});
+
+// Socket.io with JWT authentication
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (token) {
+    try {
+      const JWTService = require('./services/jwtService');
+      const decoded = JWTService.verifyToken(token);
+      socket.user = decoded;
+      next();
+    } catch (err) {
+      next(new Error('Authentication error'));
+    }
+  } else {
+    next(new Error('Authentication error'));
+  }
+});
+
+io.on("connection", (socket) => {
+  console.log("🟢 New client connected:", socket.id, "User:", socket.user?.name);
+
+  socket.on("join", (userId) => {
+    socket.join(userId);
+  });
+
+  socket.on("send-message", async (msg) => {
+    const { from, to, message } = msg;
+    await Message.create({ from, to, message });
+    io.to(to).emit("receive-message", msg);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("🔴 Client disconnected:", socket.id);
+  });
 });
 
 server.listen(process.env.PORT, () => {

@@ -22,7 +22,7 @@ import { useUserInfo } from "../../contexts/UserContext";
 import { DRIVER_SERVICES, OTHER_SERVICES } from "../../constants/dashboard";
 
 // Danh sách services đã phát triển
-const DEVELOPED_SERVICES = ["sms-brandname", "zalo-chat"];
+const DEVELOPED_SERVICES = ["sms-brandname", "zalo-chat", "jwt-test"];
 
 const Dashboard = () => {
   const navigate = useNavigate();
