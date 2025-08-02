@@ -1,6 +1,6 @@
 // socket.js
 import { io } from "socket.io-client";
-const socket = io("https://cent-identifier-eos-ld.trycloudflare.com", { autoConnect: true });
+const socket = io("https://subjective-x-sections-are.trycloudflare.com", { autoConnect: true });
 
 export const connectSocket = (userId) => {
   socket.emit("join", userId);

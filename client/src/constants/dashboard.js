@@ -64,6 +64,12 @@ export const OTHER_SERVICES = [
     label: "Live Chat", 
     bgColor: "bg-gray-500",
   },
+  { 
+    id: "jwt-test", 
+    icon: "🔐", 
+    label: "JWT Test", 
+    bgColor: "bg-indigo-500",
+  },
 ];
 
 
@@ -79,6 +85,7 @@ export const SERVICE_ROUTES = {
   "flight-tickets": null,
   "travel-tours": null,
   "zalo-chat": "/zalo-chat",
+  "jwt-test": "/jwt-test",
 };
 
 // Local storage keys

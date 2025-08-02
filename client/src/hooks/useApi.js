@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import axios from 'axios';
 import { getServerUrl, getRequestHeaders } from '../config/server';
 
 export const useApi = () => {
@@ -10,20 +11,35 @@ export const useApi = () => {
     setError(null);
     
     try {
-      const url = `${getServerUrl()}${endpoint}`;
-      const response = await fetch(url, {
-        headers: getRequestHeaders(),
-        ...options
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      // Get auth headers safely
+      let authHeaders = {};
+      try {
+        const token = localStorage.getItem('gosafe_jwt_token');
+        if (token) {
+          authHeaders = { 'Authorization': `Bearer ${token}` };
+        }
+      } catch (err) {
+        console.warn('Could not get auth token:', err);
       }
 
-      return await response.json();
+      const config = {
+        url: `${getServerUrl()}${endpoint}`,
+        method: options.method || 'GET',
+        headers: {
+          ...getRequestHeaders(),
+          ...authHeaders,
+          ...options.headers
+        },
+        ...options
+      };
+
+      const response = await axios(config);
+      return response.data;
+
     } catch (err) {
-      setError(err.message);
-      throw err;
+      const errorMsg = err.response?.data?.error || err.message;
+      setError(errorMsg);
+      throw new Error(errorMsg);
     } finally {
       setLoading(false);
     }
