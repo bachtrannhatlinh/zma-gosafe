@@ -4,14 +4,16 @@ import { SERVICE_ROUTES } from "../constants/dashboard";
 export const useServiceNavigation = (navigate) => {
   const handleServiceClick = useCallback(
     (service) => {
-      console.log(`Clicked on ${service}`);
+      console.log(`🎯 useServiceNavigation: Clicked on ${service}`);
       
       const route = SERVICE_ROUTES[service];
+      console.log(`🗺️ Route for ${service}:`, route);
       
       if (route) {
+        console.log(`✅ Navigating to: ${route}`);
         navigate(route);
       } else {
-        console.log(`${service} service coming soon`);
+        console.log(`⏳ ${service} service coming soon`);
         // Có thể show toast notification ở đây
       }
     },

@@ -12,6 +12,8 @@ export const UserProvider = ({ children }) => {
     const initUser = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
         const user = await getZMPUserInfo();
         
         if (user) {
@@ -31,11 +33,17 @@ export const UserProvider = ({ children }) => {
             phoneNumber
           };
           setUserInfo(userInfoWithPhone);
+          console.log('✅ User info loaded successfully:', userInfoWithPhone);
         } else {
+          console.warn('⚠️ No user info received from ZMP');
           setError('Failed to load user info');
         }
       } catch (err) {
+        console.error('❌ Error loading user info:', err);
         setError(err.message);
+        
+        // Fallback: Set loading false sau khi error
+        setLoading(false);
       } finally {
         setLoading(false);
       }

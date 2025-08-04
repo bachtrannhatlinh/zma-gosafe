@@ -30,26 +30,55 @@ const Dashboard = () => {
   const [showPhoneModal, setShowPhoneModal] = useState(false); // Thêm state này
   const [pendingServiceId, setPendingServiceId] = useState(null); // Để lưu serviceId đang chờ
 
-  const {
-    isGettingPhone,
-    checkPhoneExists,
-    requestPhonePermission,
-  } = usePhoneAuth();
+  const { isGettingPhone, checkPhoneExists, requestPhonePermission } =
+    usePhoneAuth();
 
-const { userInfo, fetchUserInfo } = useUserInfo();
+  const { userInfo, fetchUserInfo } = useUserInfo();
   const { handleServiceClick } = useServiceNavigation(navigate);
 
   // Helper function to check if phone number exists
   const hasValidPhoneNumber = () => {
-    return userInfo?.phoneNumber;
+    const phoneFromUserInfo = userInfo?.userInfo?.phoneNumber;
+    const phoneFromContext = userInfo?.phoneNumber; // Có thể phoneNumber nằm ở level cao hơn
+    const phone = phoneFromUserInfo || phoneFromContext;
+
+    console.log("🔍 Dashboard - Checking phone number:", {
+      phoneFromUserInfo,
+      phoneFromContext,
+      finalPhone: phone,
+      userInfo,
+      hasValidPhone:
+        phone &&
+        phone !== "Chưa có số điện thoại" &&
+        phone !== "Cần cấp quyền" &&
+        phone !== "null" &&
+        phone !== "undefined" &&
+        phone !== null,
+    });
+
+    return (
+      phone &&
+      phone !== "Chưa có số điện thoại" &&
+      phone !== "Cần cấp quyền" &&
+      phone !== "null" &&
+      phone !== "undefined" &&
+      phone !== null
+    );
   };
 
   const handleServiceClickWithToast = (showToast) => (serviceId) => {
-    if (!hasValidPhoneNumber()) {
+    console.log("🎯 Service clicked:", serviceId);
+    
+    const hasPhone = hasValidPhoneNumber();
+    console.log("📱 Has valid phone number:", hasPhone);
+
+    if (!hasPhone) {
+      console.log("❌ No phone number, showing permission modal");
       setPendingServiceId(serviceId);
       setShowPhoneModal(true);
       return;
     } else {
+      console.log("✅ Phone number exists, navigating to service:", serviceId);
       handleServiceClick(serviceId);
     }
   };
@@ -77,23 +106,27 @@ const { userInfo, fetchUserInfo } = useUserInfo();
 
   // Xử lý khi người dùng đồng ý cấp quyền số điện thoại
   const handlePhonePermission = async () => {
+    console.log("🔐 User agreed to phone permission");
     const result = await requestPhonePermission();
+    console.log("📱 Phone permission result:", result);
+    
     if (result.success) {
       setShowPhoneModal(false);
+      console.log("✅ Phone permission successful, proceeding to service");
       
       // Navigate to pending service if exists
       setTimeout(() => {
         if (pendingServiceId) {
+          console.log("🚀 Navigating to pending service:", pendingServiceId);
           handleServiceClick(pendingServiceId);
           setPendingServiceId(null);
         }
       }, 100);
     } else {
       console.error("❌ Phone permission failed:", result.error);
+      // Có thể show error toast ở đây
     }
-  };
-
-  return (
+  };  return (
     <Page
       className="dashboard-page"
       style={{
@@ -109,7 +142,7 @@ const { userInfo, fetchUserInfo } = useUserInfo();
       <DevFeatureToast>
         {(showToast) => (
           // <PullToRefresh onRefresh={handleRefresh} refreshing={isRefreshing}>
-          <Box 
+          <Box
             style={{
               overflowY: "auto", // Cho phép scroll theo chiều dọc
               height: "calc(100vh - 80px)", // Trừ đi chiều cao của bottom navigation
@@ -164,14 +197,14 @@ const { userInfo, fetchUserInfo } = useUserInfo();
         )}
       </DevFeatureToast>
 
-      <BottomNavigation 
-        activeTab="home" 
+      <BottomNavigation
+        activeTab="home"
         style={{
           position: "fixed",
           bottom: 0,
           left: 0,
           right: 0,
-          zIndex: 1000
+          zIndex: 1000,
         }}
       />
 

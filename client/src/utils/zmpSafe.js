@@ -16,24 +16,38 @@ export const isZMPAvailable = () => {
   );
 };
 
+// Fix: Wrap ZMP getUserInfo callback trong Promise với timeout
 export const getZMPUserInfo = async () => {
   try {
-    if (isZMPAvailable()) {
-      const getUserInfo = await safeZMPImport("getUserInfo");
-      if (getUserInfo) {
-        return await getUserInfo({});
-      }
-    }
+    console.log("🔍 Calling ZMP getUserInfo API...");
 
-    // Return mock data for development
-    return {
-      id: "dev_user_123",
-      name: "Development User",
-      avatar: "",
-    };
+    const getUserInfo = await safeZMPImport("getUserInfo");
+    if (!getUserInfo) throw new Error("getUserInfo is not available");
+
+    // Wrap callback-based API trong Promise với timeout
+    return new Promise((resolve, reject) => {
+      // Timeout sau 10 giây
+      const timeout = setTimeout(() => {
+        console.warn("⏰ ZMP getUserInfo timeout after 10s");
+        reject(new Error("getUserInfo timeout"));
+      }, 10000);
+
+      getUserInfo({
+        success: (data) => {
+          clearTimeout(timeout);
+          console.log("✅ ZMP getUserInfo success:", data);
+          resolve(data);
+        },
+        fail: (error) => {
+          clearTimeout(timeout);
+          console.error("❌ ZMP getUserInfo failed:", error);
+          reject(error);
+        },
+      });
+    });
   } catch (error) {
-    console.error("ZMP getUserInfo failed:", error);
-    return null;
+    console.error("❌ Error in getZMPUserInfo:", error);
+    throw error;
   }
 };
 

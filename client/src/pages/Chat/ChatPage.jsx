@@ -24,8 +24,8 @@ const ChatPage = () => {
     let unsub = () => {};
 
     // Sửa logic lấy userInfo - bỏ .userInfo vì đã có trong context
-    if (!loading && userInfo?.id) {
-      setUserId(userInfo.id);
+    if (!loading && userInfo?.userInfo?.id) {
+      setUserId(userInfo.userInfo.id); // "8411142294954674476"
       
       const initializeChat = async () => {
         try {
@@ -37,12 +37,12 @@ const ChatPage = () => {
           // Nếu không có token, gửi user info lên server để lấy JWT
           if (!token) {
             console.log('No stored token, authenticating with Zalo user info...');
-            token = await authenticateWithZalo(userInfo); // Bỏ .userInfo
+            token = await authenticateWithZalo(userInfo); // Truyền flat object
           }
           
           if (token) {
-            console.log('Connecting socket with user ID:', userInfo.id);
-            connectSocket(userInfo.id);
+            console.log('Connecting socket with user ID:', userInfo.userInfo.id);
+            connectSocket(userInfo.userInfo.id);
             
             unsub = onMessageReceived((msg) => {
               if (msg && typeof msg === 'object') {

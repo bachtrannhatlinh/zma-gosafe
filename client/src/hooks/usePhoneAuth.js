@@ -30,10 +30,20 @@ export const usePhoneAuth = () => {
   }, [contextUserInfo?.phoneNumber]);
 
   const clearPhoneData = useCallback(() => {
+    console.log("🧹 Clearing phone data...");
     setPhoneNumber(null);
     setUserInfo(null);
     localStorage.removeItem("zalo_phone_token");
-    // Cập nhật UserContext
+    // Chỉ clear phoneNumber trong UserContext, không clear toàn bộ userInfo
+    // updatePhoneNumber(null); // Commented out để không làm mất userInfo khi navigate
+  }, []);
+
+  // Method riêng để clear toàn bộ data khi logout
+  const clearAllData = useCallback(() => {
+    console.log("🧹 Clearing all user data...");
+    setPhoneNumber(null);
+    setUserInfo(null);
+    localStorage.removeItem("zalo_phone_token");
     updatePhoneNumber(null);
   }, [updatePhoneNumber]);
 
@@ -48,16 +58,20 @@ export const usePhoneAuth = () => {
       const phoneResult = await fetchPhoneResult();
       await handlePhoneResult(phoneResult, accessToken);
       
-      // Không cần gọi fetchUserInfo() vì đã cập nhật phoneNumber qua updatePhoneNumber()
+      // Đợi một chút để state được cập nhật
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log("✅ Phone permission completed, current phoneNumber:", phoneNumber);
       
       return { success: true, phoneNumber, userInfo };
     } catch (error) {
+      console.error("❌ Phone permission error:", error);
       handlePermissionError(error);
       return { success: false, error: error.message };
     } finally {
       setIsGettingPhone(false);
     }
-  }, [phoneNumber, updatePhoneNumber]);
+  }, [phoneNumber, updatePhoneNumber, fetchUserInfo]);
 
   // Helper functions from UserHeader
   const requestAccessToken = async () => {
@@ -108,13 +122,32 @@ export const usePhoneAuth = () => {
   };
 
   const handleDirectPhone = async (number) => {
+    console.log("✅ Got phone number:", number);
     setPhoneNumber(number);
+    
+    // Lưu vào localStorage
+    try {
+      localStorage.setItem("user_phone", number);
+      console.log("💾 Saved phone to localStorage:", number);
+    } catch (err) {
+      console.warn("⚠️ Failed to save phone to localStorage:", err);
+    }
+    
     // Cập nhật UserContext
     updatePhoneNumber(number);
+    
+    // Re-fetch user info để đảm bảo data được cập nhật
+    try {
+      await fetchUserInfo();
+      console.log("🔄 Refreshed user info after phone update");
+    } catch (err) {
+      console.warn("⚠️ Failed to refresh user info:", err);
+    }
 
     try {
       await sendTokenToServer(number);
     } catch (err) {
+      console.warn("⚠️ Failed to send token to server:", err);
     }
   };
 
@@ -123,15 +156,42 @@ export const usePhoneAuth = () => {
       const result = await getZaloPhoneNumber(accessToken, token, "j3MVFN1NJAZOcBWQ2w5E");
 
       if (result?.phoneNumber) {
+        console.log("✅ Got phone number from token:", result.phoneNumber);
         setPhoneNumber(result.phoneNumber);
+        
+        // Lưu vào localStorage
+        try {
+          localStorage.setItem("user_phone", result.phoneNumber);
+          console.log("💾 Saved phone to localStorage:", result.phoneNumber);
+        } catch (err) {
+          console.warn("⚠️ Failed to save phone to localStorage:", err);
+        }
+        
         // Cập nhật UserContext
         updatePhoneNumber(result.phoneNumber);
+        
+        // Re-fetch user info để đảm bảo data được cập nhật
+        try {
+          await fetchUserInfo();
+          console.log("🔄 Refreshed user info after phone token update");
+        } catch (err) {
+          console.warn("⚠️ Failed to refresh user info:", err);
+        }
       }
     } catch (err) {
+      console.warn("⚠️ Phone token failed, using fallback:", err);
       const fallbackPhone = `${userInfo?.name || "Người dùng Zalo"} - Đã xác thực`;
       setPhoneNumber(fallbackPhone);
       // Cập nhật UserContext
       updatePhoneNumber(fallbackPhone);
+      
+      // Re-fetch user info 
+      try {
+        await fetchUserInfo();
+        console.log("🔄 Refreshed user info after fallback");
+      } catch (fetchErr) {
+        console.warn("⚠️ Failed to refresh user info:", fetchErr);
+      }
       
       try {
         localStorage.setItem("zalo_phone_token", token);
@@ -173,5 +233,6 @@ export const usePhoneAuth = () => {
     checkPhoneExists,
     requestPhonePermission,
     clearPhoneData,
+    clearAllData,
   };
 };

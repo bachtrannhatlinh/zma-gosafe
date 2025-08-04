@@ -11,10 +11,12 @@ import CustomModal from "../../components/CustomModal";
 
 const Account = () => {
   const navigate = useNavigate();
-  const { userInfo, isLoading, clearUserInfo } = useUserInfo();
-  const { clearPhoneData } = usePhoneAuth();
+  const { userInfo, isLoading, error, clearUserInfo } = useUserInfo();
+  const { clearAllData } = usePhoneAuth();
   const { logout: jwtLogout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  console.log(userInfo, 'userInfo')
+  console.log('isLoading:', isLoading, 'error:', error);
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
@@ -27,7 +29,7 @@ const Account = () => {
       if (jwtLogout) {
         jwtLogout();
       }
-      clearPhoneData();
+      clearAllData(); // Sử dụng clearAllData thay vì clearPhoneData
       setShowLogoutModal(false);
       navigate("/");
     } catch (error) {
@@ -61,12 +63,53 @@ const Account = () => {
         <Box
           style={{
             display: "flex",
+            flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
             height: "100%",
+            padding: "20px",
           }}
         >
-          <Text>Đang tải thông tin...</Text>
+          <Text style={{ marginBottom: "16px" }}>Đang tải thông tin...</Text>
+          {/* Debug info */}
+          <Text style={{ fontSize: "12px", color: "#666", textAlign: "center" }}>
+            Debug: Loading={isLoading ? 'true' : 'false'}, Error={error || 'none'}
+          </Text>
+        </Box>
+        <BottomNavigation activeTab="account" />
+      </Page>
+    );
+  }
+
+  // Hiển thị error nếu có
+  if (error && !userInfo) {
+    return (
+      <Page style={{ height: "100vh", backgroundColor: "#f9fafb" }}>
+        <Box
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+            padding: "20px",
+          }}
+        >
+          <Text style={{ color: "#ef4444", marginBottom: "16px" }}>
+            ❌ Lỗi: {error}
+          </Text>
+          <Button
+            onClick={() => window.location.reload()}
+            style={{
+              backgroundColor: "#667eea",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              padding: "12px 24px",
+            }}
+          >
+            🔄 Thử lại
+          </Button>
         </Box>
         <BottomNavigation activeTab="account" />
       </Page>

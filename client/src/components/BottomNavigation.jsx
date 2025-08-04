@@ -52,20 +52,44 @@ const BottomNavigation = ({ activeTab = "home" }) => {
 
   // Helper function to check if phone number exists
   const hasValidPhoneNumber = () => {
-    return userInfo?.phoneNumber;
+    const phoneFromUserInfo = userInfo?.userInfo?.phoneNumber;
+    const phoneFromContext = userInfo?.phoneNumber; // Có thể phoneNumber nằm ở level cao hơn
+    const phone = phoneFromUserInfo || phoneFromContext;
+    
+    console.log("🔍 Checking phone number:", {
+      phoneFromUserInfo,
+      phoneFromContext,
+      finalPhone: phone,
+      userInfo
+    });
+    
+    return phone && 
+           phone !== "Chưa có số điện thoại" && 
+           phone !== "Cần cấp quyền" &&
+           phone !== "null" &&
+           phone !== "undefined" &&
+           phone !== null;
   };
 
   const handleNavClick = async (item) => {
+    console.log("🔍 Nav click:", item.label, "requirePhone:", item.requirePhone);
+    
     if (item.requirePhone) {
-      if (!hasValidPhoneNumber()) {
+      const hasPhone = hasValidPhoneNumber();
+      console.log("📱 Has valid phone:", hasPhone);
+      
+      if (!hasPhone) {
+        console.log("❌ No phone, showing modal");
         setPendingPath(item.path);
         setShowPhoneModal(true);
         return;
+      } else {
+        console.log("✅ Phone exists, navigating directly");
       }
     }
 
     if (item.path) {
-      console.log("Navigating to:", item.path);
+      console.log("🚀 Navigating to:", item.path);
       navigate(item.path);
     }
   };
