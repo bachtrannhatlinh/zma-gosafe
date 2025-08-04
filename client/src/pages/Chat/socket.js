@@ -22,7 +22,7 @@ const getJWTToken = async () => {
     console.log('Zalo accessToken:', zaloAccessToken);
     
     // Đổi thành JWT token
-    const response = await fetch("https://kansas-door-factors-swiss.trycloudflare.com/auth/zalo", {
+    const response = await fetch("https://operation-subscriber-fa-learned.trycloudflare.com/auth/zalo", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -52,7 +52,7 @@ export const connectSocket = async (userId) => {
   try {
     const token = await getJWTToken();
     
-    socket = io("https://kansas-door-factors-swiss.trycloudflare.com", {
+    socket = io("https://operation-subscriber-fa-learned.trycloudflare.com", {
       auth: {
         token: token // Sử dụng JWT token
       }

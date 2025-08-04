@@ -10,7 +10,7 @@ import {
 import { Box, Button, Input, Page, Header } from "zmp-ui";
 
 const ADMIN_ID = "3368637342326461234";
-const SERVER_URL = "https://kansas-door-factors-swiss.trycloudflare.com";
+const SERVER_URL = "https://operation-subscriber-fa-learned.trycloudflare.com";
 
 const ChatPage = () => {
   const [userId, setUserId] = useState(null);
