@@ -45,19 +45,11 @@ const { userInfo, fetchUserInfo } = useUserInfo();
   };
 
   const handleServiceClickWithToast = (showToast) => (serviceId) => {
-    console.log("🔍 Checking phone number for service:", serviceId, {
-      hasPhone: hasValidPhoneNumber(),
-      phoneNumber: userInfo?.phoneNumber,
-      userInfo
-    });
-
     if (!hasValidPhoneNumber()) {
-      console.log("❌ No phone number, showing modal");
       setPendingServiceId(serviceId);
       setShowPhoneModal(true);
       return;
     } else {
-      console.log("✅ Phone exists, navigating to service:", serviceId);
       handleServiceClick(serviceId);
     }
   };
@@ -87,13 +79,11 @@ const { userInfo, fetchUserInfo } = useUserInfo();
   const handlePhonePermission = async () => {
     const result = await requestPhonePermission();
     if (result.success) {
-      console.log("✅ Phone permission granted, phone number:", result.phoneNumber);
       setShowPhoneModal(false);
       
       // Navigate to pending service if exists
       setTimeout(() => {
         if (pendingServiceId) {
-          console.log("🔄 Retrying service navigation:", pendingServiceId);
           handleServiceClick(pendingServiceId);
           setPendingServiceId(null);
         }

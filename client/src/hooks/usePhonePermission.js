@@ -9,8 +9,6 @@ export const usePhonePermission = () => {
     setIsGettingPhone(true);
     
     try {
-      console.log("🔐 Requesting phone permission...");
-      
       // Step 1: Request authorization
       const authResult = await new Promise((resolve, reject) => {
         authorize({
@@ -20,8 +18,6 @@ export const usePhonePermission = () => {
         });
       });
       
-      console.log("✅ Authorization success:", authResult);
-
       // Step 2: Get phone number với token
       const phoneResult = await new Promise((resolve, reject) => {
         getPhoneNumber({
@@ -30,12 +26,9 @@ export const usePhonePermission = () => {
         });
       });
       
-      console.log("✅ Phone result:", phoneResult);
-
       // Xử lý kết quả
       if (phoneResult?.token) {
         // Có token - cần gửi lên server để lấy số thật
-        console.log("📱 Got token:", phoneResult.token);
         setPhoneNumber("Đã có token");
         return { 
           success: true, 
@@ -49,7 +42,6 @@ export const usePhonePermission = () => {
           : `+84${phoneResult.number.substring(1)}`;
         
         setPhoneNumber(formattedPhone);
-        console.log("✅ Phone permission granted:", formattedPhone);
         return { success: true, phoneNumber: formattedPhone };
       }
 

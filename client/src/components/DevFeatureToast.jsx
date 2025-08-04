@@ -40,7 +40,6 @@ const DevFeatureToast = ({
   };
 
   const handleClick = (e) => {
-    console.log('DevFeatureToast clicked!');
     if (window.zmp && window.zmp.showToast) {
       window.zmp.showToast({
         message,

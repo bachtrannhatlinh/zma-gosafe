@@ -13,7 +13,6 @@ const Account = () => {
   const navigate = useNavigate();
   const { userInfo, isLoading, clearUserInfo } = useUserInfo();
   const { clearPhoneData } = usePhoneAuth();
-  console.log(userInfo, 'userInfouserInfouserInfouserInfouserInfouserInfo')
   const { logout: jwtLogout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -23,42 +22,21 @@ const Account = () => {
 
   const handleConfirmLogout = () => {
     try {
-      console.log("🚪 Starting logout process...");
-
-      // Clear localStorage
       localStorage.clear();
-      console.log("✅ localStorage cleared");
-
-      // Clear userInfo trong context
       clearUserInfo();
-      console.log("✅ User info cleared");
-
-      // Clear JWT authentication
       if (jwtLogout) {
         jwtLogout();
-        console.log("✅ JWT logout completed");
       }
-
-      // Clear phone data
       clearPhoneData();
-      console.log("✅ Phone data cleared");
-
-      // Close modal
       setShowLogoutModal(false);
-
-      // Navigate về trang chủ
       navigate("/");
-      console.log("✅ Navigated to home");
     } catch (error) {
-      console.error("❌ Logout error:", error);
-      // Vẫn cố gắng navigate về trang chủ
       setShowLogoutModal(false);
       navigate("/");
     }
   };
 
   const handleCancelLogout = () => {
-    console.log("🔙 Logout cancelled");
     setShowLogoutModal(false);
   };
 

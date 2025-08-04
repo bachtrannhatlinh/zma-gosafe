@@ -8,8 +8,6 @@ import HistoryItem from "../../components/HistoryItem";
 import { useEffect } from "react";
 
 const History = () => {
-  console.log("History component rendered");
-  
   // Sample data - trong thực tế sẽ fetch từ API
   const [historyData, setHistoryData] = useState([]);
 

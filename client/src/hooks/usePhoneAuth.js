@@ -68,7 +68,6 @@ export const usePhoneAuth = () => {
         fail: () => reject(new Error("Cần cấp quyền số điện thoại để sử dụng ứng dụng")),
       });
     });
-    console.log("✅ Authorization success:", authResult);
 
     const accessToken = await new Promise((resolve, reject) => {
       getAccessToken({ success: resolve, fail: reject });
@@ -109,8 +108,6 @@ export const usePhoneAuth = () => {
   };
 
   const handleDirectPhone = async (number) => {
-    console.log("✅ Got phone number: 123", number);
-    console.log(number, 'phoneNumber123123123 - Direct Phone')
     setPhoneNumber(number);
     // Cập nhật UserContext
     updatePhoneNumber(number);
@@ -126,7 +123,6 @@ export const usePhoneAuth = () => {
       const result = await getZaloPhoneNumber(accessToken, token, "j3MVFN1NJAZOcBWQ2w5E");
 
       if (result?.phoneNumber) {
-        console.log(result.phoneNumber, 'phoneNumber123123123 - Token Phone')
         setPhoneNumber(result.phoneNumber);
         // Cập nhật UserContext
         updatePhoneNumber(result.phoneNumber);
@@ -167,7 +163,6 @@ export const usePhoneAuth = () => {
   };
 
   const handlePermissionError = (error) => {
-    console.error("❌ Lỗi xin quyền:", error);
     setPhoneNumber("Cần cấp quyền");
   };
 

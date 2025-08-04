@@ -31,12 +31,10 @@ export const UserProvider = ({ children }) => {
             phoneNumber
           };
           setUserInfo(userInfoWithPhone);
-          console.log('✅ User info loaded:', userInfoWithPhone);
         } else {
           setError('Failed to load user info');
         }
       } catch (err) {
-        console.error('❌ User context error:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -48,7 +46,6 @@ export const UserProvider = ({ children }) => {
 
   // Thêm method để cập nhật số điện thoại
   const updatePhoneNumber = (phoneNumber) => {
-    console.log('📞 Updating phone number in UserContext:', phoneNumber);
     setUserInfo(prev => ({
       ...prev,
       phoneNumber
@@ -82,7 +79,6 @@ export const UserProvider = ({ children }) => {
             phoneNumber
           };
           
-          console.log('✅ User info refreshed:', userInfoWithPhone);
           return userInfoWithPhone;
         });
         
@@ -91,7 +87,6 @@ export const UserProvider = ({ children }) => {
         throw new Error('Failed to load user info');
       }
     } catch (err) {
-      console.error('❌ User context fetch error:', err);
       setError(err.message);
       throw err;
     } finally {

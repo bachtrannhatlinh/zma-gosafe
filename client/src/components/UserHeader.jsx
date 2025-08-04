@@ -93,7 +93,6 @@ const UserHeader = () => {
         showCloseButton={false}
         position="center"
       >
-        {console.log("🔍 Modal render:", { showModal, isGettingPhone })}
         <Box className="text-center p-4">
           <Box className="mb-4">
             <Text className="text-2xl mb-2">📱</Text>
@@ -137,8 +136,6 @@ const UserHeader = () => {
                 position: 'relative'
               }}
               onClick={() => {
-                console.log("🔥 Button clicked - isGettingPhone:", isGettingPhone);
-                console.log("🔥 handleLogin type:", typeof handleLogin);
                 if (handleLogin) {
                   handleLogin();
                 } else {

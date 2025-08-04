@@ -6,22 +6,17 @@ export const useAppLifecycle = () => {
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      console.log("🚪 App is closing, clearing phone data...");
       clearPhoneData();
     };
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        console.log("📱 App went to background");
-        // Optionally clear data when app goes to background
-        // clearPhoneData();
       } else {
         console.log("📱 App came to foreground");
       }
     };
 
     const handlePageHide = () => {
-      console.log("🚪 Page hide, clearing phone data...");
       clearPhoneData();
     };
 

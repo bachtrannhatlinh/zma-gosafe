@@ -34,11 +34,8 @@ export const useApi = () => {
         ...options
       };
 
-      console.log('🚀 API Request:', config.method, config.url);
-      
       const response = await axios(config);
       
-      console.log('✅ API Response:', response.status, response.data);
       return response.data;
 
     } catch (err) {

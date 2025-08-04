@@ -19,8 +19,6 @@ const ChatPage = () => {
   const [input, setInput] = useState("");
   const { userInfo } = useUserInfo();
 
-  console.log("💬 ChatPage userInfo:", userInfo);
-
   const isAdmin = userId === ADMIN_ID;
 
   useEffect(() => {
