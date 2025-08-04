@@ -5,6 +5,7 @@ import {
   sendMessage,
   onMessageReceived,
   disconnectSocket,
+  getStoredJWTToken,
 } from "./socket";
 import { Box, Button, Input, Page, Header } from "zmp-ui";
 
@@ -45,8 +46,16 @@ const ChatPage = () => {
     const fetchHistory = async () => {
       if (userId && targetId) {
         try {
+          const token = getStoredJWTToken();
+          
           const resHistory = await fetch(
-            `${SERVER_URL}/history?from=${userId}&to=${targetId}`
+            `${SERVER_URL}/history?from=${userId}&to=${targetId}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            }
           );
           
           if (!resHistory.ok) {
@@ -55,7 +64,6 @@ const ChatPage = () => {
           
           const history = await resHistory.json();
           
-          // Đảm bảo history là array
           if (Array.isArray(history)) {
             setMessages(history);
           } else {

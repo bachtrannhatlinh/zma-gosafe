@@ -9,6 +9,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const authMiddleware = require('./middleware/authMiddleware');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 
 const app = express();
 app.use(cors());
@@ -61,6 +62,39 @@ app.get("/history", authMiddleware, async (req, res) => {
     ]
   }).sort({ timestamp: 1 });
   res.json(messages);
+});
+
+// Endpoint để đổi Zalo token thành JWT
+app.post("/auth/zalo", async (req, res) => {
+  try {
+    const { accessToken } = req.body;
+    
+    // Verify Zalo token với Zalo API
+    const zaloResponse = await axios.get(process.env.ENDPOINT, {
+      headers: {
+        'access_token': accessToken
+      }
+    });
+    
+    if (zaloResponse.data && zaloResponse.data.id) {
+      // Tạo JWT token
+      const jwtToken = jwt.sign(
+        { 
+          userId: zaloResponse.data.id,
+          name: zaloResponse.data.name 
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+      
+      res.json({ token: jwtToken, userInfo: zaloResponse.data });
+    } else {
+      res.status(401).json({ error: 'Invalid Zalo token' });
+    }
+  } catch (error) {
+    console.error('Zalo auth error:', error);
+    res.status(401).json({ error: 'Authentication failed' });
+  }
 });
 
 // Socket.io with JWT authentication
