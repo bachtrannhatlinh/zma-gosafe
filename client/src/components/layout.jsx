@@ -9,6 +9,7 @@ import {
 import { Provider } from "jotai";
 import { UserProvider } from "../contexts/UserContext";
 import { AuthProvider } from "../contexts/AuthContext";
+import ErrorBoundary from './ErrorBoundary';
 
 // Import components
 import Dashboard from "../pages/Dashboard";
@@ -27,39 +28,41 @@ import JWTTest from "../pages/JWTTest";
 
 const Layout = () => {
   return (
-    <Provider>
-      <AuthProvider>
-        <UserProvider>
-          <App theme={getSystemInfo().zaloTheme}>
+    <ErrorBoundary>
+      <Provider store={store}>
+        <AuthProvider>
+          <UserProvider>
             <SnackbarProvider>
-              <ZMPRouter>
-                <AnimationRoutes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/call-to-user" element={<CallToUser />} />
-                  <Route path="/sms-brandname" element={<SMSBrandnamePage />} />
-                  <Route path="/zalo-chat" element={<LiveChat />} />
-                  <Route path="/history" element={<History />} />
-                  <Route path="/account" element={<Account />} />
-                  <Route path="/vehicle-management" element={<VehicleManagement />} />
-                  <Route path="/add-vehicle" element={<AddVehicle />} />
-                  <Route path="/change-password" element={<ChangePassword />} />
-                  <Route path="/vnpay-policy" element={<VNPayPolicy />} />
-                  <Route path="/promotions" element={<Promotions />} />
-                  <Route path="/promotion-detail/:id" element={<PromotionDetail />} />
-                  <Route path="/jwt-test" element={<JWTTest />} />
-                  <Route path="*" element={
-                    <div style={{padding: '20px', textAlign: 'center'}}>
-                      <h2>Page not found</h2>
-                      <p>Current path: {window.location.pathname}</p>
-                    </div>
-                  } />
-                </AnimationRoutes>
-              </ZMPRouter>
+              <App>
+                <ZMPRouter>
+                  <AnimationRoutes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/call-to-user" element={<CallToUser />} />
+                    <Route path="/sms-brandname" element={<SMSBrandnamePage />} />
+                    <Route path="/zalo-chat" element={<LiveChat />} />
+                    <Route path="/history" element={<History />} />
+                    <Route path="/account" element={<Account />} />
+                    <Route path="/vehicle-management" element={<VehicleManagement />} />
+                    <Route path="/add-vehicle" element={<AddVehicle />} />
+                    <Route path="/change-password" element={<ChangePassword />} />
+                    <Route path="/vnpay-policy" element={<VNPayPolicy />} />
+                    <Route path="/promotions" element={<Promotions />} />
+                    <Route path="/promotion-detail/:id" element={<PromotionDetail />} />
+                    <Route path="/jwt-test" element={<JWTTest />} />
+                    <Route path="*" element={
+                      <div style={{padding: '20px', textAlign: 'center'}}>
+                        <h2>Page not found</h2>
+                        <p>Current path: {window.location.pathname}</p>
+                      </div>
+                    } />
+                  </AnimationRoutes>
+                </ZMPRouter>
+              </App>
             </SnackbarProvider>
-          </App>
-        </UserProvider>
-      </AuthProvider>
-    </Provider>
+          </UserProvider>
+        </AuthProvider>
+      </Provider>
+    </ErrorBoundary>
   );
 };
 export default Layout;

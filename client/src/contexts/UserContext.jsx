@@ -1,8 +1,49 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getUserInfo } from "zmp-sdk/apis";
-import { useAuth } from './AuthContext';
+import { getZMPUserInfo } from '../utils/zmpSafe';
 
 const UserContext = createContext();
+
+export const UserProvider = ({ children }) => {
+  const [userInfo, setUserInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const initUser = async () => {
+      try {
+        setLoading(true);
+        const user = await getZMPUserInfo();
+        
+        if (user) {
+          setUserInfo(user);
+          console.log('✅ User info loaded:', user);
+        } else {
+          setError('Failed to load user info');
+        }
+      } catch (err) {
+        console.error('❌ User context error:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initUser();
+  }, []);
+
+  const value = {
+    userInfo,
+    loading,
+    error,
+    setUserInfo
+  };
+
+  return (
+    <UserContext.Provider value={value}>
+      {children}
+    </UserContext.Provider>
+  );
+};
 
 export const useUserInfo = () => {
   const context = useContext(UserContext);
@@ -10,69 +51,4 @@ export const useUserInfo = () => {
     throw new Error('useUserInfo must be used within UserProvider');
   }
   return context;
-};
-
-export const UserProvider = ({ children }) => {
-  const [userInfo, setUserInfo] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  const { login: jwtLogin, user: jwtUser, isAuthenticated } = useAuth();
-
-  const fetchUserInfo = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      console.log("🚀 Fetching user info...");
-      
-      const { userInfo: zaloUserInfo } = await getUserInfo({});
-      console.log("✅ User info fetched:", zaloUserInfo);
-      
-      setUserInfo(zaloUserInfo);
-
-      // Auto login with JWT if not authenticated
-      if (!isAuthenticated && zaloUserInfo?.id) {
-        console.log("🔑 Auto login with JWT...");
-        await jwtLogin(zaloUserInfo.id, zaloUserInfo);
-      }
-
-      return zaloUserInfo;
-    } catch (error) {
-      console.error("❌ Error fetching user info:", error);
-      setError(error.message || "Không thể lấy thông tin người dùng");
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const refetchUserInfo = async () => {
-    return await fetchUserInfo();
-  };
-
-  const clearUserInfo = () => {
-    setUserInfo(null);
-    setError(null);
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    fetchUserInfo();
-  }, []);
-
-  return (
-    <UserContext.Provider value={{
-      userInfo,
-      isLoading,
-      error,
-      fetchUserInfo,
-      refetchUserInfo,
-      clearUserInfo,
-      // JWT user info
-      jwtUser,
-      isAuthenticated
-    }}>
-      {children}
-    </UserContext.Provider>
-  );
 };

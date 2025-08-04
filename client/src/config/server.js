@@ -3,8 +3,10 @@ export const getServerUrl = () => {
   if (process.env.NODE_ENV === 'development') {
     url = 'http://localhost:5000';
   } else {
-    // Đảm bảo có https:// prefix
-    url = process.env.URL_SERVER || 'zma-gosafe.vercel.app';
+    // Fix: Use correct production server URL
+    url = process.env.URL_SERVER || 'https://zma-gosafe.vercel.app';
+    
+    // Ensure https:// prefix
     if (!url.startsWith('http')) {
       url = 'https://' + url;
     }

@@ -37,6 +37,8 @@ const JWTTest = () => {
     }
 
     try {
+      setTestResult(null); // Clear previous result
+      
       const result = await request('/api/auth/login', {
         method: 'POST',
         data: {
@@ -45,9 +47,14 @@ const JWTTest = () => {
         }
       });
 
-      if (result.success) {
-        localStorage.setItem('gosafe_jwt_token', result.token);
-        localStorage.setItem('gosafe_user_info', JSON.stringify(result.user));
+      if (result && result.success) {
+        // Safely store auth data
+        try {
+          localStorage.setItem('gosafe_jwt_token', result.token);
+          localStorage.setItem('gosafe_user_info', JSON.stringify(result.user));
+        } catch (storageErr) {
+          console.warn('Storage error:', storageErr);
+        }
         
         setAuthState({
           token: result.token,
@@ -56,9 +63,15 @@ const JWTTest = () => {
         });
         
         setTestResult({ success: true, data: result });
+      } else {
+        throw new Error('Login failed - no success response');
       }
     } catch (err) {
-      setTestResult({ success: false, error: err.message });
+      console.error('Login test error:', err);
+      setTestResult({ 
+        success: false, 
+        error: err.message || 'Unknown login error' 
+      });
     }
   };
 
