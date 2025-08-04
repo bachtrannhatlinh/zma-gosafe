@@ -9,6 +9,7 @@ const CustomModal = ({
   overlayClassName = "",
   modalClassName = "",
   position = "bottom", // "center" hoặc "bottom"
+  hideBottomNav = true, // Thêm prop này
   ...props 
 }) => {
   // Prevent body scroll when modal is open
@@ -30,11 +31,16 @@ const CustomModal = ({
       // Save current scroll position
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       
-      // Add CSS class to prevent scroll
+      // Add CSS classes to prevent scroll
       body.classList.add('modal-no-scroll');
       html.classList.add('modal-no-scroll');
       
-      // Lock body scroll
+      // Add class to hide bottom nav only when needed
+      if (hideBottomNav) {
+        body.classList.add('modal-hide-nav');
+      }
+      
+      // Set body styles to lock position
       body.style.position = 'fixed';
       body.style.top = `-${scrollTop}px`;
       body.style.left = '0';
@@ -42,16 +48,8 @@ const CustomModal = ({
       body.style.width = '100%';
       body.style.overflow = 'hidden';
       body.style.height = '100%';
-      
-      // Additional prevention
       html.style.overflow = 'hidden';
       html.style.height = '100%';
-      
-      // Hide BottomNavigation when modal is open
-      const bottomNav = document.querySelector('[data-fixed-element="true"]');
-      if (bottomNav) {
-        bottomNav.style.display = 'none';
-      }
       
       // Add event listeners to prevent scroll
       document.addEventListener('wheel', preventScroll, { passive: false });
@@ -65,19 +63,14 @@ const CustomModal = ({
       // Remove CSS classes
       body.classList.remove('modal-no-scroll');
       html.classList.remove('modal-no-scroll');
-      
-      // Show BottomNavigation again
-      const bottomNav = document.querySelector('[data-fixed-element="true"]');
-      if (bottomNav) {
-        bottomNav.style.display = '';
-      }
+      body.classList.remove('modal-hide-nav');
       
       // Remove event listeners
       document.removeEventListener('wheel', preventScroll);
       document.removeEventListener('touchmove', preventTouchMove);
       document.removeEventListener('scroll', preventScroll);
       
-      // Restore styles
+      // Restore body styles
       body.style.position = '';
       body.style.top = '';
       body.style.left = '';
@@ -89,9 +82,7 @@ const CustomModal = ({
       html.style.height = '';
       
       // Restore scroll position
-      if (scrollTop > 0) {
-        window.scrollTo(0, scrollTop);
-      }
+      window.scrollTo(0, scrollTop);
     }
 
     // Cleanup on unmount
@@ -99,12 +90,7 @@ const CustomModal = ({
       // Remove CSS classes
       body.classList.remove('modal-no-scroll');
       html.classList.remove('modal-no-scroll');
-      
-      // Show BottomNavigation again
-      const bottomNav = document.querySelector('[data-fixed-element="true"]');
-      if (bottomNav) {
-        bottomNav.style.display = '';
-      }
+      body.classList.remove('modal-hide-nav');
       
       document.removeEventListener('wheel', preventScroll);
       document.removeEventListener('touchmove', preventTouchMove);
@@ -120,7 +106,7 @@ const CustomModal = ({
       html.style.overflow = '';
       html.style.height = '';
     };
-  }, [visible]);
+  }, [visible, hideBottomNav]);
 
   if (!visible) return null;
 

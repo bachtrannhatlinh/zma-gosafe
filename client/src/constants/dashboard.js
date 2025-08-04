@@ -1,78 +1,91 @@
-// Constants for services
-export const SERVICES = [
-  { id: "vehicle", icon: "🚗", label: "Thuê xe", bgColor: "bg-blue-500" },
-  { id: "car", icon: "🚙", label: "Ô tô", bgColor: "bg-blue-600" },
-  { id: "bike", icon: "🏍️", label: "Xe máy", bgColor: "bg-cyan-500" },
-  { id: "food", icon: "🍔", label: "Đồ ăn", bgColor: "bg-green-500" },
+// Constants for main driver services - DỊCH VỤ TÀI XẾ
+export const DRIVER_SERVICES = [
+  { 
+    id: "car-driver", 
+    icon: "🚗", 
+    label: "Tài xế ô tô", 
+    bgColor: "bg-orange-500",
+  },
+  { 
+    id: "bike-driver", 
+    icon: "🏍️", 
+    label: "Tài xế xe máy", 
+    bgColor: "bg-orange-500",
+  },
+  { 
+    id: "daily-rental", 
+    icon: "📅", 
+    label: "Thuê tài xế theo ngày", 
+    bgColor: "bg-orange-500",
+  },
 ];
 
-// Constants for promotions
-export const PROMOTIONS = [
-  {
-    id: 1,
-    title: "Deal Hè Của Đá",
-    subtitle: "Món Ngon Giảm Giá Cực Sốc",
+// Constants for other GoSafe services - CÁC DỊCH VỤ KHÁC CỦA GOSAFE
+export const OTHER_SERVICES = [
+  { 
+    id: "vehicle-registration", 
+    icon: "📋", 
+    label: "Đăng kiểm hộ", 
+    bgColor: "bg-blue-500",
+  },
+  { 
+    id: "bike-rental", 
+    icon: "🛵", 
+    label: "Cho thuê xe máy", 
     bgColor: "bg-green-500",
-    image: "🧊",
   },
-  {
-    id: 2,
-    title: "DEAL HÈ CỰC ĐÃ",
-    subtitle: "ĐẢ - MÓN NGON...",
-    bgColor: "bg-orange-500",
-    image: "☀️",
-  },
-  {
-    id: 3,
-    title: "ĐẶT MÓN VIP",
-    subtitle: "GIAO - KHAO...",
+  { 
+    id: "car-rental", 
+    icon: "🚙", 
+    label: "Cho thuê xe ô tô", 
     bgColor: "bg-red-500",
-    image: "👑",
   },
-  {
-    id: 4,
-    title: "Món Ngon Mỗi Ngày",
-    subtitle: "Giảm Giá Đặc Biệt",
+  { 
+    id: "sms-brandname", 
+    icon: "💬", 
+    label: "SMS Brandname", 
     bgColor: "bg-purple-500",
-    image: "🍽️",
+  },
+  { 
+    id: "flight-tickets", 
+    icon: "✈️", 
+    label: "Vé máy bay", 
+    bgColor: "bg-purple-500",
+  },
+  { 
+    id: "travel-tours", 
+    icon: "🌍", 
+    label: "Vé khu vui chơi toàn quốc", 
+    bgColor: "bg-teal-500",
+  },
+  { 
+    id: "zalo-chat", 
+    icon: "💬", 
+    label: "Live Chat", 
+    bgColor: "bg-gray-500",
+  },
+  { 
+    id: "jwt-test", 
+    icon: "🔐", 
+    label: "JWT Test", 
+    bgColor: "bg-indigo-500",
   },
 ];
 
-// Constants for news
-export const NEWS_DATA = [
-  {
-    id: 1,
-    title: "Deal Hè Của Đá",
-    subtitle: "Món Ngon Giảm Giá Cực Sốc",
-    bgColor: "bg-green-500",
-    image: "🧊",
-  },
-  {
-    id: 2,
-    title: "DEAL HÈ CỰC ĐÃ",
-    subtitle: "ĐẢ - MÓN NGON...",
-    bgColor: "bg-orange-500",
-    image: "☀️",
-  },
-  {
-    id: 3,
-    title: "ĐẶT MÓN VIP",
-    subtitle: "GIAO - KHAO...",
-    bgColor: "bg-red-500",
-    image: "👑",
-  },
-];
 
 // Service route mapping
 export const SERVICE_ROUTES = {
-  food: "/food",
-  vehicle: "/vehicle",
-  delivery: null, // Coming soon
-  gift: null, // Coming soon
-  gas: null, // Coming soon
-  car: "/vehicle",
-  bike: "/vehicle",
-  market: null, // Coming soon
+  "car-driver": null,
+  "bike-driver": null, 
+  "daily-rental": null,
+  "vehicle-registration": null,
+  "bike-rental": null,
+  "car-rental": null,
+  "sms-brandname": "/sms-brandname",
+  "flight-tickets": null,
+  "travel-tours": null,
+  "zalo-chat": "/zalo-chat",
+  "jwt-test": "/jwt-test",
 };
 
 // Local storage keys

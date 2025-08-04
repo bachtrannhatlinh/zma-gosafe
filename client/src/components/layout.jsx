@@ -6,24 +6,60 @@ import {
   SnackbarProvider,
   ZMPRouter,
 } from "zmp-ui";
+import { Provider } from "jotai";
+import { UserProvider } from "../contexts/UserContext";
+import { AuthProvider } from "../contexts/AuthContext";
 
+// Import components
 import Dashboard from "../pages/Dashboard";
+import SMSBrandnamePage from "../pages/SMSBrandname";
+import History from "../pages/History";
+import Account from "../pages/Account";
+import VehicleManagement from "../pages/VehicleManagement";
+import AddVehicle from "../pages/AddVehicle";
+import ChangePassword from "../pages/ChangePassword";
+import VNPayPolicy from "../pages/VNPayPolicy";
 import Promotions from "../pages/Promotions";
-import News from "../pages/News";
+import PromotionDetail from "../pages/PromotionDetail";
+import CallToUser from "../pages/CallToUser";
+import LiveChat from "../pages/Chat/ChatPage";
+import JWTTest from "../pages/JWTTest";
 
 const Layout = () => {
   return (
-    <App theme={getSystemInfo().zaloTheme}>
-      <SnackbarProvider>
-        <ZMPRouter>
-          <AnimationRoutes>
-            <Route path="/" element={<Dashboard />}></Route>
-            <Route path="/promotions" element={<Promotions />}></Route>
-            <Route path="/news" element={<News />}></Route>
-          </AnimationRoutes>
-        </ZMPRouter>
-      </SnackbarProvider>
-    </App>
+    <Provider>
+      <AuthProvider>
+        <UserProvider>
+          <App theme={getSystemInfo().zaloTheme}>
+            <SnackbarProvider>
+              <ZMPRouter>
+                <AnimationRoutes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/call-to-user" element={<CallToUser />} />
+                  <Route path="/sms-brandname" element={<SMSBrandnamePage />} />
+                  <Route path="/zalo-chat" element={<LiveChat />} />
+                  <Route path="/history" element={<History />} />
+                  <Route path="/account" element={<Account />} />
+                  <Route path="/vehicle-management" element={<VehicleManagement />} />
+                  <Route path="/add-vehicle" element={<AddVehicle />} />
+                  <Route path="/change-password" element={<ChangePassword />} />
+                  <Route path="/vnpay-policy" element={<VNPayPolicy />} />
+                  <Route path="/promotions" element={<Promotions />} />
+                  <Route path="/promotion-detail/:id" element={<PromotionDetail />} />
+                  <Route path="/jwt-test" element={<JWTTest />} />
+                  <Route path="*" element={
+                    <div style={{padding: '20px', textAlign: 'center'}}>
+                      <h2>Page not found</h2>
+                      <p>Current path: {window.location.pathname}</p>
+                    </div>
+                  } />
+                </AnimationRoutes>
+              </ZMPRouter>
+            </SnackbarProvider>
+          </App>
+        </UserProvider>
+      </AuthProvider>
+    </Provider>
   );
 };
 export default Layout;
