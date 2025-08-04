@@ -5,41 +5,66 @@ import {
   sendMessage,
   onMessageReceived,
   disconnectSocket,
-  getStoredJWTToken,
 } from "./socket";
 import { Box, Button, Input, Page, Header } from "zmp-ui";
+import { authenticateWithZalo, getStoredJWTToken } from '../../utils/auth';
 
 const ADMIN_ID = "3368637342326461234";
-const SERVER_URL = "https://operation-subscriber-fa-learned.trycloudflare.com";
 
 const ChatPage = () => {
   const [userId, setUserId] = useState(null);
   const [targetId, setTargetId] = useState("");
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const { userInfo } = useUserInfo();
+  const { userInfo, loading } = useUserInfo();
 
   const isAdmin = userId === ADMIN_ID;
 
   useEffect(() => {
     let unsub = () => {};
 
-    if (userInfo?.userInfo?.id) {
-      setUserId(userInfo.userInfo.id);
-      connectSocket(userInfo.userInfo.id);
-
-      unsub = onMessageReceived((msg) => {
-        if (msg && typeof msg === 'object') {
-          setMessages((prev) => Array.isArray(prev) ? [...prev, msg] : [msg]);
+    // Sửa logic lấy userInfo - bỏ .userInfo vì đã có trong context
+    if (!loading && userInfo?.id) {
+      setUserId(userInfo.id);
+      
+      const initializeChat = async () => {
+        try {
+          console.log('Initializing chat with user info:', userInfo);
+          
+          // Thử lấy token đã lưu
+          let token = getStoredJWTToken();
+          
+          // Nếu không có token, gửi user info lên server để lấy JWT
+          if (!token) {
+            console.log('No stored token, authenticating with Zalo user info...');
+            token = await authenticateWithZalo(userInfo); // Bỏ .userInfo
+          }
+          
+          if (token) {
+            console.log('Connecting socket with user ID:', userInfo.id);
+            connectSocket(userInfo.id);
+            
+            unsub = onMessageReceived((msg) => {
+              if (msg && typeof msg === 'object') {
+                setMessages((prev) => Array.isArray(prev) ? [...prev, msg] : [msg]);
+              }
+            });
+          } else {
+            console.error('Failed to get JWT token');
+          }
+        } catch (error) {
+          console.error('Chat initialization failed:', error);
         }
-      });
+      };
+      
+      initializeChat();
     }
 
     return () => {
       disconnectSocket();
       unsub && unsub();
     };
-  }, [userInfo]);
+  }, [userInfo, loading]); // Thêm loading vào dependency
 
   // Lấy lịch sử chat khi userId và targetId đã sẵn sàng
   useEffect(() => {
@@ -48,8 +73,13 @@ const ChatPage = () => {
         try {
           const token = getStoredJWTToken();
           
+          if (!token) {
+            console.error('No JWT token for history fetch');
+            return;
+          }
+          
           const resHistory = await fetch(
-            `${SERVER_URL}/history?from=${userId}&to=${targetId}`,
+            `${process.env.URL_SERVER}/history?from=${userId}&to=${targetId}`,
             {
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -101,6 +131,24 @@ const ChatPage = () => {
       console.error('Error sending message:', error);
     }
   };
+
+  // Debug log
+  useEffect(() => {
+    console.log('UserInfo context data:', {
+      userInfo,
+      loading,
+      hasUserId: !!userInfo?.id
+    });
+  }, [userInfo, loading]);
+
+  // Rest of component...
+  if (loading) {
+    return <div>Loading user info...</div>;
+  }
+
+  if (!userInfo) {
+    return <div>Failed to load user info</div>;
+  }
 
   return (
     <Page>

@@ -1,63 +1,31 @@
 // socket.js
 import { io } from "socket.io-client";
-import { getAccessToken } from "zmp-sdk/apis";
 
 let socket = null;
-let jwtToken = null;
+const SERVER_URL = process.env.URL_SERVER || "https://zma-gosafe-bachtrannhatlinhs-projects.vercel.app";
 
-// Hàm lấy JWT token từ server
-const getJWTToken = async () => {
-  if (jwtToken) return jwtToken;
-  
+// Import từ auth.js thay vì tự định nghĩa
+export { getStoredJWTToken } from '../../utils/auth';
+
+export const connectSocket = (userId) => {
   try {
-    // Lấy Zalo access token
-    const zaloTokenResult = await new Promise((resolve, reject) => {
-      getAccessToken({ 
-        success: resolve, 
-        fail: reject 
-      });
-    });
+    // Import getStoredJWTToken từ auth.js
+    const { getStoredJWTToken } = require('../../utils/auth');
+    const token = getStoredJWTToken();
     
-    const zaloAccessToken = zaloTokenResult.accessToken;
-    console.log('Zalo accessToken:', zaloAccessToken);
-    
-    // Đổi thành JWT token
-    const response = await fetch("https://operation-subscriber-fa-learned.trycloudflare.com/auth/zalo", {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ accessToken: zaloAccessToken })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to get JWT token');
+    if (!token) {
+      throw new Error('No JWT token available');
     }
     
-    const data = await response.json();
-    jwtToken = data.token;
-    
-    // Lưu token để sử dụng cho API calls
-    localStorage.setItem('jwt_token', jwtToken);
-    
-    return jwtToken;
-    
-  } catch (error) {
-    console.error('Error getting JWT token:', error);
-    throw error;
-  }
-};
-
-export const connectSocket = async (userId) => {
-  try {
-    const token = await getJWTToken();
-    
-    socket = io("https://operation-subscriber-fa-learned.trycloudflare.com", {
-      auth: {
-        token: token // Sử dụng JWT token
-      }
+    socket = io(SERVER_URL, {
+      auth: { token },
+      transports: ['websocket']
     });
-
+    
+    if (!socket) {
+      throw new Error('Failed to create socket instance');
+    }
+    
     socket.emit("join", userId);
     
     socket.on("connect", () => {
@@ -73,14 +41,9 @@ export const connectSocket = async (userId) => {
   }
 };
 
-// Export hàm để sử dụng cho API calls
-export const getStoredJWTToken = () => {
-  return localStorage.getItem('jwt_token') || jwtToken;
-};
-
 export const sendMessage = (msg) => {
   try {
-    if (socket.connected) {
+    if (socket && socket.connected) {
       socket.emit("send-message", msg);
     } else {
       console.error('Socket not connected, cannot send message');
@@ -101,15 +64,20 @@ export const onMessageReceived = (cb) => {
     }
   };
   
-  socket.on("receive-message", handler);
-  return () => socket.off("receive-message", handler);
+  if (socket) {
+    socket.on("receive-message", handler);
+    return () => socket.off("receive-message", handler);
+  }
+  
+  return () => {}; // Return empty function if no socket
 };
 
 export const disconnectSocket = () => {
   try {
-    if (socket.connected) {
+    if (socket && socket.connected) {
       socket.disconnect();
     }
+    socket = null; // Reset socket instance
   } catch (error) {
     console.error('Error disconnecting socket:', error);
   }
