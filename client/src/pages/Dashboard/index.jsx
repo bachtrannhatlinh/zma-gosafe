@@ -31,29 +31,35 @@ const Dashboard = () => {
   const [pendingServiceId, setPendingServiceId] = useState(null); // Để lưu serviceId đang chờ
 
   const {
-    phoneNumber,
     isGettingPhone,
     checkPhoneExists,
     requestPhonePermission,
   } = usePhoneAuth();
 
-  const { userInfo, fetchUserInfo } = useUserInfo();
-
-  // Custom hooks
+const { userInfo, fetchUserInfo } = useUserInfo();
   const { handleServiceClick } = useServiceNavigation(navigate);
 
-  // Function xử lý click service - nhận showToast từ DevFeatureToast
+  // Helper function to check if phone number exists
+  const hasValidPhoneNumber = () => {
+    return userInfo?.phoneNumber;
+  };
+
   const handleServiceClickWithToast = (showToast) => (serviceId) => {
-    // Kiểm tra userInfo trước tiên
-    if (!userInfo) {
-      // Chưa có userInfo - hiện modal xin quyền
+    console.log("🔍 Checking phone number for service:", serviceId, {
+      hasPhone: hasValidPhoneNumber(),
+      phoneNumber: userInfo?.phoneNumber,
+      userInfo
+    });
+
+    if (!hasValidPhoneNumber()) {
+      console.log("❌ No phone number, showing modal");
       setPendingServiceId(serviceId);
       setShowPhoneModal(true);
       return;
+    } else {
+      console.log("✅ Phone exists, navigating to service:", serviceId);
+      handleServiceClick(serviceId);
     }
-
-    // Có userInfo - navigate trực tiếp
-    handleServiceClick(serviceId);
   };
 
   // Handle pull-to-refresh
@@ -81,30 +87,19 @@ const Dashboard = () => {
   const handlePhonePermission = async () => {
     const result = await requestPhonePermission();
     if (result.success) {
-      // Fetch userInfo từ Zalo API sau khi có số điện thoại
-      try {
-        await fetchUserInfo();
-      } catch (error) {
-        console.error("❌ Error fetching user info:", error);
-      }
-      
+      console.log("✅ Phone permission granted, phone number:", result.phoneNumber);
       setShowPhoneModal(false);
+      
+      // Navigate to pending service if exists
       setTimeout(() => {
-        const recheckPhone = localStorage.getItem("user_phone");
-        const recheckHasPhone = checkPhoneExists();
-        if (
-          pendingServiceId &&
-          recheckHasPhone &&
-          recheckPhone &&
-          recheckPhone !== "Chưa có số điện thoại" &&
-          recheckPhone !== "Cần cấp quyền" &&
-          recheckPhone !== "null" &&
-          recheckPhone !== "undefined"
-        ) {
+        if (pendingServiceId) {
+          console.log("🔄 Retrying service navigation:", pendingServiceId);
           handleServiceClick(pendingServiceId);
           setPendingServiceId(null);
         }
       }, 100);
+    } else {
+      console.error("❌ Phone permission failed:", result.error);
     }
   };
 

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Page, Box, Text, Button, Avatar } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
 import { useUserInfo } from "../../contexts/UserContext";
-import { usePhoneAuth } from "../../hooks/usePhoneAuth";
 import { useAuth } from "../../contexts/AuthContext";
+import { usePhoneAuth } from "../../hooks/usePhoneAuth";
 
 // Components
 import BottomNavigation from "../../components/BottomNavigation";
@@ -12,26 +12,19 @@ import CustomModal from "../../components/CustomModal";
 const Account = () => {
   const navigate = useNavigate();
   const { userInfo, isLoading, clearUserInfo } = useUserInfo();
+  const { clearPhoneData } = usePhoneAuth();
+  console.log(userInfo, 'userInfouserInfouserInfouserInfouserInfouserInfo')
   const { logout: jwtLogout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Thêm hook để lấy số điện thoại
-  const { phoneNumber, checkPhoneExists, clearPhoneData } = usePhoneAuth();
-
-  // Kiểm tra số điện thoại khi component mount
-  useEffect(() => {
-    checkPhoneExists();
-  }, [checkPhoneExists]);
-
   const handleLogoutClick = () => {
-    console.log("🔘 Logout button clicked");
     setShowLogoutModal(true);
   };
 
   const handleConfirmLogout = () => {
     try {
       console.log("🚪 Starting logout process...");
-      
+
       // Clear localStorage
       localStorage.clear();
       console.log("✅ localStorage cleared");
@@ -56,7 +49,6 @@ const Account = () => {
       // Navigate về trang chủ
       navigate("/");
       console.log("✅ Navigated to home");
-      
     } catch (error) {
       console.error("❌ Logout error:", error);
       // Vẫn cố gắng navigate về trang chủ
@@ -142,9 +134,9 @@ const Account = () => {
             marginBottom: "16px",
           }}
         >
-          {userInfo?.avatar ? (
+          {userInfo?.userInfo?.avatar ? (
             <Avatar
-              src={userInfo.avatar}
+              src={userInfo.userInfo.avatar}
               size={80}
               style={{
                 border: "3px solid rgba(255,255,255,0.3)",
@@ -176,7 +168,7 @@ const Account = () => {
             marginBottom: "8px",
           }}
         >
-          {userInfo?.name || "Người dùng Zalo"}
+          {userInfo?.userInfo?.name || "Người dùng Zalo"}
         </Text>
 
         {/* User ID */}
@@ -186,7 +178,7 @@ const Account = () => {
             opacity: 0.8,
           }}
         >
-          ID: {userInfo?.id || "Không có thông tin"}
+          ID: {userInfo?.userInfo?.id || "Không có thông tin"}
         </Text>
       </Box>
 
@@ -219,7 +211,7 @@ const Account = () => {
             Tên hiển thị
           </Text>
           <Text style={{ fontSize: "14px", color: "#333" }}>
-            {userInfo?.name || "Chưa có thông tin"}
+            {userInfo?.userInfo?.name || "Chưa có thông tin"}
           </Text>
         </Box>
 
@@ -230,7 +222,7 @@ const Account = () => {
             Zalo ID
           </Text>
           <Text style={{ fontSize: "14px", color: "#333" }}>
-            {userInfo?.id || "Chưa có thông tin"}
+            {userInfo?.userInfo?.id || "Chưa có thông tin"}
           </Text>
         </Box>
 
@@ -251,42 +243,7 @@ const Account = () => {
           >
             Số điện thoại
           </Text>
-          {/* Debug info */}
-          {process.env.NODE_ENV === "development" && (
-            <Text
-              style={{ fontSize: "10px", color: "#999", marginBottom: "4px" }}
-            >
-              Debug: "{phoneNumber}" (type: {typeof phoneNumber})
-            </Text>
-          )}
-          <Text
-            style={{
-              fontSize: "14px",
-              color: (() => {
-                const currentPhone = localStorage.getItem("user_phone");
-                const displayPhone = currentPhone || phoneNumber;
-                return displayPhone &&
-                  displayPhone !== "Chưa có số điện thoại" &&
-                  displayPhone !== "Cần cấp quyền" &&
-                  displayPhone !== "null" &&
-                  displayPhone !== "undefined"
-                  ? "#333"
-                  : "#ef4444";
-              })(),
-            }}
-          >
-            {(() => {
-              const currentPhone = localStorage.getItem("user_phone");
-              const displayPhone = currentPhone || phoneNumber;
-              return displayPhone &&
-                displayPhone !== "Chưa có số điện thoại" &&
-                displayPhone !== "Cần cấp quyền" &&
-                displayPhone !== "null" &&
-                displayPhone !== "undefined"
-                ? displayPhone
-                : "Chưa cấp quyền số điện thoại";
-            })()}
-          </Text>
+          <Text>{userInfo?.phoneNumber || "Chưa cấp quyền số điện thoại"}</Text>
         </Box>
       </Box>
 

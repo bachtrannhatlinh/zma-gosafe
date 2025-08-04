@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { authorize, getUserInfo, getPhoneNumber, getAccessToken } from "zmp-sdk/apis";
 import { useServerAuth } from "./useServerAuth";
+import { useUserInfo } from "../contexts/UserContext";
 import axios from "axios";
 
 export const usePhoneAuth = () => {
@@ -9,38 +10,45 @@ export const usePhoneAuth = () => {
   const [userInfo, setUserInfo] = useState(null);
   
   const { sendTokenToServer } = useServerAuth();
+  const { updatePhoneNumber, fetchUserInfo, userInfo: contextUserInfo } = useUserInfo();
 
   const checkPhoneExists = useCallback(() => {
-    const storedPhone = localStorage.getItem("user_phone");
-    if (storedPhone && 
-        storedPhone !== "Chưa có số điện thoại" && 
-        storedPhone !== "Cần cấp quyền" &&
-        storedPhone !== "null" &&
-        storedPhone !== "undefined") {
+    // Lấy phoneNumber từ UserContext
+    const userPhone = contextUserInfo?.phoneNumber;
+    
+    if (userPhone && 
+        userPhone !== "Chưa có số điện thoại" && 
+        userPhone !== "Cần cấp quyền" &&
+        userPhone !== "null" &&
+        userPhone !== "undefined") {
+      setPhoneNumber(userPhone);
       return true;
     }
     
     setPhoneNumber(null);
     return false;
-  }, []);
+  }, [contextUserInfo?.phoneNumber]);
 
   const clearPhoneData = useCallback(() => {
     setPhoneNumber(null);
     setUserInfo(null);
-    localStorage.removeItem("user_phone");
     localStorage.removeItem("zalo_phone_token");
-  }, []);
+    // Cập nhật UserContext
+    updatePhoneNumber(null);
+  }, [updatePhoneNumber]);
 
   const requestPhonePermission = useCallback(async () => {
     setIsGettingPhone(true);
 
     try {
       const accessToken = await requestAccessToken();
-      const userInfo = await fetchUserInfo();
+      const userInfo = await fetchZaloUserInfo();
       setUserInfo(userInfo);
 
       const phoneResult = await fetchPhoneResult();
       await handlePhoneResult(phoneResult, accessToken);
+      
+      // Không cần gọi fetchUserInfo() vì đã cập nhật phoneNumber qua updatePhoneNumber()
       
       return { success: true, phoneNumber, userInfo };
     } catch (error) {
@@ -49,7 +57,7 @@ export const usePhoneAuth = () => {
     } finally {
       setIsGettingPhone(false);
     }
-  }, [phoneNumber]);
+  }, [phoneNumber, updatePhoneNumber]);
 
   // Helper functions from UserHeader
   const requestAccessToken = async () => {
@@ -69,15 +77,13 @@ export const usePhoneAuth = () => {
     return accessToken;
   };
 
-  const fetchUserInfo = async () => {
-    const result = await new Promise((resolve, reject) => {
+  const fetchZaloUserInfo = async () => {
+    return await new Promise((resolve, reject) => {
       getUserInfo({
         success: resolve,
         fail: () => reject(new Error("Không thể lấy thông tin người dùng")),
       });
     });
-
-    return result.userInfo;
   };
 
   const fetchPhoneResult = async () => {
@@ -103,8 +109,11 @@ export const usePhoneAuth = () => {
   };
 
   const handleDirectPhone = async (number) => {
+    console.log("✅ Got phone number: 123", number);
+    console.log(number, 'phoneNumber123123123 - Direct Phone')
     setPhoneNumber(number);
-    localStorage.setItem("user_phone", number);
+    // Cập nhật UserContext
+    updatePhoneNumber(number);
 
     try {
       await sendTokenToServer(number);
@@ -117,13 +126,16 @@ export const usePhoneAuth = () => {
       const result = await getZaloPhoneNumber(accessToken, token, "j3MVFN1NJAZOcBWQ2w5E");
 
       if (result?.phoneNumber) {
+        console.log(result.phoneNumber, 'phoneNumber123123123 - Token Phone')
         setPhoneNumber(result.phoneNumber);
-        localStorage.setItem("user_phone", result.phoneNumber);
+        // Cập nhật UserContext
+        updatePhoneNumber(result.phoneNumber);
       }
     } catch (err) {
       const fallbackPhone = `${userInfo?.name || "Người dùng Zalo"} - Đã xác thực`;
       setPhoneNumber(fallbackPhone);
-      localStorage.setItem("user_phone", fallbackPhone);
+      // Cập nhật UserContext
+      updatePhoneNumber(fallbackPhone);
       
       try {
         localStorage.setItem("zalo_phone_token", token);

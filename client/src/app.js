@@ -2,6 +2,12 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 
+// Error handler
+import { initErrorHandler } from "./utils/errorHandler";
+
+// Initialize error handling first
+initErrorHandler();
+
 // ZaUI stylesheet
 import "zmp-ui/zaui.css";
 import "./css/tailwind.scss";

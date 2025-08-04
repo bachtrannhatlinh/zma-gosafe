@@ -6,7 +6,7 @@ import {
   SnackbarProvider,
   ZMPRouter,
 } from "zmp-ui";
-import { Provider } from "jotai";
+import { RecoilRoot } from "recoil";
 import { UserProvider } from "../contexts/UserContext";
 import { AuthProvider } from "../contexts/AuthContext";
 import ErrorBoundary from './ErrorBoundary';
@@ -29,7 +29,7 @@ import JWTTest from "../pages/JWTTest";
 const Layout = () => {
   return (
     <ErrorBoundary>
-      <Provider store={store}>
+      <RecoilRoot>
         <AuthProvider>
           <UserProvider>
             <SnackbarProvider>
@@ -61,7 +61,7 @@ const Layout = () => {
             </SnackbarProvider>
           </UserProvider>
         </AuthProvider>
-      </Provider>
+      </RecoilRoot>
     </ErrorBoundary>
   );
 };

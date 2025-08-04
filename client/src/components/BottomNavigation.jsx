@@ -3,7 +3,6 @@ import { Box, Text, Button, Icon } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
 import { usePhoneAuth } from "../hooks/usePhoneAuth";
 import { useUserInfo } from "../contexts/UserContext";
-import { debugPhoneStorage } from "../utils/phoneUtils";
 import PhonePermissionModal from "./PhonePermissionModal";
 
 const BottomNavigation = ({ activeTab = "home" }) => {
@@ -12,19 +11,11 @@ const BottomNavigation = ({ activeTab = "home" }) => {
   const [pendingPath, setPendingPath] = useState(null);
 
   const {
-    phoneNumber,
     isGettingPhone,
-    checkPhoneExists,
     requestPhonePermission,
   } = usePhoneAuth();
 
-  const { fetchUserInfo } = useUserInfo();
-
-  // Debug khi component mount
-  useEffect(() => {
-    console.log("🔍 BottomNavigation mounted");
-    debugPhoneStorage();
-  }, []);
+  const { userInfo } = useUserInfo();
 
   const navItems = [
     {
@@ -59,62 +50,18 @@ const BottomNavigation = ({ activeTab = "home" }) => {
     },
   ];
 
+  // Helper function to check if phone number exists
+  const hasValidPhoneNumber = () => {
+    return userInfo?.phoneNumber;
+  };
+
   const handleNavClick = async (item) => {
-    console.log("Navigation clicked:", item.id, "Path:", item.path);
-
-    // Check if this navigation requires phone number
     if (item.requirePhone) {
-      // Luôn lấy số điện thoại mới nhất từ localStorage
-      const currentPhone = localStorage.getItem("user_phone");
-      const hasPhone = checkPhoneExists();
-
-      debugPhoneStorage();
-      console.log("📱 Phone check result:", {
-        hasPhone,
-        currentPhone,
-        phoneNumber,
-        phoneNumberType: typeof phoneNumber,
-      });
-
-      // Prioritize currentPhone over phoneNumber
-      const displayPhone = currentPhone || phoneNumber;
-
-      if (
-        !hasPhone ||
-        !displayPhone ||
-        displayPhone === "Chưa có số điện thoại" ||
-        displayPhone === "Cần cấp quyền" ||
-        displayPhone === "null" ||
-        displayPhone === "undefined"
-      ) {
-        // Kiểm tra lại lần cuối trước khi show modal (tránh race condition)
-        setTimeout(() => {
-          const recheckPhone = localStorage.getItem("user_phone");
-          const recheckDisplayPhone = recheckPhone || phoneNumber;
-          const recheckHasPhone = checkPhoneExists();
-
-          if (
-            !recheckHasPhone ||
-            !recheckDisplayPhone ||
-            recheckDisplayPhone === "Chưa có số điện thoại" ||
-            recheckDisplayPhone === "Cần cấp quyền" ||
-            recheckDisplayPhone === "null" ||
-            recheckDisplayPhone === "undefined"
-          ) {
-            setPendingPath(item.path);
-            setShowPhoneModal(true);
-          } else {
-            setShowPhoneModal(false);
-            setPendingPath(null);
-            navigate(item.path);
-          }
-        }, 50);
+      if (!hasValidPhoneNumber()) {
+        setPendingPath(item.path);
+        setShowPhoneModal(true);
         return;
-      } else {
-        setShowPhoneModal(false);
-        setPendingPath(null);
       }
-      console.log("✅ Phone exists, navigating to:", item.path);
     }
 
     if (item.path) {
@@ -126,30 +73,15 @@ const BottomNavigation = ({ activeTab = "home" }) => {
   const handlePhonePermission = async () => {
     const result = await requestPhonePermission();
     if (result.success) {
-      // Fetch userInfo từ Zalo API sau khi có số điện thoại
-      try {
-        await fetchUserInfo();
-      } catch (error) {
-        console.error("❌ Error fetching user info:", error);
-      }
-      
       setShowPhoneModal(false);
-      setTimeout(() => {
-        const recheckPhone = localStorage.getItem("user_phone");
-        const recheckHasPhone = checkPhoneExists();
-        if (
-          pendingPath &&
-          recheckHasPhone &&
-          recheckPhone &&
-          recheckPhone !== "Chưa có số điện thoại" &&
-          recheckPhone !== "Cần cấp quyền" &&
-          recheckPhone !== "null" &&
-          recheckPhone !== "undefined"
-        ) {
-          navigate(pendingPath);
-          setPendingPath(null);
-        }
-      }, 100);
+      
+      // Navigate to pending path if exists
+      if (pendingPath) {
+        navigate(pendingPath);
+        setPendingPath(null);
+      }
+    } else {
+      console.error("❌ Phone permission failed:", result.error);
     }
   };
 

@@ -19,14 +19,16 @@ const ChatPage = () => {
   const [input, setInput] = useState("");
   const { userInfo } = useUserInfo();
 
+  console.log("💬 ChatPage userInfo:", userInfo);
+
   const isAdmin = userId === ADMIN_ID;
 
   useEffect(() => {
     let unsub = () => {};
 
-    if (userInfo?.id) {
-      setUserId(userInfo.id);
-      connectSocket(userInfo.id);
+    if (userInfo?.userInfo?.id) {
+      setUserId(userInfo.userInfo.id);
+      connectSocket(userInfo.userInfo.id);
 
       unsub = onMessageReceived((msg) => {
         if (msg && typeof msg === 'object') {
