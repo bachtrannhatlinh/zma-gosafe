@@ -1,12 +1,14 @@
+require('dotenv').config({ path: './.env' });
+// hoặc
+require('dotenv').config();
+
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
 const cors = require('cors');
 const authMiddleware = require('./middleware/authMiddleware');
-
-dotenv.config();
+const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(cors());
@@ -31,6 +33,24 @@ const messageSchema = new mongoose.Schema({
 });
 const Message = mongoose.model("Message", messageSchema);
 
+// Middleware xác thực JWT
+const authenticateToken = (req, res, next) => {
+    const token = req.headers['authorization']?.split(' ')[1];
+    
+    if (!token) {
+        return res.status(401).json({ error: 'Access token required' });
+    }
+    
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        console.error('JWT verification error:', error.message);
+        return res.status(403).json({ error: 'Invalid token' });
+    }
+};
+
 // Protected API routes
 app.get("/history", authMiddleware, async (req, res) => {
   const { from, to } = req.query;
@@ -45,19 +65,20 @@ app.get("/history", authMiddleware, async (req, res) => {
 
 // Socket.io with JWT authentication
 io.use((socket, next) => {
-  const token = socket.handshake.auth.token;
-  if (token) {
-    try {
-      const JWTService = require('./services/jwtService');
-      const decoded = JWTService.verifyToken(token);
-      socket.user = decoded;
-      next();
-    } catch (err) {
-      next(new Error('Authentication error'));
+    const token = socket.handshake.auth.token;
+    
+    if (!token) {
+        return next(new Error('Authentication error'));
     }
-  } else {
-    next(new Error('Authentication error'));
-  }
+    
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        socket.userId = decoded.userId;
+        next();
+    } catch (error) {
+        console.error('Socket JWT error:', error.message);
+        next(new Error('Authentication error'));
+    }
 });
 
 io.on("connection", (socket) => {
@@ -81,3 +102,6 @@ io.on("connection", (socket) => {
 server.listen(process.env.PORT, () => {
   console.log(`🚀 Server running on port ${process.env.PORT}`);
 });
+
+console.log('JWT_SECRET loaded:', process.env.JWT_SECRET ? 'Yes' : 'No');
+console.log('JWT_SECRET length:', process.env.JWT_SECRET?.length);

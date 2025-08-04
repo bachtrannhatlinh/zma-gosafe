@@ -50,6 +50,12 @@ export const UserProvider = ({ children }) => {
     return await fetchUserInfo();
   };
 
+  const clearUserInfo = () => {
+    setUserInfo(null);
+    setError(null);
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     fetchUserInfo();
   }, []);
@@ -61,6 +67,7 @@ export const UserProvider = ({ children }) => {
       error,
       fetchUserInfo,
       refetchUserInfo,
+      clearUserInfo,
       // JWT user info
       jwtUser,
       isAuthenticated

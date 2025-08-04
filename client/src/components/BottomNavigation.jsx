@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Box, Text, Button, Icon } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
 import { usePhoneAuth } from "../hooks/usePhoneAuth";
+import { useUserInfo } from "../contexts/UserContext";
 import { debugPhoneStorage } from "../utils/phoneUtils";
 import PhonePermissionModal from "./PhonePermissionModal";
 
@@ -16,6 +17,8 @@ const BottomNavigation = ({ activeTab = "home" }) => {
     checkPhoneExists,
     requestPhonePermission,
   } = usePhoneAuth();
+
+  const { fetchUserInfo } = useUserInfo();
 
   // Debug khi component mount
   useEffect(() => {
@@ -123,8 +126,14 @@ const BottomNavigation = ({ activeTab = "home" }) => {
   const handlePhonePermission = async () => {
     const result = await requestPhonePermission();
     if (result.success) {
+      // Fetch userInfo từ Zalo API sau khi có số điện thoại
+      try {
+        await fetchUserInfo();
+      } catch (error) {
+        console.error("❌ Error fetching user info:", error);
+      }
+      
       setShowPhoneModal(false);
-      // Đợi localStorage cập nhật, sau đó kiểm tra lại số điện thoại
       setTimeout(() => {
         const recheckPhone = localStorage.getItem("user_phone");
         const recheckHasPhone = checkPhoneExists();

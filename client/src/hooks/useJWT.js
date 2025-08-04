@@ -32,10 +32,15 @@ export const useJWT = () => {
     setLoading(true);
     
     try {
-      // Sử dụng axios thay vì fetch
+      // Sử dụng axios thay vì fetch với timeout
       const response = await axios.post(`${getServerUrl()}/api/auth/login`, {
         zaloUserId,
         userInfo
+      }, {
+        timeout: 10000, // 10 seconds timeout
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       const result = response.data;
@@ -51,14 +56,42 @@ export const useJWT = () => {
       localStorage.setItem(JWT_STORAGE_KEY, result.token);
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(result.user));
 
+      console.log('✅ JWT login successful');
       return { success: true, user: result.user };
 
     } catch (error) {
-      console.error('❌ JWT login error:', error);
-      return { success: false, error: error.message };
+      let errorMessage = 'Network error or server unavailable';
+      
+      if (error.response) {
+        // Server responded with error status
+        errorMessage = error.response.data?.error || `Server error: ${error.response.status}`;
+      } else if (error.request) {
+        // Request was made but no response
+        errorMessage = 'No response from server. Please check your connection.';
+      } else if (error.code === 'ECONNABORTED') {
+        // Timeout
+        errorMessage = 'Request timeout. Please try again.';
+      } else {
+        errorMessage = error.message;
+      }
+      
+      console.error('❌ JWT login error:', errorMessage);
+      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const logout = useCallback(() => {
+    setToken(null);
+    setUser(null);
+    setIsAuthenticated(false);
+    
+    // Clear từ localStorage
+    localStorage.removeItem(JWT_STORAGE_KEY);
+    localStorage.removeItem(USER_STORAGE_KEY);
+    
+    console.log('✅ JWT logout completed');
   }, []);
 
   const getAuthHeaders = useCallback(() => {
@@ -74,6 +107,7 @@ export const useJWT = () => {
     isAuthenticated,
     loading,
     login,
+    logout,
     getAuthHeaders
   };
 };

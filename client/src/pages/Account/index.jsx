@@ -3,6 +3,7 @@ import { Page, Box, Text, Button, Avatar } from "zmp-ui";
 import { useNavigate } from "zmp-ui";
 import { useUserInfo } from "../../contexts/UserContext";
 import { usePhoneAuth } from "../../hooks/usePhoneAuth";
+import { useAuth } from "../../contexts/AuthContext";
 
 // Components
 import BottomNavigation from "../../components/BottomNavigation";
@@ -11,6 +12,7 @@ import CustomModal from "../../components/CustomModal";
 const Account = () => {
   const navigate = useNavigate();
   const { userInfo, isLoading, clearUserInfo } = useUserInfo();
+  const { logout: jwtLogout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Thêm hook để lấy số điện thoại
@@ -22,27 +24,49 @@ const Account = () => {
   }, [checkPhoneExists]);
 
   const handleLogoutClick = () => {
+    console.log("🔘 Logout button clicked");
     setShowLogoutModal(true);
   };
 
   const handleConfirmLogout = () => {
-    // Clear localStorage
-    localStorage.clear();
+    try {
+      console.log("🚪 Starting logout process...");
+      
+      // Clear localStorage
+      localStorage.clear();
+      console.log("✅ localStorage cleared");
 
-    // Clear userInfo trong context
-    clearUserInfo();
+      // Clear userInfo trong context
+      clearUserInfo();
+      console.log("✅ User info cleared");
 
-    // Clear phone data
-    clearPhoneData();
+      // Clear JWT authentication
+      if (jwtLogout) {
+        jwtLogout();
+        console.log("✅ JWT logout completed");
+      }
 
-    // Close modal
-    setShowLogoutModal(false);
+      // Clear phone data
+      clearPhoneData();
+      console.log("✅ Phone data cleared");
 
-    // Navigate về trang chủ
-    navigate("/");
+      // Close modal
+      setShowLogoutModal(false);
+
+      // Navigate về trang chủ
+      navigate("/");
+      console.log("✅ Navigated to home");
+      
+    } catch (error) {
+      console.error("❌ Logout error:", error);
+      // Vẫn cố gắng navigate về trang chủ
+      setShowLogoutModal(false);
+      navigate("/");
+    }
   };
 
   const handleCancelLogout = () => {
+    console.log("🔙 Logout cancelled");
     setShowLogoutModal(false);
   };
 
