@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import axios from 'axios';
-import { getServerUrl, getRequestHeaders } from '../config/server';
+import { getServerUrl, getRequestHeaders } from '../utils/serverConfig';
 
 export const useApi = () => {
   const [loading, setLoading] = useState(false);
@@ -30,6 +30,7 @@ export const useApi = () => {
           ...authHeaders,
           ...options.headers
         },
+        timeout: 10000, // Add timeout
         ...options
       };
 

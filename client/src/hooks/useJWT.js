@@ -28,48 +28,43 @@ export const useJWT = () => {
     }
   }, []);
 
-  const login = useCallback(async (zaloUserId, userInfo) => {
+  const jwtLogin = useCallback(async (userId, userInfo = null) => {
     setLoading(true);
     
     try {
-      // Sử dụng axios thay vì fetch với timeout
-      const response = await axios.post(`${getServerUrl()}/api/auth/login`, {
-        zaloUserId,
-        userInfo
-      }, {
-        timeout: 10000, // 10 seconds timeout
+      console.log('🔑 JWT Login attempt:', { userId, userInfo });
+      
+      const response = await axios({
+        method: 'POST',
+        url: `${getServerUrl()}/api/auth/jwt-login`, // Fix URL path
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          ...getRequestHeaders()
+        },
+        data: {
+          userId: userId,
+          userInfo: userInfo
+        },
+        timeout: 10000
       });
 
-      const result = response.data;
-
-      if (!result.success) {
-        throw new Error(result.error || 'Login failed');
+      if (response.data?.token) {
+        localStorage.setItem('gosafe_jwt_token', response.data.token);
+        setIsAuthenticated(true);
+        console.log('✅ JWT login successful');
+        return { success: true, token: response.data.token };
       }
-
-      setToken(result.token);
-      setUser(result.user);
-      setIsAuthenticated(true);
       
-      localStorage.setItem(JWT_STORAGE_KEY, result.token);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(result.user));
-
-      console.log('✅ JWT login successful');
-      return { success: true, user: result.user };
-
+      throw new Error('No token received from server');
+      
     } catch (error) {
       let errorMessage = 'Network error or server unavailable';
       
       if (error.response) {
-        // Server responded with error status
         errorMessage = error.response.data?.error || `Server error: ${error.response.status}`;
       } else if (error.request) {
-        // Request was made but no response
         errorMessage = 'No response from server. Please check your connection.';
       } else if (error.code === 'ECONNABORTED') {
-        // Timeout
         errorMessage = 'Request timeout. Please try again.';
       } else {
         errorMessage = error.message;
@@ -87,7 +82,7 @@ export const useJWT = () => {
     setUser(null);
     setIsAuthenticated(false);
     
-    // Clear từ localStorage
+    // Clear from localStorage
     localStorage.removeItem(JWT_STORAGE_KEY);
     localStorage.removeItem(USER_STORAGE_KEY);
     
@@ -106,7 +101,7 @@ export const useJWT = () => {
     user,
     isAuthenticated,
     loading,
-    login,
+    jwtLogin,
     logout,
     getAuthHeaders
   };

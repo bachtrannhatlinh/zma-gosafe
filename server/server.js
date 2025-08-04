@@ -139,3 +139,57 @@ server.listen(process.env.PORT, () => {
 
 console.log('JWT_SECRET loaded:', process.env.JWT_SECRET ? 'Yes' : 'No');
 console.log('JWT_SECRET length:', process.env.JWT_SECRET?.length);
+
+// Add missing JWT login route
+app.post('/api/auth/jwt-login', async (req, res) => {
+  try {
+    const { userId, userInfo } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID required' });
+    }
+    
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        userId: userId,
+        userInfo: userInfo,
+        timestamp: Date.now()
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    res.json({ 
+      success: true, 
+      token: token,
+      user: userInfo 
+    });
+    
+  } catch (error) {
+    console.error('JWT login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Add phone verification route
+app.post('/api/phone/verify-token', async (req, res) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ error: 'Token required' });
+    }
+    
+    // Mock phone verification - replace with actual Zalo API call
+    res.json({
+      success: true,
+      phoneNumber: '+84987654321', // Mock phone
+      userInfo: { verified: true }
+    });
+    
+  } catch (error) {
+    console.error('Phone verification error:', error);
+    res.status(500).json({ error: 'Phone verification failed' });
+  }
+});
