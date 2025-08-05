@@ -39,22 +39,8 @@ const Dashboard = () => {
   // Helper function to check if phone number exists
   const hasValidPhoneNumber = () => {
     const phoneFromUserInfo = userInfo?.userInfo?.phoneNumber;
-    const phoneFromContext = userInfo?.phoneNumber; // Có thể phoneNumber nằm ở level cao hơn
+    const phoneFromContext = userInfo?.phoneNumber; 
     const phone = phoneFromUserInfo || phoneFromContext;
-
-    console.log("🔍 Dashboard - Checking phone number:", {
-      phoneFromUserInfo,
-      phoneFromContext,
-      finalPhone: phone,
-      userInfo,
-      hasValidPhone:
-        phone &&
-        phone !== "Chưa có số điện thoại" &&
-        phone !== "Cần cấp quyền" &&
-        phone !== "null" &&
-        phone !== "undefined" &&
-        phone !== null,
-    });
 
     return (
       phone &&

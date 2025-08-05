@@ -97,39 +97,70 @@ app.post("/auth/zalo", async (req, res) => {
   }
 });
 
-// Socket.io with JWT authentication
+// Cập nhật Socket.io middleware
 io.use((socket, next) => {
-    const token = socket.handshake.auth.token;
+  const token = socket.handshake.auth.token;
+  
+  if (!token) {
+    return next(new Error('Authentication error'));
+  }
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    socket.userId = decoded.id;
+    socket.userRole = decoded.role;
+    socket.phoneNumber = decoded.phoneNumber;
     
-    if (!token) {
-        return next(new Error('Authentication error'));
-    }
-    
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        socket.userId = decoded.userId;
-        next();
-    } catch (error) {
-        console.error('Socket JWT error:', error.message);
-        next(new Error('Authentication error'));
-    }
+    console.log(`🔌 Socket connected: ${decoded.id}, Role: ${decoded.role}`);
+    next();
+  } catch (error) {
+    console.error('Socket JWT verification error:', error);
+    next(new Error('Authentication failed'));
+  }
 });
 
+// Socket events với role checking
 io.on("connection", (socket) => {
-  console.log("🟢 New client connected:", socket.id, "User:", socket.user?.name);
+  console.log(`✅ User connected: ${socket.userId} (${socket.userRole})`);
 
   socket.on("join", (userId) => {
     socket.join(userId);
+    console.log(`👤 User ${userId} joined room`);
   });
 
-  socket.on("send-message", async (msg) => {
-    const { from, to, message } = msg;
-    await Message.create({ from, to, message });
-    io.to(to).emit("receive-message", msg);
+  socket.on("message", async (data) => {
+    try {
+      // Lưu message vào database
+      const message = new Message({
+        from: data.from,
+        to: data.to,
+        message: data.message,
+        timestamp: new Date()
+      });
+      
+      await message.save();
+      
+      // Nếu là admin, có thể gửi broadcast message
+      if (socket.userRole === 'admin' && data.broadcast) {
+        io.emit("broadcast_message", {
+          from: data.from,
+          message: data.message,
+          timestamp: new Date(),
+          type: 'admin_broadcast'
+        });
+        console.log(`📢 Admin broadcast: ${data.message}`);
+      } else {
+        // Gửi message thường
+        io.to(data.to).emit("message", data);
+        console.log(`💬 Message from ${data.from} to ${data.to}`);
+      }
+    } catch (error) {
+      console.error('Message handling error:', error);
+    }
   });
 
   socket.on("disconnect", () => {
-    console.log("🔴 Client disconnected:", socket.id);
+    console.log(`❌ User disconnected: ${socket.userId}`);
   });
 });
 
@@ -193,3 +224,98 @@ app.post('/api/phone/verify-token', async (req, res) => {
     res.status(500).json({ error: 'Phone verification failed' });
   }
 });
+
+// Thêm route xử lý Zalo phone token
+app.post('/auth/verify-phone', async (req, res) => {
+  try {
+    const { token, secretKey } = req.body;
+    
+    if (!token || !secretKey) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Token and secret key required' 
+      });
+    }
+
+    // Decode Zalo phone token
+    const phoneData = await decodeZaloPhoneToken(token, secretKey);
+    
+    if (!phoneData || !phoneData.number) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid phone token' 
+      });
+    }
+
+    const phoneNumber = phoneData.number;
+    
+    // Kiểm tra admin phone number
+    const ADMIN_PHONE = "0963332502";
+    const role = phoneNumber === ADMIN_PHONE ? "admin" : "user";
+    
+    // Tạo JWT token
+    const jwtPayload = {
+      id: phoneData.id || `phone_${phoneNumber}`,
+      phoneNumber: phoneNumber,
+      role: role,
+      platform: 'zalo',
+      iat: Math.floor(Date.now() / 1000)
+    };
+    
+    const jwtToken = jwt.sign(jwtPayload, process.env.JWT_SECRET, { 
+      expiresIn: '7d' 
+    });
+    
+    console.log(`✅ Phone verified: ${phoneNumber}, Role: ${role}`);
+    
+    res.json({
+      success: true,
+      jwtToken: jwtToken,
+      user: {
+        id: jwtPayload.id,
+        phoneNumber: phoneNumber,
+        role: role
+      }
+    });
+    
+  } catch (error) {
+    console.error('Phone verification error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Phone verification failed' 
+    });
+  }
+});
+
+// Hàm decode Zalo phone token
+const decodeZaloPhoneToken = async (token, secretKey) => {
+  try {
+    const crypto = require('crypto');
+    
+    // Zalo sử dụng HMAC-SHA256 để encode phone token
+    const decoded = jwt.verify(token, secretKey, { algorithms: ['HS256'] });
+    
+    return {
+      id: decoded.id,
+      number: decoded.number
+    };
+  } catch (error) {
+    console.error('Token decode error:', error);
+    
+    // Fallback: gọi Zalo API để verify
+    try {
+      const response = await axios.get('https://graph.zalo.me/v2.0/me/info', {
+        headers: {
+          'access_token': token
+        }
+      });
+      
+      return {
+        id: response.data.id,
+        number: response.data.phone
+      };
+    } catch (apiError) {
+      throw new Error('Cannot decode phone token');
+    }
+  }
+};

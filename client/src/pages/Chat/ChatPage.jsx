@@ -5,6 +5,7 @@ import {
   sendMessage,
   onMessageReceived,
   disconnectSocket,
+  sendBroadcastMessage,
 } from "./socket";
 import { Box, Button, Input, Page, Header } from "zmp-ui";
 import { authenticateWithZalo, getStoredJWTToken } from '../../utils/auth';
@@ -16,9 +17,25 @@ const ChatPage = () => {
   const [targetId, setTargetId] = useState("");
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [isBroadcast, setIsBroadcast] = useState(false);
   const { userInfo, loading } = useUserInfo();
 
-  const isAdmin = userId === ADMIN_ID;
+  // Kiểm tra user role từ JWT token
+  const getUserRole = () => {
+    try {
+      const token = getStoredJWTToken();
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.role;
+      }
+    } catch (error) {
+      console.error('Error parsing JWT:', error);
+    }
+    return 'user';
+  };
+  
+  const userRole = getUserRole();
+  const isAdmin = userRole === 'admin';
 
   useEffect(() => {
     let unsub = () => {};
@@ -119,17 +136,26 @@ const ChatPage = () => {
   }, [isAdmin]);
 
   const handleSend = () => {
-    if (!targetId || !input.trim()) return;
+    if (!input.trim()) return;
 
-    const msg = { from: userId, to: targetId, message: input };
-    
-    try {
+    if (isAdmin && isBroadcast) {
+      // Gửi broadcast message
+      sendBroadcastMessage(input);
+      setMessages(prev => [...prev, {
+        from: userId,
+        message: input,
+        type: 'admin_broadcast',
+        timestamp: new Date()
+      }]);
+    } else {
+      // Gửi message thường
+      if (!targetId) return;
+      const msg = { from: userId, to: targetId, message: input };
       sendMessage(msg);
-      setMessages((prev) => Array.isArray(prev) ? [...prev, msg] : [msg]);
-      setInput("");
-    } catch (error) {
-      console.error('Error sending message:', error);
+      setMessages(prev => [...prev, msg]);
     }
+    
+    setInput("");
   };
 
   // Debug log
@@ -152,57 +178,52 @@ const ChatPage = () => {
 
   return (
     <Page>
-      <Header title="Live Chat" showBackIcon={true} />
-
-      <Box style={{ padding: "16px", marginTop: "80px" }}>
-        <Box>
-          <strong>Bạn là:</strong> {userId || "Đang lấy ID..."} (
-          {isAdmin ? "Quản trị viên" : "Người dùng"})
-        </Box>
-
+      <Header title={`Chat ${isAdmin ? '(Admin)' : ''}`} />
+      
+      <Box style={{ padding: "20px" }}>
+        {/* Admin broadcast toggle */}
         {isAdmin && (
-          <Box>
-            <Input
-              value={targetId}
-              onChange={(e) => setTargetId(e.target.value)}
-              placeholder="Nhập ID người dùng để trả lời"
-            />
+          <Box style={{ marginBottom: "10px" }}>
+            <label>
+              <input
+                type="checkbox"
+                checked={isBroadcast}
+                onChange={(e) => setIsBroadcast(e.target.checked)}
+              />
+              Gửi thông báo toàn hệ thống
+            </label>
           </Box>
         )}
-
+        
+        {/* Messages display */}
         <Box style={{ overflowY: "auto", marginBottom: "10px" }}>
-          {Array.isArray(messages) && messages.map((m, i) => {
-            const isMine = m.from === userId;
-            const isAdminMsg = m.from === ADMIN_ID;
-            return (
-              <Box key={i}>
-                {/* Avatar giả lập */}
-                <Box>{isAdminMsg ? "A" : "U"}</Box>
-                <Box>
-                  <Box>{m.message}</Box>
-                  <Box>
-                    {isAdminMsg
-                      ? isMine
-                        ? "Bạn (Admin)"
-                        : "Quản trị viên"
-                      : isMine
-                      ? "Bạn"
-                      : "Người dùng"}
-                  </Box>
-                </Box>
+          {messages.map((m, i) => (
+            <Box key={i} style={{
+              padding: "8px",
+              margin: "4px 0",
+              backgroundColor: m.type === 'admin_broadcast' ? '#fff3cd' : '#f8f9fa',
+              borderRadius: "8px"
+            }}>
+              <Box>{m.message}</Box>
+              <Box style={{ fontSize: "12px", color: "#666" }}>
+                {m.type === 'admin_broadcast' ? '📢 Thông báo hệ thống' : 
+                 m.from === userId ? 'Bạn' : 'Người dùng'}
               </Box>
-            );
-          })}
+            </Box>
+          ))}
         </Box>
 
+        {/* Input area */}
         <Box style={{ display: "flex", gap: "10px" }}>
           <Input
-            placeholder="Nhập tin nhắn..."
+            placeholder={isBroadcast ? "Nhập thông báo hệ thống..." : "Nhập tin nhắn..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            style={{ flex: 1, height: "40px" }}
+            style={{ flex: 1 }}
           />
-          <Button onClick={handleSend}>Gửi</Button>
+          <Button onClick={handleSend}>
+            {isBroadcast ? "📢 Gửi thông báo" : "Gửi"}
+          </Button>
         </Box>
       </Box>
     </Page>

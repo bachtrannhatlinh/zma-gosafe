@@ -4,7 +4,7 @@ export const getServerUrl = () => {
     url = 'http://localhost:5000';
   } else {
     // Fix: Use correct production server URL
-    url = process.env.URL_SERVER || 'https://zma-gosafe.vercel.app';
+    url = process.env.URL_SERVER || 'https://zma-gosafe.vercel.app/';
     
     // Ensure https:// prefix
     if (!url.startsWith('http')) {

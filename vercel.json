@@ -2,6 +2,13 @@
   "version": 2,
   "builds": [
     {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
       "src": "server/server.js",
       "use": "@vercel/node"
     }
@@ -9,19 +16,17 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server/server.js"
+      "dest": "/server/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/client/$1"
     }
   ],
-  "env": {
-    "NODE_ENV": "production"
-  },
   "git": {
     "deploymentEnabled": {
-      "master": true,
-      "main": false
+      "develop": true,
+      "master": true
     }
-  },
-  "github": {
-    "silent": true
   }
 }

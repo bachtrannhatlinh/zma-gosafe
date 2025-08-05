@@ -5,7 +5,7 @@ export const getServerUrl = () => {
   }
   
   // Production - adjust based on your deployment
-  return 'https://your-production-server.com';
+  return 'https://zma-gosafe.vercel.app/';
 };
 
 export const getRequestHeaders = () => {

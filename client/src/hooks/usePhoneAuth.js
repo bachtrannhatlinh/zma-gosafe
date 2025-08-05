@@ -151,53 +151,68 @@ export const usePhoneAuth = () => {
     }
   };
 
+  // Thêm method để verify phone với server
+  const verifyPhoneWithServer = async (token, secretKey) => {
+    try {
+      const response = await axios.post(`${process.env.URL_SERVER}/auth/verify-phone`, {
+        token: token,
+        secretKey: secretKey
+      });
+
+      if (response.data.success) {
+        const { jwtToken, user } = response.data;
+        
+        // Lưu JWT token
+        localStorage.setItem('gosafe_jwt_token', jwtToken);
+        
+        // Cập nhật user info với role
+        setUserInfo(prev => ({
+          ...prev,
+          ...user,
+          isAdmin: user.role === 'admin'
+        }));
+        
+        updatePhoneNumber(user.phoneNumber);
+        
+        console.log(`✅ Phone verified with server: ${user.phoneNumber}, Role: ${user.role}`);
+        
+        return { success: true, user };
+      }
+      
+      throw new Error(response.data.error || 'Server verification failed');
+    } catch (error) {
+      console.error('❌ Server phone verification failed:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Cập nhật handlePhoneToken method
   const handlePhoneToken = async (token, accessToken) => {
     try {
+      // Thử verify với server trước
+      const serverResult = await verifyPhoneWithServer(token, "j3MVFN1NJAZOcBWQ2w5E");
+      
+      if (serverResult.success) {
+        setPhoneNumber(serverResult.user.phoneNumber);
+        return;
+      }
+      
+      // Fallback về cách cũ nếu server fail
       const result = await getZaloPhoneNumber(accessToken, token, "j3MVFN1NJAZOcBWQ2w5E");
-
+      
       if (result?.phoneNumber) {
         console.log("✅ Got phone number from token:", result.phoneNumber);
         setPhoneNumber(result.phoneNumber);
         
-        // Lưu vào localStorage
-        try {
-          localStorage.setItem("user_phone", result.phoneNumber);
-          console.log("💾 Saved phone to localStorage:", result.phoneNumber);
-        } catch (err) {
-          console.warn("⚠️ Failed to save phone to localStorage:", err);
-        }
-        
         // Cập nhật UserContext
         updatePhoneNumber(result.phoneNumber);
         
-        // Re-fetch user info để đảm bảo data được cập nhật
-        try {
-          await fetchUserInfo();
-          console.log("🔄 Refreshed user info after phone token update");
-        } catch (err) {
-          console.warn("⚠️ Failed to refresh user info:", err);
-        }
+        // Refresh user info
+        await fetchUserInfo();
       }
     } catch (err) {
-      console.warn("⚠️ Phone token failed, using fallback:", err);
-      const fallbackPhone = `${userInfo?.name || "Người dùng Zalo"} - Đã xác thực`;
-      setPhoneNumber(fallbackPhone);
-      // Cập nhật UserContext
-      updatePhoneNumber(fallbackPhone);
-      
-      // Re-fetch user info 
-      try {
-        await fetchUserInfo();
-        console.log("🔄 Refreshed user info after fallback");
-      } catch (fetchErr) {
-        console.warn("⚠️ Failed to refresh user info:", fetchErr);
-      }
-      
-      try {
-        localStorage.setItem("zalo_phone_token", token);
-      } catch (storageErr) {
-        console.warn("⚠️ Không thể lưu token:", storageErr);
-      }
+      console.warn("⚠️ Phone token failed:", err);
+      // Handle fallback
     }
   };
 

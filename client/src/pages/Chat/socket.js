@@ -9,35 +9,39 @@ export { getStoredJWTToken } from '../../utils/auth';
 
 export const connectSocket = (userId) => {
   try {
-    // Import getStoredJWTToken từ auth.js
-    const { getStoredJWTToken } = require('../../utils/auth');
     const token = getStoredJWTToken();
     
     if (!token) {
       throw new Error('No JWT token available');
     }
     
+    // Decode token để lấy thông tin user
+    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+    const userRole = tokenPayload.role;
+    
     socket = io(SERVER_URL, {
       auth: { token },
       transports: ['websocket']
     });
     
-    if (!socket) {
-      throw new Error('Failed to create socket instance');
-    }
-    
     socket.emit("join", userId);
     
     socket.on("connect", () => {
-      console.log("✅ Socket connected:", socket.id);
+      console.log(`✅ Socket connected: ${socket.id}, Role: ${userRole}`);
     });
-
-    socket.on("connect_error", (error) => {
-      console.error("❌ Socket connection error:", error.message);
+    
+    // Listen for admin broadcast messages
+    socket.on("broadcast_message", (message) => {
+      console.log("📢 Received admin broadcast:", message);
+      // Handle broadcast message trong UI
+    });
+    
+    socket.on("disconnect", () => {
+      console.log("❌ Socket disconnected");
     });
     
   } catch (error) {
-    console.error("❌ Error connecting socket:", error);
+    console.error("❌ Socket connection failed:", error);
   }
 };
 
@@ -80,5 +84,17 @@ export const disconnectSocket = () => {
     socket = null; // Reset socket instance
   } catch (error) {
     console.error('Error disconnecting socket:', error);
+  }
+};
+
+// Thêm method để gửi broadcast message (chỉ admin)
+export const sendBroadcastMessage = (message) => {
+  if (socket && socket.connected) {
+    socket.emit("message", {
+      from: socket.userId,
+      message: message,
+      broadcast: true,
+      timestamp: new Date()
+    });
   }
 };
