@@ -6,8 +6,6 @@ import {
   onMessageReceived,
   disconnectSocket,
   sendBroadcastMessage,
-  isSocketConnected,
-  testServerConnection,
 } from "./socket";
 import { Box, Button, Input, Page, Header } from "zmp-ui";
 import {
@@ -51,6 +49,7 @@ const ChatPage = () => {
   useEffect(() => {
     let unsub = () => {};
     let statusCheckInterval = null;
+    let isMounted = true; // Thêm flag để track mount status
 
     // Sửa logic lấy userInfo - bỏ .userInfo vì đã có trong context
     if (!loading && userInfo?.userInfo?.id) {
@@ -65,7 +64,7 @@ const ChatPage = () => {
           console.log("Stored token:", token ? "Found" : "null");
 
           // Nếu không có token, gửi user info lên server để lấy JWT
-          if (!token) {
+          if (!token && isMounted) {
             console.log(
               "No stored token, authenticating with Zalo user info..."
             );
@@ -73,27 +72,40 @@ const ChatPage = () => {
             console.log("New token:", token ? "Success" : "Failed");
           }
 
-          if (token) {
+          if (token && isMounted) {
             console.log("✅ Token available, connecting socket...");
             console.log(
               "Connecting socket with user ID:",
               userInfo.userInfo.id
             );
 
+            // Kết nối socket và cập nhật status
+            const connectResult = await connectSocket(userInfo.userInfo.id, token);
+            
+            if (isMounted) {
+              if (connectResult) {
+                setConnectionStatus("connected");
+              } else {
+                setConnectionStatus("offline");
+              }
+            }
+
             unsub = onMessageReceived((msg) => {
-              if (msg && typeof msg === "object") {
+              if (msg && typeof msg === "object" && isMounted) {
                 setMessages((prev) =>
                   Array.isArray(prev) ? [...prev, msg] : [msg]
                 );
               }
             });
-          } else {
+          } else if (isMounted) {
             console.error("❌ No JWT token - cannot connect to chat server");
             setConnectionStatus("offline");
           }
         } catch (error) {
           console.error("❌ Chat initialization failed:", error);
-          setConnectionStatus("offline");
+          if (isMounted) {
+            setConnectionStatus("offline");
+          }
         }
       };
 
@@ -101,8 +113,25 @@ const ChatPage = () => {
     }
 
     return () => {
-      disconnectSocket();
-      unsub && unsub();
+      isMounted = false; // Set flag to false when unmounting
+    
+      // Cleanup socket connection properly
+      try {
+        disconnectSocket();
+      } catch (error) {
+        console.warn("Error during socket disconnect:", error);
+      }
+      
+      // Cleanup message listener
+      if (unsub && typeof unsub === 'function') {
+        try {
+          unsub();
+        } catch (error) {
+          console.warn("Error during unsub:", error);
+        }
+      }
+      
+      // Clear interval
       if (statusCheckInterval) {
         clearInterval(statusCheckInterval);
       }
@@ -111,22 +140,25 @@ const ChatPage = () => {
 
   // Lấy lịch sử chat khi userId và targetId đã sẵn sàng
   useEffect(() => {
+    let isMounted = true;
+  
     const fetchHistory = async () => {
-      if (userId && targetId) {
+      if (userId && targetId && isMounted) {
         try {
           const token = getStoredJWTToken();
 
           if (!token) {
             console.error("No JWT token for history fetch");
-            // Thông báo cần kết nối server
-            setMessages([
-              {
-                from: "system",
-                message: "Cần kết nối server để tải lịch sử chat. Vui lòng thử lại sau.",
-                timestamp: new Date().toISOString(),
-                type: "error"
-              }
-            ]);
+            if (isMounted) {
+              setMessages([
+                {
+                  from: "system",
+                  message: "Cần kết nối server để tải lịch sử chat. Vui lòng thử lại sau.",
+                  timestamp: new Date().toISOString(),
+                  type: "error"
+                }
+              ]);
+            }
             return;
           }
 
@@ -147,29 +179,37 @@ const ChatPage = () => {
 
           const history = await resHistory.json();
 
-          if (Array.isArray(history)) {
-            setMessages(history);
-          } else {
-            console.warn("History response is not an array:", history);
-            setMessages([]);
+          if (isMounted) {
+            if (Array.isArray(history)) {
+              setMessages(history);
+            } else {
+              console.warn("History response is not an array:", history);
+              setMessages([]);
+            }
           }
         } catch (e) {
           console.error("Error fetching chat history:", e);
-          // Thông báo lỗi kết nối
-          setMessages([
-            {
-              from: "system",
-              message: "Không thể tải lịch sử chat do lỗi kết nối server.",
-              timestamp: new Date().toISOString(),
-              type: "error"
-            }
-          ]);
+          if (isMounted) {
+            setMessages([
+              {
+                from: "system",
+                message: "Không thể tải lịch sử chat do lỗi kết nối server.",
+                timestamp: new Date().toISOString(),
+                type: "error"
+              }
+            ]);
+          }
         }
-      } else {
+      } else if (isMounted) {
         setMessages([]);
       }
     };
+    
     fetchHistory();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [userId, targetId]);
 
   useEffect(() => {

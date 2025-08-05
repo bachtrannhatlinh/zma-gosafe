@@ -94,10 +94,13 @@ export const sendBroadcastMessage = (message) => {
 };
 
 export const disconnectSocket = () => {
-  if (socket) {
-    console.log("🔌 Disconnecting socket...");
-    socket.disconnect();
+  try {
+    if (socket && socket.connected) {
+      socket.disconnect();
+    }
     socket = null;
+  } catch (error) {
+    console.warn("Error disconnecting socket:", error);
   }
 };
 
