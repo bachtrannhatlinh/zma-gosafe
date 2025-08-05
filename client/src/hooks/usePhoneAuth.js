@@ -3,6 +3,7 @@ import { authorize, getUserInfo, getPhoneNumber, getAccessToken } from "zmp-sdk/
 import { useServerAuth } from "./useServerAuth";
 import { useUserInfo } from "../contexts/UserContext";
 import axios from "axios";
+import { setStoredJWTToken } from '../utils/auth';
 
 export const usePhoneAuth = () => {
   const [phoneNumber, setPhoneNumber] = useState(null);
@@ -154,34 +155,79 @@ export const usePhoneAuth = () => {
   // Thêm method để verify phone với server
   const verifyPhoneWithServer = async (token, secretKey) => {
     try {
-      const response = await axios.post(`${process.env.URL_SERVER}/auth/verify-phone`, {
-        token: token,
-        secretKey: secretKey
-      });
+      // Sử dụng cùng server URL như auth.js để đảm bảo consistency
+      const serverURL = process.env.URL_SERVER || "https://server-gosafe.vercel.app";
+      console.log('🌐 Using server URL for phone verification:', serverURL);
+      
+      // Thử với endpoint verify-phone trước
+      try {
+        const response = await axios.post(`${serverURL}/auth/verify-phone`, {
+          token: token,
+          secretKey: secretKey
+        });
 
-      if (response.data.success) {
-        const { jwtToken, user } = response.data;
+        if (response.data.success) {
+          const { jwtToken, user } = response.data;
+          
+          // ✅ Lưu JWT token vào localStorage
+          setStoredJWTToken(jwtToken);
+          
+          // Cập nhật user info
+          setUserInfo(prev => ({
+            ...prev,
+            ...user,
+            isAdmin: user.role === 'admin'
+          }));
+          
+          updatePhoneNumber(user.phoneNumber);
+          
+          console.log(`✅ Phone verified with server: ${user.phoneNumber}, Role: ${user.role}`);
+          console.log(`🔑 JWT token saved:`, jwtToken.substring(0, 20) + '...');
+          
+          return { success: true, user };
+        }
+      } catch (firstError) {
+        console.warn('⚠️ /auth/verify-phone failed, trying fallback:', firstError.response?.status);
         
-        // Lưu JWT token
-        localStorage.setItem('gosafe_jwt_token', jwtToken);
+        // Fallback: sử dụng endpoint /auth/zalo với phone token
+        if (firstError.response?.status === 405 || firstError.response?.status === 404) {
+          console.log('🔄 Trying fallback with /auth/zalo endpoint...');
+          
+          // Tạo payload giả với phone info từ token
+          const fallbackPayload = {
+            phoneToken: token,
+            secretKey: secretKey,
+            id: userInfo?.id || 'unknown',
+            name: userInfo?.name || 'Unknown User',
+            avatar: userInfo?.avatar || ''
+          };
+          
+          const fallbackResponse = await axios.post(`${serverURL}/auth/zalo`, fallbackPayload);
+          
+          if (fallbackResponse.data.success) {
+            const { jwtToken, user } = fallbackResponse.data;
+            setStoredJWTToken(jwtToken);
+            updatePhoneNumber(user.phoneNumber || 'Unknown');
+            
+            console.log('✅ Fallback authentication successful');
+            return { success: true, user };
+          }
+        }
         
-        // Cập nhật user info với role
-        setUserInfo(prev => ({
-          ...prev,
-          ...user,
-          isAdmin: user.role === 'admin'
-        }));
-        
-        updatePhoneNumber(user.phoneNumber);
-        
-        console.log(`✅ Phone verified with server: ${user.phoneNumber}, Role: ${user.role}`);
-        
-        return { success: true, user };
+        throw firstError;
       }
       
-      throw new Error(response.data.error || 'Server verification failed');
+      throw new Error('Server verification failed');
     } catch (error) {
-      console.error('❌ Server phone verification failed:', error);
+      console.error('❌ All server phone verification methods failed:', error);
+      
+      // Log thêm thông tin debug
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+        console.error('Request URL:', error.config?.url);
+      }
+      
       return { success: false, error: error.message };
     }
   };
@@ -189,15 +235,10 @@ export const usePhoneAuth = () => {
   // Cập nhật handlePhoneToken method
   const handlePhoneToken = async (token, accessToken) => {
     try {
-      // Thử verify với server trước
-      const serverResult = await verifyPhoneWithServer(token, "j3MVFN1NJAZOcBWQ2w5E");
+      // Tạm thời skip server verification vì endpoint chưa sẵn sàng
+      console.log('⚠️ Skipping server verification, using direct Zalo API...');
       
-      if (serverResult.success) {
-        setPhoneNumber(serverResult.user.phoneNumber);
-        return;
-      }
-      
-      // Fallback về cách cũ nếu server fail
+      // Sử dụng trực tiếp Zalo API
       const result = await getZaloPhoneNumber(accessToken, token, "j3MVFN1NJAZOcBWQ2w5E");
       
       if (result?.phoneNumber) {
@@ -209,6 +250,24 @@ export const usePhoneAuth = () => {
         
         // Refresh user info
         await fetchUserInfo();
+        
+        // Sau khi có phone, thử authenticate với server bằng endpoint đã hoạt động
+        try {
+          const userInfoForAuth = userInfo || contextUserInfo?.userInfo;
+          if (userInfoForAuth) {
+            const { authenticateWithZalo } = await import('../utils/auth');
+            const jwtToken = await authenticateWithZalo({
+              ...userInfoForAuth,
+              phoneNumber: result.phoneNumber
+            });
+            
+            if (jwtToken) {
+              console.log('✅ Successfully authenticated with server after phone verification');
+            }
+          }
+        } catch (authError) {
+          console.warn('⚠️ Failed to authenticate with server after phone verification:', authError);
+        }
       }
     } catch (err) {
       console.warn("⚠️ Phone token failed:", err);

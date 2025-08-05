@@ -6,8 +6,6 @@ import {
   onMessageReceived,
   disconnectSocket,
   sendBroadcastMessage,
-  isSocketConnected,
-  testServerConnection,
 } from "./socket";
 import { Box, Button, Input, Page, Header } from "zmp-ui";
 import {
@@ -50,7 +48,6 @@ const ChatPage = () => {
 
   useEffect(() => {
     let unsub = () => {};
-    let statusCheckInterval = null;
 
     // Sửa logic lấy userInfo - bỏ .userInfo vì đã có trong context
     if (!loading && userInfo?.userInfo?.id) {
@@ -80,6 +77,17 @@ const ChatPage = () => {
               userInfo.userInfo.id
             );
 
+            // Đợi một chút để đảm bảo token đã được lưu
+            setTimeout(() => {
+              const connected = connectSocket(userInfo.userInfo.id);
+              if (connected) {
+                setConnectionStatus("connected");
+              } else {
+                console.warn("❌ Socket connection failed");
+                setConnectionStatus("offline");
+              }
+            }, 100);
+
             unsub = onMessageReceived((msg) => {
               if (msg && typeof msg === "object") {
                 setMessages((prev) =>
@@ -103,9 +111,6 @@ const ChatPage = () => {
     return () => {
       disconnectSocket();
       unsub && unsub();
-      if (statusCheckInterval) {
-        clearInterval(statusCheckInterval);
-      }
     };
   }, [userInfo, loading]); // Thêm loading vào dependency
 

@@ -1,13 +1,13 @@
 {
-  "name": "gosafe-backend",
+  "name": "gosafe-server",
   "version": "1.0.0",
   "description": "GoSafe Backend Server for Zalo Mini App",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "deploy": "vercel --prod",
-    "deploy-dev": "vercel"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "build": "echo 'Server build completed'",
+    "vercel-build": "npm install"
   },
   "dependencies": {
     "axios": "^1.6.0",
@@ -22,5 +22,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

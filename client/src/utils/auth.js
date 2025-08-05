@@ -5,7 +5,7 @@ const getServerURL = () => {
   if (process.env.NODE_ENV === 'development') {
     return process.env.URL_SERVER_LOCAL || 'http://localhost:5000';
   }
-  return process.env.URL_SERVER || "https://zma-gosafe-bachtrannhatlinhs-projects.vercel.app";
+  return process.env.URL_SERVER || "https://server-gosafe.vercel.app";
 };
 
 const SERVER_URL = getServerURL();
@@ -39,59 +39,110 @@ export const clearAuth = () => {
   }
 };
 
+// Thêm các function quản lý JWT token
+export const getStoredJWTToken = () => {
+  try {
+    const token = localStorage.getItem('gosafe_jwt_token');
+    return token;
+  } catch (error) {
+    console.error('❌ Error getting JWT token:', error);
+    return null;
+  }
+};
+
+export const setStoredJWTToken = (token) => {
+  try {
+    localStorage.setItem('gosafe_jwt_token', token);
+    console.log('✅ JWT token stored successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Error storing JWT token:', error);
+    return false;
+  }
+};
+
+export const removeStoredJWTToken = () => {
+  try {
+    localStorage.removeItem('gosafe_jwt_token');
+    console.log('🗑️ JWT token removed');
+    return true;
+  } catch (error) {
+    console.error('❌ Error removing JWT token:', error);
+    return false;
+  }
+};
+
+// Đảm bảo function authenticateWithZalo đúng format:
 export const authenticateWithZalo = async (userInfo) => {
   try {
-    console.log('Authenticating with user info:', userInfo);
+    console.log('🔐 Authenticating with Zalo user info:', userInfo);
     
-    const response = await fetch(`${SERVER_URL}/auth/zalo-login`, {
+    const serverURL = process.env.URL_SERVER || "https://server-gosafe.vercel.app";
+    console.log('🌐 Using server URL:', serverURL);
+    
+    const payload = {
+      id: userInfo.id,
+      name: userInfo.name,
+      avatar: userInfo.avatar,
+    };
+    
+    console.log('📤 Sending payload:', payload);
+    
+    const response = await fetch(`${serverURL}/auth/zalo`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        zaloUserId: userInfo.id,
-        name: userInfo.name,
-        avatar: userInfo.avatar,
-        phoneNumber: userInfo.phoneNumber || null,
-      })
+      body: JSON.stringify(payload),
     });
 
+    console.log('📡 Response status:', response.status);
+    console.log('📡 Response headers:', response.headers);
+
     if (!response.ok) {
-      throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('❌ Server error:', errorText);
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('📦 Response data:', data);
     
     if (data.success && data.jwtToken) {
-      // Lưu cùng key với getAccessToken
-      localStorage.setItem('gosafe_jwt_token', data.jwtToken);
-      localStorage.setItem('jwt_token', data.jwtToken); // Backup
-      console.log('JWT token received and stored');
+      setStoredJWTToken(data.jwtToken);
+      console.log('✅ JWT token saved successfully');
       return data.jwtToken;
+    } else {
+      throw new Error(data.error || 'Authentication failed');
     }
     
-    throw new Error(data.error || 'No JWT token received from server');
   } catch (error) {
-    console.error('Zalo authentication failed:', error);
-    
-    // Fallback: tạo fake token để test
-    console.log('Using fallback fake token for development');
-    const fakeToken = 'fake-jwt-token-for-dev-' + Date.now();
-    localStorage.setItem('gosafe_jwt_token', fakeToken);
-    localStorage.setItem('jwt_token', fakeToken);
-    return fakeToken;
+    console.error('❌ authenticateWithZalo failed:', error);
+    return null;
   }
 };
 
-// Sửa hàm này để consistent
-export const getStoredJWTToken = () => {
+// Function kiểm tra JWT token có hợp lệ không
+export const isTokenValid = () => {
   try {
-    // Dùng cùng logic với getAccessToken
-    const token = localStorage.getItem('gosafe_jwt_token') || localStorage.getItem('jwt_token');
-    console.log('Retrieved stored JWT token:', token ? 'exists' : 'null');
-    return token;
+    const token = getStoredJWTToken();
+    if (!token) return false;
+    
+    // Decode JWT payload
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    
+    // Kiểm tra expiry
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (payload.exp && payload.exp < currentTime) {
+      console.log('⚠️ JWT token expired');
+      removeStoredJWTToken();
+      return false;
+    }
+    
+    return true;
   } catch (error) {
-    console.error('Error getting stored JWT token:', error);
-    return null;
+    console.error('❌ Error validating token:', error);
+    removeStoredJWTToken();
+    return false;
   }
 };
